@@ -37,7 +37,24 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ced2d428-5f87-47df-88bd-3eee4bb3ced2" name="Changes" comment="" />
+    <list default="true" id="ced2d428-5f87-47df-88bd-3eee4bb3ced2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/ui/Expenses/DatePicker.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Expenses/ExpenseCont.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/icons/icons8-back-100.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/icons/icons8-date-picker-100.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/icons/icons8-forward-100.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/Cards.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/Cards.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/Dash.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/Dash.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/DashButton.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/DashButton.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/EarnedCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/EarnedCard.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/ExpectedPayCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Expenses/DateBar.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/Menu.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/NavMenu/Menu.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/MenuItems.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/NavMenu/MenuItems.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/SavingsCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/SavingsCard.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/StatCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/StatCard.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/app-window.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/app-window.slint" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -55,7 +72,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/build/_deps/slint-src" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -64,6 +81,9 @@
     &quot;assignee&quot;: &quot;n00dell&quot;
   }
 }</component>
+  <component name="GithubDefaultAccount">
+    <option name="defaultAccountId" value="d648daff-2f5b-4080-a7d6-37d044c27b05" />
+  </component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/slint-ui/slint.git&quot;,
@@ -79,61 +99,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="3.5149317264990164E-7" />
-      <entry key="MS500" value="0.052107296315051295" />
-      <entry key="S2" value="0.6522107081808879" />
-      <entry key="S5" value="1.37359752644069" />
-      <entry key="S10" value="2.1237748401064285" />
-      <entry key="S30" value="4.0899419510147474" />
-      <entry key="S60" value="6.750493417251553" />
-      <entry key="M2" value="10.685315702867678" />
-      <entry key="M5" value="16.477916342642825" />
-      <entry key="M10" value="22.01718221340809" />
-      <entry key="M15" value="27.078976989925224" />
-      <entry key="M30" value="44.32836224239557" />
-      <entry key="H1" value="82.61602536326984" />
-      <entry key="H2" value="148.7545563787897" />
-      <entry key="H4" value="246.35387979646111" />
-      <entry key="D1" value="468.30359890234934" />
-      <entry key="W1" value="536.3239995266562" />
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="1.4513712580359798E-175" />
+      <entry key="S2" value="1.9519031930330972E-44" />
+      <entry key="S5" value="3.3727182680428414E-18" />
+      <entry key="S10" value="2.5328755769281356E-9" />
+      <entry key="S30" value="0.0055960178952846" />
+      <entry key="S60" value="0.2712800929484926" />
+      <entry key="M2" value="2.0374612399129535" />
+      <entry key="M5" value="8.29781693012733" />
+      <entry key="M10" value="17.4288887088724" />
+      <entry key="M15" value="26.548820364698287" />
+      <entry key="M30" value="53.399374383702316" />
+      <entry key="H1" value="96.86988565901243" />
+      <entry key="H2" value="168.28691004914708" />
+      <entry key="H4" value="285.6642193697321" />
+      <entry key="D1" value="621.4477880254242" />
+      <entry key="W1" value="742.5591633158718" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0000002177200975" />
-      <entry key="S5" value="1.003355733767647" />
-      <entry key="S10" value="1.0915993466202465" />
-      <entry key="S30" value="1.9924439177663762" />
-      <entry key="S60" value="2.9434019737590247" />
-      <entry key="M2" value="3.9433552010733104" />
-      <entry key="M5" value="5.875492338573968" />
-      <entry key="M10" value="8.231154220708046" />
-      <entry key="M15" value="10.589947227234603" />
-      <entry key="M30" value="19.03456374554467" />
-      <entry key="H1" value="36.70091211966763" />
-      <entry key="H2" value="65.10512723008907" />
-      <entry key="H4" value="103.85702377891398" />
-      <entry key="D1" value="184.89629515015326" />
-      <entry key="W1" value="208.61984825657956" />
+      <entry key="MS500" value="1.0000195835250483" />
+      <entry key="S2" value="1.066523136403335" />
+      <entry key="S5" value="1.3382120577625687" />
+      <entry key="S10" value="1.5815600223911832" />
+      <entry key="S30" value="1.8359684567094652" />
+      <entry key="S60" value="1.9651130154365686" />
+      <entry key="M2" value="2.455570033860506" />
+      <entry key="M5" value="5.436963609479841" />
+      <entry key="M10" value="10.779850465575368" />
+      <entry key="M15" value="16.074400347275557" />
+      <entry key="M30" value="32.6751634516946" />
+      <entry key="H1" value="58.739378761928364" />
+      <entry key="H2" value="94.441214398908" />
+      <entry key="H4" value="145.20567169831799" />
+      <entry key="D1" value="275.7094764833734" />
+      <entry key="W1" value="320.4342678898381" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.0018865967500867186" />
-      <entry key="MS500" value="0.30414657724148453" />
-      <entry key="S2" value="1.2119010517170008" />
-      <entry key="S5" value="2.0624136376947773" />
-      <entry key="S10" value="2.9215756702814266" />
-      <entry key="S30" value="5.83090776725209" />
-      <entry key="S60" value="9.502177744372728" />
-      <entry key="M2" value="14.496782735585752" />
-      <entry key="M5" value="22.278744380611688" />
-      <entry key="M10" value="30.199054362107077" />
-      <entry key="M15" value="37.628949335265396" />
-      <entry key="M30" value="63.33177947951677" />
-      <entry key="H1" value="119.2900121558869" />
-      <entry key="H2" value="213.83738724162004" />
-      <entry key="H4" value="350.19393168894925" />
-      <entry key="D1" value="653.1950435125536" />
-      <entry key="W1" value="744.9430697406275" />
+      <entry key="MS100" value="2.88328286481819E-4" />
+      <entry key="MS500" value="0.19588114419560748" />
+      <entry key="S2" value="0.7164188443897682" />
+      <entry key="S5" value="1.1540431275624352" />
+      <entry key="S10" value="1.4735130692370046" />
+      <entry key="S30" value="1.8002032330503597" />
+      <entry key="S60" value="2.213301315970643" />
+      <entry key="M2" value="4.472994747257209" />
+      <entry key="M5" value="13.703772283436543" />
+      <entry key="M10" value="28.171427477625315" />
+      <entry key="M15" value="42.584504151706916" />
+      <entry key="M30" value="86.03633751175659" />
+      <entry key="H1" value="155.57625966701704" />
+      <entry key="H2" value="262.70136239174604" />
+      <entry key="H4" value="430.84883156004247" />
+      <entry key="D1" value="897.1504401094351" />
+      <entry key="W1" value="1062.9922938462516" />
     </decayedShown>
   </component>
   <component name="ProjectApplicationVersion">
@@ -147,42 +167,50 @@
   &quot;associatedIndex&quot;: 5
 }</component>
   <component name="ProjectId" id="3KGTh5hVCgLRD2s697KgT096kSw" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;CMake Application.my_application.executor&quot;: &quot;Run&quot;,
-    &quot;CidrDebugProfileConversion&quot;: &quot;true&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.RadMigrateCodeStyle&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;release/1&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.jshint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.jshint&quot;: &quot;&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;python.packages.toolwindow.project.migrated.to.right.top.v2&quot;: &quot;true&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;/home/lee/.local/share/JetBrains/Toolbox/apps/clion/plugins/javascript-plugin/jsLanguageServicesImpl/external&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "CMake Application.my_application.executor": "Run",
+    "CidrDebugProfileConversion": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.RadMigrateCodeStyle": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "junie.onboarding.icon.badge.shown": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.jshint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.jshint": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "python.packages.toolwindow.project.migrated.to.right.top.v2": "true",
+    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable",
+    "to.speed.mode.migration.done": "true",
+    "ts.external.directory.path": "/home/lee/.local/share/JetBrains/Toolbox/apps/clion/plugins/javascript-plugin/jsLanguageServicesImpl/external"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/ui/icons" />
+      <recent name="$PROJECT_DIR$/ui/Expenses" />
+      <recent name="$PROJECT_DIR$/ui" />
+      <recent name="$PROJECT_DIR$/ui/icons/Dash" />
+      <recent name="$PROJECT_DIR$/ui/icons/NavMenu" />
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.my_application">
@@ -302,5 +330,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

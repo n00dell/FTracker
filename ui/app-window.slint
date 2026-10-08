@@ -1,5 +1,6 @@
-import { MenuCont} from "Menu.slint";
-import { DashCont } from "Dash.slint";
+import { MenuCont} from "./NavMenu/Menu.slint";
+import { DashCont } from "./Dash/Dash.slint";
+import { DateBar } from "Expenses/DateBar.slint";
 
 export component MainWindow inherits Window {
  preferred-width: 1280px;
@@ -12,7 +13,11 @@ export component MainWindow inherits Window {
      background: @linear-gradient(160deg, #d9eeea 0%, #f4f8f8 55%, #e3f1ee 100%);
 
      HorizontalLayout {
+
          MenuCont { }                          // keeps its own width: 200px
-         DashCont { horizontal-stretch: 1; }   // takes all the remaining width
+
+         DashCont { horizontal-stretch: 1; }
+
+
      }
 }

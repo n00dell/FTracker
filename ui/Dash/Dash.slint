@@ -1,10 +1,11 @@
 // ===== Dash.slint (v2) =====
-import { Palette } from "MenuItems.slint";
+import { Palette } from "../NavMenu/MenuItems.slint";
 import { AppButton } from "DashButton.slint";
 import { Card } from "Cards.slint";
 import { EarnedCard } from "EarnedCard.slint";
 import { SavingsCard } from "SavingsCard.slint";
 import { StatCard } from "StatCard.slint";
+import { DateBar } from "../Expenses/DateBar.slint";
 
 export component DashCont inherits Rectangle {
     // Data in
@@ -142,12 +143,16 @@ export component DashCont inherits Rectangle {
                 }
             }
         }
-
-        // Placeholder for the Daily entries table
         Rectangle {
-            vertical-stretch: 1;
-            background: rgba(0, 0, 0, 0.03);
-            border-radius: 10px;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 10px;
+        DateBar {}
         }
+//        // Placeholder for the Daily entries table
+//        Rectangle {
+////            vertical-stretch: 1;
+//            background: rgba(0, 0, 0, 0.03);
+//            border-radius: 10px;
+//        }
     }
 }

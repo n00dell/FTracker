@@ -3,11 +3,11 @@ import { NavItems, DateDisplay, NavText, Palette } from "MenuItems.slint";
 
 export component MenuCont inherits Rectangle {
     in property <[NavText]> nav_text: [
-        { name: "Dashboard", icon: @image-url("icons/icons8-dashboard-96.png") },
-        { name: "Savings",   icon: @image-url("icons/icons8-piggy-bank-96.png") },
-        { name: "Goals",     icon: @image-url("icons/icons8-flag-96.png") },
-        { name: "Rules",     icon: @image-url("icons/icons8-slider-96.png") },
-        { name: "Log",       icon: @image-url("icons/icons8-time-96.png") },
+        { name: "Dashboard", icon: @image-url("../icons/icons8-dashboard-96.png") },
+        { name: "Savings",   icon: @image-url("../icons/icons8-piggy-bank-96.png") },
+        { name: "Goals",     icon: @image-url("../icons/icons8-flag-96.png") },
+        { name: "Rules",     icon: @image-url("../icons/icons8-slider-96.png") },
+        { name: "Log",       icon: @image-url("../icons/icons8-time-96.png") },
     ];
     in-out property <int> current-index: 0;
     callback selected(int);   // lets the main window switch pages
@@ -62,7 +62,7 @@ export component MenuCont inherits Rectangle {
 //                }
                   Image
                   {
-                   source: @image-url("icons/icons8-wallet-100.png");
+                   source: @image-url("../icons/icons8-wallet-100.png");
                    width: 50px;
                    image-fit: contain;
                    horizontal-alignment: center;

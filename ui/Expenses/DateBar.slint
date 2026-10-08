@@ -1,0 +1,61 @@
+
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Button } from "std-widgets.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+export component DateBar inherits Rectangle{
+    in property <string> DateinWords: "Thursday";
+    in property <string> DateBtntxt: "October 5, 2026";
+    callback date-back();
+    callback date-picker();
+    callback date-forward();
+    callback set-date-today();
+        height: 50px;
+
+    HorizontalLayout {
+    spacing: 12px;
+    Text {
+    text: "Daily Entries";
+    font-size: 20px;
+    color: Palette.text;
+    vertical-alignment: center;
+    horizontal-alignment: left;
+    }
+    Rectangle { horizontal-stretch: 1; }
+
+    Text {
+    text: DateinWords;
+    color: Palette.muted;
+    horizontal-alignment: center;
+    vertical-alignment: center;
+    }
+    VerticalLayout {
+    alignment: center;
+    HorizontalLayout {
+
+    spacing: 12px;
+
+        AppButton {
+        width: 30px;
+        icon: @image-url("../icons/icons8-back-100.png");
+        clicked => {root.date-back()}
+        }
+        AppButton {
+        text: DateBtntxt;
+        width: 150px;
+        icon: @image-url("../icons/icons8-date-picker-100.png");
+        clicked => {root.date-picker()}
+        }
+        AppButton {
+        width: 30px;
+        icon: @image-url("../icons/icons8-forward-100.png");
+        clicked => {root.date-forward()}
+        }
+        AppButton {
+        width: 80px;
+        text: "Today";
+        clicked => {root.set-date-today()}
+        }
+        }
+}}
+    }
+

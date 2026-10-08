@@ -1,0 +1,26 @@
+import { DatePickerPopup, Button } from "std-widgets.slint";
+export component Example inherits Window {
+    width: 400px;
+    height: 600px;
+
+    date-picker-button := Button {
+        text: @tr("Open Date Picker");
+
+        clicked => {
+            date-picker.show();
+        }
+    }
+
+    date-picker := DatePickerPopup {
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height ) / 2;
+        close-policy: PopupClosePolicy.no-auto-close;
+
+        accepted(date) => {
+            date-picker.close();
+        }
+        canceled => {
+            date-picker.close();
+        }
+    }
+}
