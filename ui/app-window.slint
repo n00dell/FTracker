@@ -1,0 +1,18 @@
+import { MenuCont} from "Menu.slint";
+import { DashCont } from "Dash.slint";
+
+export component MainWindow inherits Window {
+ preferred-width: 1280px;
+     preferred-height: 800px;
+     min-width: 1000px;
+     min-height: 680px;
+
+     // A tinted backdrop. Your old one was almost white, so the glass on the
+     // menu and dashboard had nothing to show through.
+     background: @linear-gradient(160deg, #d9eeea 0%, #f4f8f8 55%, #e3f1ee 100%);
+
+     HorizontalLayout {
+         MenuCont { }                          // keeps its own width: 200px
+         DashCont { horizontal-stretch: 1; }   // takes all the remaining width
+     }
+}

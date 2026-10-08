@@ -1,0 +1,27 @@
+import { Palette } from "MenuItems.slint";
+export component AppButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> primary: false;
+    callback clicked();
+
+    height: 32px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: root.primary ? Palette.teal : Palette.divider;
+    background: root.primary
+        ? (ta.has-hover ? #0c625b : Palette.teal)
+        : (ta.has-hover ? #f3f4f6 : white);
+
+    Text {
+        text: root.text;
+        color: root.primary ? white : Palette.text;
+        font-size: 13px;
+        font-weight: 500;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

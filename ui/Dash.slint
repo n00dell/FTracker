@@ -1,0 +1,153 @@
+// ===== Dash.slint (v2) =====
+import { Palette } from "MenuItems.slint";
+import { AppButton } from "DashButton.slint";
+import { Card } from "Cards.slint";
+import { EarnedCard } from "EarnedCard.slint";
+import { SavingsCard } from "SavingsCard.slint";
+import { StatCard } from "StatCard.slint";
+
+export component DashCont inherits Rectangle {
+    // Data in
+    in property <string> earned-remaining: "KES 42,300";
+    in property <string> savings: "KES 85,000";
+    in property <string> spent: "KES 27,700";
+    in property <string> expected-pay: "KES 70,000";
+    in property <float> spent-fraction: 0.396;
+
+    // Selection state, worked out by the table / your C++ backend.
+    // Default is 2 so you can SEE the bar in the preview. Set to 0 to hide it.
+    in property <int> selected-count: 2;
+    in property <string> selected-total: "KES 340";
+
+    // Events out
+    callback got-paid();
+    callback cover-from-savings();
+    callback move-to-earned();
+    callback clear-selection();
+
+    // [GLASS] translucent background. [PLAIN] use: background: #f6f8f9;
+    background: @linear-gradient(160deg, rgba(255, 255, 255, 0.78) 0%, rgba(240, 249, 247, 0.62) 100%);
+
+    VerticalLayout {
+        padding: 24px;
+        spacing: 16px;
+        alignment: start;
+
+        // HEADER: title on the left, the ONE primary action on the right
+        HorizontalLayout {
+            height: 36px;
+            Text {
+                text: "Dashboard";
+                font-size: 24px;
+                color: Palette.text;
+                vertical-alignment: center;
+            }
+        }
+
+        // CARDS ROW
+        HorizontalLayout {
+            height: 200px;
+            spacing: 16px;
+
+            EarnedCard {
+                width: 296px;
+                value: root.earned-remaining;
+                spent-fraction: root.spent-fraction;
+                spent-label: "39.6% spent";
+                remaining-label: "60.4% remaining";
+            }
+             //spent savings and expected
+            VerticalLayout {
+                horizontal-stretch: 1;
+                spacing: 12px;
+                SavingsCard {
+                    horizontal-stretch: 1;
+                    value: root.savings;
+                    move-to-earned => { root.move-to-earned(); }
+                }
+
+                HorizontalLayout {
+                    spacing: 12px;
+                    StatCard {
+                        label: "Spent this period";
+                        value: root.spent;
+                    }
+
+                    StatCard {
+                        label: "Expected pay";
+                        value: root.expected-pay;
+                    }
+                }
+            }
+
+            VerticalLayout {
+                spacing: 12px;
+                alignment: start;
+                Rectangle {
+                    horizontal-stretch: 1;
+                    width: 12px;
+                }   // pushes the button right
+                                                       AppButton {
+                    width: 156px;
+                    text: "I got paid";
+                    primary: true;
+                    clicked => { root.got-paid(); }
+                }
+
+                AppButton {
+                    width: 156px;
+                    text: "Move savings to earned";
+                    clicked => { root.got-paid(); }
+                }
+            }
+        }
+
+        // SELECTION BAR: only exists while something is ticked.
+        // "if" removes it from the layout completely, so the table moves up.
+        if root.selected-count > 0: Rectangle {
+            height: 44px;
+            border-radius: 10px;
+            background: Palette.teal-soft;
+
+            HorizontalLayout {
+                padding-left: 16px;
+                padding-right: 8px;
+                padding-top: 6px;
+                padding-bottom: 6px;
+                spacing: 8px;
+
+                Text {
+                    text: root.selected-count + " selected  -  " + root.selected-total;
+                    font-size: 13px;
+                    color: Palette.teal;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                }
+
+                AppButton {
+                    width: 70px;
+                    text: "Clear";
+                    clicked => { root.clear-selection(); }
+                }
+
+                AppButton {
+                    width: 170px;
+                    text: "Cover from savings";
+                    primary: true;
+                    clicked => { root.cover-from-savings(); }
+                }
+            }
+        }
+
+        // Placeholder for the Daily entries table
+        Rectangle {
+            vertical-stretch: 1;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 10px;
+        }
+    }
+}

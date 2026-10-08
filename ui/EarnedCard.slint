@@ -1,0 +1,39 @@
+import { Card } from "Cards.slint";
+import { Palette } from "MenuItems.slint";
+export component EarnedCard inherits Card {
+    in property <string> value;
+    in property <float> spent-fraction;
+    in property <string> spent-label;
+    in property <string> remaining-label;
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 6px;
+        alignment: start;
+
+        Text { text: "Earned remaining"; font-size: 13px; color: Palette.muted; }
+        Text { text: root.value; font-size: 28px; font-weight: 700; color: Palette.teal; }
+
+        Rectangle {
+            height: 4px;
+            border-radius: 2px;
+            background: Palette.divider;
+            Rectangle {
+                x: 0px;
+                width: parent.width * root.spent-fraction;
+                height: parent.height;
+                border-radius: 2px;
+                background: Palette.teal;
+            }
+        }
+        HorizontalLayout {
+            Text { text: root.spent-label; font-size: 11px; color: Palette.muted; }
+            Text {
+                text: root.remaining-label;
+                font-size: 11px;
+                color: Palette.muted;
+                horizontal-alignment: right;
+            }
+        }
+    }
+}

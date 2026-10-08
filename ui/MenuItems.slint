@@ -1,0 +1,87 @@
+export struct NavText {
+    name: string,
+    icon: image,
+}
+
+// Shared colours (pulled from your screenshot)
+export global Palette {
+    out property <color> teal: #0f766e;
+    out property <color> teal-soft: rgb(229, 242, 240);
+    out property <color> text: #1f2937;
+    out property <color> muted: #6b7280;
+    out property <color> divider: #e5e7eb;
+}
+
+export component NavItems inherits Rectangle {
+    in property <NavText> item;
+    in property <bool> active: false;
+    callback clicked();
+
+    height: 40px;
+    border-radius: 10px;
+    background: transparent;
+    border-width: 1px;              
+    border-color: transparent;
+
+    states [
+        active when root.active: {
+
+            background: @linear-gradient(180deg,
+                rgba(255, 255, 255, 0.85) 0%,
+                rgba(229, 242, 240, 0.95) 100%);
+            border-color: rgba(255, 255, 255, 0.9);
+        }
+        hover when ta.has-hover && !root.active: {
+            background: rgba(15, 118, 110, 0.06);
+        }
+    ]
+
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 12px;
+
+        Image {
+            source: root.item.icon;
+            width: 20px;
+            image-fit: contain;
+            colorize: root.active ? Palette.teal : Palette.muted;
+        }
+
+        Text {
+            text: root.item.name;
+            vertical-alignment: center;
+            font-size: 14px;
+            font-weight: root.active ? 600 : 400;
+            color: root.active ? Palette.teal : Palette.text;
+        }
+    }
+
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+// Bottom block: "Period since 25 Sep / Personal workspace \u{00B7} KES"
+export component DateDisplay inherits VerticalLayout {
+    in property <string> period: "Period since 25 Sep";
+    in property <string> workspace: "Personal workspace \u{00B7} KES";
+
+    spacing: 4px;
+
+    Rectangle {
+        height: 1px;
+        background: Palette.divider;
+    }
+    Text {
+        text: root.period;
+        font-size: 12px;
+        color: Palette.muted;
+    }
+    Text {
+        text: root.workspace;
+        font-size: 11px;
+        color: Palette.muted;
+    }
+}

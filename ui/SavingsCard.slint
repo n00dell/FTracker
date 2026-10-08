@@ -1,0 +1,26 @@
+import { Card } from "Cards.slint";
+import { AppButton } from "DashButton.slint";
+import { Palette } from "MenuItems.slint";
+export component SavingsCard inherits Card {
+    in property <string> value;
+    callback move-to-earned();
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 6px;
+        alignment: start;
+
+        Text { text: "Savings"; font-size: 13px; color: Palette.muted; horizontal-alignment: center; }
+        Text { text: root.value; font-size: 22px; font-weight: 700; color: Palette.text; horizontal-alignment: center; }
+
+        HorizontalLayout {
+            alignment: center;
+            AppButton {
+                width: 150px;
+                height: 28px;
+                text: "Move to earned";
+                clicked => { root.move-to-earned(); }
+            }
+        }
+    }
+}

@@ -1,0 +1,98 @@
+
+import { NavItems, DateDisplay, NavText, Palette } from "MenuItems.slint";
+
+export component MenuCont inherits Rectangle {
+    in property <[NavText]> nav_text: [
+        { name: "Dashboard", icon: @image-url("icons/icons8-dashboard-96.png") },
+        { name: "Savings",   icon: @image-url("icons/icons8-piggy-bank-96.png") },
+        { name: "Goals",     icon: @image-url("icons/icons8-flag-96.png") },
+        { name: "Rules",     icon: @image-url("icons/icons8-slider-96.png") },
+        { name: "Log",       icon: @image-url("icons/icons8-time-96.png") },
+    ];
+    in-out property <int> current-index: 0;
+    callback selected(int);   // lets the main window switch pages
+
+    width: 200px;
+
+    // [PLAIN] use this instead:  background: white;
+    // [GLASS] translucent white-to-teal wash. Needs something behind the
+    //         menu (e.g. a gradient window background) to read as glass.
+    background: @linear-gradient(160deg,
+        rgba(255, 255, 255, 0.78) 0%,
+        rgba(240, 249, 247, 0.62) 100%);
+    border-width: 1px;                                   // [GLASS] remove
+    border-color: rgba(255, 255, 255, 0.7);              // [GLASS] remove
+    drop-shadow-blur: 24px;                              // [GLASS] remove
+    drop-shadow-color: rgba(15, 118, 110, 0.12);         // [GLASS] remove
+    drop-shadow-offset-x: 4px;                           // [GLASS] remove
+
+    // [GLASS] specular highlight along the top. Delete this whole block for plain.
+    Rectangle {
+        y: 0px;
+        width: parent.width;
+        height: 140px;
+        background: @linear-gradient(180deg,
+            rgba(255, 255, 255, 0.55) 0%,
+            rgba(255, 255, 255, 0) 100%);
+    }
+
+    VerticalLayout {
+        // Rectangle has no padding property, so padding lives on the layout
+        padding-top: 70px;
+        padding-bottom: 70px;
+        padding-left: 16px;
+        padding-right: 16px;
+        spacing: 24px;
+
+        // Brand
+        HorizontalLayout {
+            spacing: 10px;
+            alignment: start;
+            Rectangle {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                background: Palette.teal;
+//                Text {
+//                    text: "P";   // swap for your wallet icon
+//                    color: white;
+//                    font-weight: 700;
+//                    horizontal-alignment: center;
+//                    vertical-alignment: center;
+//                }
+                  Image
+                  {
+                   source: @image-url("icons/icons8-wallet-100.png");
+                   width: 50px;
+                   image-fit: contain;
+                   horizontal-alignment: center;
+                   vertical-alignment: center;
+                  }
+            }
+            Text {
+                text: "Pesa";
+                font-size: 18px;
+                color: Palette.text;
+                vertical-alignment: center;
+            }
+        }
+
+        // Nav items
+        VerticalLayout {
+            spacing: 8px;
+            for data[i] in root.nav_text: NavItems {
+                item: data;
+                active: i == root.current-index;
+                clicked => {
+                    root.current-index = i;
+                    root.selected(i);
+                }
+            }
+        }
+
+        // Pushes the footer to the bottom
+        Rectangle { vertical-stretch: 1; }
+
+        DateDisplay {}
+    }
+}

@@ -1,0 +1,21 @@
+import { Card } from "Cards.slint";
+import { Palette } from "MenuItems.slint";
+
+
+
+
+export component StatCard inherits Card {
+    in property <string> label;
+    in property <string> value;
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 4px;
+        alignment: center;
+        Text { text: root.label; font-size: 12px; color: Palette.muted; }
+        Text { text: root.value; font-size: 18px; font-weight: 600; color: Palette.text; }
+    }
+}
+
+
+
