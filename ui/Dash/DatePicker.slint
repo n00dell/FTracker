@@ -1,0 +1,25 @@
+import { DatePickerPopup } from "std-widgets.slint";
+
+// Invisible overlay. Place ONE of these directly inside DashCont (outside any layout),
+// so it covers the page and the popup centres on it. Call open() from the date button.
+export component DayPicker inherits Rectangle {
+    callback picked(int, int, int);   // year, month, day
+
+    public function open() {
+        popup.show();
+    }
+
+    popup := DatePickerPopup {
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+        close-policy: PopupClosePolicy.no-auto-close;
+
+        accepted(date) => {
+            popup.close();
+            root.picked(date.year, date.month, date.day);
+        }
+        canceled => {
+            popup.close();
+        }
+    }
+}

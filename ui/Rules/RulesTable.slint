@@ -1,0 +1,91 @@
+import { Rulerule-data , RuleCols, RuleTablerule-data } from "RuleTableData.slint";
+import { Card, Chip } from "../Dash/Cards.slint";
+import { FilterPill } from "FilterPill.slint";
+import { Palette } from "../NavMenu/MenuItems.slint";
+component ColHead inherits Text {
+    font-family: Palette.font-body;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: Palette.muted;
+    vertical-alignment: center;
+}
+export component RulesTable inherits Card {
+    in property <[Rulerule-data]> rules;
+    in-out property <int> filter: 0;     // 0 all, 1 charge, 2 adjust
+    callback edit-rule(string);
+    callback rule-toggled(string, bool);
+
+    clip: true;
+
+    VerticalLayout {
+        alignment: start;
+
+        // Card header: title on the left, filter tabs on the right
+        Rectangle {
+            height: 56px;
+
+            HorizontalLayout {
+                padding-left: 18px;
+                padding-right: 18px;
+                spacing: 12px;
+
+                Text {
+                    text: "Rules";
+                    font-family: Palette.font-body;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: Palette.fg;
+                    vertical-alignment: center;
+                }
+                Rectangle { horizontal-stretch: 1; }
+                VerticalLayout {
+                    alignment: center;
+                    HorizontalLayout {
+                        spacing: 6px;
+                        FilterPill { text: "All"; selected: root.filter == 0; clicked => { root.filter = 0; } }
+                        FilterPill { text: "Charge"; selected: root.filter == 1; clicked => { root.filter = 1; } }
+                        FilterPill { text: "Adjust"; selected: root.filter == 2; clicked => { root.filter = 2; } }
+                    }
+                }
+            }
+
+            Rectangle {
+                y: parent.height - 1px;
+                height: 1px;
+                background: Palette.line;
+            }
+        }
+
+        // Column headings
+        Rectangle {
+            height: 34px;
+
+            HorizontalLayout {
+                padding-left: 18px;
+                padding-right: 18px;
+                spacing: 8px;
+
+                ColHead { horizontal-stretch: 1; text: "RULE"; }
+                ColHead { width: RuleCols.applies; text: "APPLIES TO"; }
+                ColHead { width: RuleCols.amount; text: "AMOUNT"; horizontal-alignment: right; }
+                ColHead { width: RuleCols.repeats; text: "REPEATS"; }
+                ColHead { width: RuleCols.dates; text: "FROM TO"; }
+                ColHead { width: RuleCols.toggle; text: "ON"; }
+            }
+
+            Rectangle {
+                y: parent.height - 1px;
+                height: 1px;
+                background: Palette.line;
+            }
+        }
+
+        for r in root.rules: RuleTablerule-data {
+            rule-data: r;
+            shown: root.filter == 0 || r.kind == root.filter - 1;
+            edit => { root.edit-rule(r.id); }
+            toggled(on) => { root.rule-toggled(r.id, on); }
+        }
+    }
+}

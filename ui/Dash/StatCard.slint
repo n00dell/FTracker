@@ -1,21 +1,25 @@
-import { Card } from "Cards.slint";
 import { Palette } from "../NavMenu/MenuItems.slint";
 
-
-
-
-export component StatCard inherits Card {
+// Plain label + number. These sit in one row inside the summary band, so there is no card chrome.
+export component StatCard inherits VerticalLayout {
     in property <string> label;
     in property <string> value;
+    in property <color> value-color: Palette.fg;
 
-    VerticalLayout {
-        padding: 12px;
-        spacing: 4px;
-        alignment: center;
-        Text { text: root.label; font-size: 12px; color: Palette.muted; }
-        Text { text: root.value; font-size: 18px; font-weight: 600; color: Palette.text; }
+    spacing: 2px;
+    alignment: start;
+
+    Text {
+        text: root.label;
+        font-family: Palette.font-body;
+        font-size: 12px;
+        color: Palette.muted;
+    }
+    Text {
+        text: root.value;
+        font-family: Palette.font-mono;
+        font-size: 17px;
+        font-weight: 500;
+        color: root.value-color;
     }
 }
-
-
-

@@ -1,59 +1,141 @@
+
+ import "../fonts/DMSans-Regular.ttf";
+ import "../fonts/DMSans-Medium.ttf";
+ import "../fonts/DMSans-SemiBold.ttf";
+ import "../fonts/JetBrainsMono-Regular.ttf";
+ import "../fonts/JetBrainsMono-Medium.ttf";
+
 export struct NavText {
     name: string,
     icon: image,
+    group: string,
 }
 
-// Shared colours (pulled from your screenshot)
+// Tokens copied from the :root block of Pesa Desktop(1).html (light theme)
 export global Palette {
-    out property <color> teal: #0f766e;
-    out property <color> teal-soft: rgb(229, 242, 240);
-    out property <color> text: #1f2937;
-    out property <color> muted: #6b7280;
-    out property <color> divider: #e5e7eb;
+    // surfaces and lines
+    out property <color> bg: #F5F7F8;
+    out property <color> surface: #FFFFFF;
+    out property <color> line: #E3E7E9;
+    out property <color> line-soft: #EEF1F2;
+
+    // text
+    out property <color> fg: #111827;
+    out property <color> muted: #4B5563;
+    out property <color> faint: #6B7280;
+
+    // brand
+    out property <color> accent: #0F766E;
+    out property <color> accent-hover: #0B5F58;
+    out property <color> accent-fg: #FFFFFF;
+    out property <color> accent-soft: #E3F2EF;
+    out property <color> accent-ink: #0B5F58;
+
+    // status
+    out property <color> pos: #15803D;
+    out property <color> neg: #B91C1C;
+    out property <color> warn: #B45309;
+    out property <color> warn-soft: #FEF3C7;
+    out property <color> neg-soft: #FEE2E2;
+    out property <color> info-soft: #DBEAFE;
+    out property <color> info-ink: #1D4ED8;
+
+    // entry row backgrounds
+    out property <color> r-edit: #FEF3C7;
+    out property <color> r-man: #DBEAFE;
+    out property <color> r-skip: #F1F3F4;
+
+    // entry row left stripes
+    out property <color> s-auto: #0F766E;
+    out property <color> s-edit: #D97706;
+    out property <color> s-man: #3B82F6;
+    out property <color> s-skip: #6B7280;
+    out property <color> s-exp: #9CA3AF;
+
+    // fonts
+    out property <string> font-body: "DM Sans";
+    out property <string> font-mono: "JetBrains Mono";
+
+    // old names, so nothing else you wrote breaks
+    out property <color> teal: accent;
+    out property <color> teal-soft: accent-soft;
+    out property <color> text: fg;
+    out property <color> divider: line;
+}
+
+export component NavGroup inherits HorizontalLayout {
+    in property <string> label;
+    padding-left: 10px;
+    padding-top: 14px;
+    padding-bottom: 4px;
+    Text {
+        text: root.label;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        color: Palette.faint;
+        vertical-alignment: center;
+    }
 }
 
 export component NavItems inherits Rectangle {
     in property <NavText> item;
     in property <bool> active: false;
+    in property <int> badge: 0;
     callback clicked();
 
-    height: 40px;
-    border-radius: 10px;
+    height: 36px;
+    border-radius: 8px;
     background: transparent;
-    border-width: 1px;              
-    border-color: transparent;
+    animate background { duration: 150ms; }
 
     states [
         active when root.active: {
-
-            background: @linear-gradient(180deg,
-                rgba(255, 255, 255, 0.85) 0%,
-                rgba(229, 242, 240, 0.95) 100%);
-            border-color: rgba(255, 255, 255, 0.9);
+            background: Palette.accent-soft;
         }
         hover when ta.has-hover && !root.active: {
-            background: rgba(15, 118, 110, 0.06);
+            background: Palette.line-soft;
         }
     ]
 
     HorizontalLayout {
-        padding-left: 12px;
-        padding-right: 12px;
-        spacing: 12px;
+        padding-left: 10px;
+        padding-right: 10px;
+        spacing: 10px;
 
         Image {
             source: root.item.icon;
-            width: 20px;
+            width: 16px;
             image-fit: contain;
-            colorize: root.active ? Palette.teal : Palette.muted;
+            colorize: root.active ? Palette.accent-ink : Palette.muted;
         }
 
         Text {
+            horizontal-stretch: 1;
             text: root.item.name;
             vertical-alignment: center;
+            font-family: Palette.font-body;
             font-size: 14px;
-            font-weight: root.active ? 600 : 400;
-            color: root.active ? Palette.teal : Palette.text;
+            font-weight: root.active ? 600 : 500;
+            color: root.active ? Palette.accent-ink : (ta.has-hover ? Palette.fg : Palette.muted);
+        }
+
+        if root.badge > 0: VerticalLayout {
+            alignment: center;
+            Rectangle {
+                width: 22px;
+                height: 18px;
+                border-radius: 9px;
+                background: Palette.neg-soft;
+                Text {
+                    text: root.badge;
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: Palette.neg;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
         }
     }
 
@@ -63,25 +145,38 @@ export component NavItems inherits Rectangle {
     }
 }
 
-// Bottom block: "Period since 25 Sep / Personal workspace \u{00B7} KES"
+// Bottom block of the sidebar: period, estimated payday, Configure AI link
 export component DateDisplay inherits VerticalLayout {
     in property <string> period: "Period since 25 Sep";
-    in property <string> workspace: "Personal workspace \u{00B7} KES";
+    in property <string> payday: "Payday expected about 24 Oct";
+    callback configure-ai();
 
-    spacing: 4px;
+    spacing: 0px;
 
     Rectangle {
         height: 1px;
-        background: Palette.divider;
+        background: Palette.line;
     }
-    Text {
-        text: root.period;
-        font-size: 12px;
-        color: Palette.muted;
-    }
-    Text {
-        text: root.workspace;
-        font-size: 11px;
-        color: Palette.muted;
+    VerticalLayout {
+        padding-top: 12px;
+        padding-left: 8px;
+        spacing: 8px;
+
+        Text { text: root.period; font-size: 12px; color: Palette.muted; }
+        Text { text: root.payday; font-size: 12px; color: Palette.muted; }
+        Rectangle {
+            height: 18px;
+            Text {
+                text: "Configure AI";
+                font-size: 12px;
+                font-weight: 500;
+                color: Palette.accent-ink;
+                vertical-alignment: center;
+            }
+            TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.configure-ai(); }
+            }
+        }
     }
 }

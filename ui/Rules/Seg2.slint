@@ -1,0 +1,53 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+export component Seg2 inherits Rectangle {
+    in property <string> left;
+    in property <string> right;
+    in-out property <int> selected: 0;
+
+    height: 32px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: Palette.line;
+    background: Palette.surface;
+    clip: true;
+
+    HorizontalLayout {
+        Rectangle {
+            background: root.selected == 0 ? Palette.accent : transparent;
+            Text {
+                text: root.left;
+                font-family: Palette.font-body;
+                font-size: 13px;
+                font-weight: root.selected == 0 ? 600 : 500;
+                color: root.selected == 0 ? Palette.accent-fg : Palette.muted;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+            TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.selected = 0; }
+            }
+        }
+        Rectangle {
+            width: 1px;
+            background: Palette.line;
+        }
+        Rectangle {
+            background: root.selected == 1 ? Palette.accent : transparent;
+            Text {
+                text: root.right;
+                font-family: Palette.font-body;
+                font-size: 13px;
+                font-weight: root.selected == 1 ? 600 : 500;
+                color: root.selected == 1 ? Palette.accent-fg : Palette.muted;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+            TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.selected = 1; }
+            }
+        }
+    }
+}

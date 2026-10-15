@@ -1,0 +1,80 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { AppButton } from "DashButton.slint";
+import { Chip } from "Cards.slint";
+
+export component DateBar inherits Rectangle {
+    in property <string> DateinWords: "Tue 6 Oct";   // the bold label between the arrows
+    in property <bool> upcoming: false;              // shows the blue "Upcoming" chip for future days
+    callback date-back();
+    callback date-picker();
+    callback date-forward();
+    callback set-date-today();
+    callback add-one-off();
+
+    height: 58px;
+
+    // bottom divider
+    Rectangle {
+        y: parent.height - 1px;
+        height: 1px;
+        background: Palette.line;
+    }
+
+    VerticalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        alignment: center;
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            AppButton {
+                compact: true;
+                width: 30px;
+                icon: @image-url("../icons/icons8-back-100.png");
+                clicked => { root.date-back(); }
+            }
+            Text {
+                min-width: 150px;
+                text: root.DateinWords;
+                font-family: Palette.font-body;
+                font-size: 16px;
+                font-weight: 600;
+                color: Palette.fg;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+            AppButton {
+                compact: true;
+                width: 30px;
+                icon: @image-url("../icons/icons8-forward-100.png");
+                clicked => { root.date-forward(); }
+            }
+            AppButton {
+                compact: true;
+                width: 30px;
+                icon: @image-url("../icons/icons8-date-picker-100.png");
+                clicked => { root.date-picker(); }
+            }
+            AppButton {
+                compact: true;
+                width: 64px;
+                text: "Today";
+                clicked => { root.set-date-today(); }
+            }
+            if root.upcoming: VerticalLayout {
+                alignment: center;
+                Chip { text: "Upcoming"; kind: 4; }
+            }
+
+            Rectangle { horizontal-stretch: 1; }
+
+            AppButton {
+                compact: true;
+                width: 96px;
+                text: "Add one-off";
+                clicked => { root.add-one-off(); }
+            }
+        }
+    }
+}

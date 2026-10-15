@@ -1,0 +1,108 @@
+import { EntryRow, EntryKind, EntryData, EntryCols } from "ExpenseEntryRow.slint";
+import { Palette } from "../NavMenu/MenuItems.slint";
+// One header label, pre-styled
+component ColHead inherits Text {
+    font-size: 11px;
+    font-weight: 600;
+    color: Palette.muted;
+    vertical-alignment: center;
+}
+
+// One swatch + label for the key
+component LegendItem inherits HorizontalLayout {
+    in property <color> swatch;
+    in property <string> label;
+    spacing: 6px;
+    alignment: start;
+
+    VerticalLayout {
+        alignment: center;
+        Rectangle {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            border-width: 1px;
+            border-color: Palette.divider;   // needed so the white swatch is visible
+            background: root.swatch;
+        }
+    }
+    Text {
+        text: root.label;
+        font-size: 11px;
+        color: Palette.muted;
+        vertical-alignment: center;
+    }
+}
+export component ExpenseBucket inherits Rectangle{
+    in property <string> bucket-header: "Rent & Utilities";
+    in property <string> subtotal-amount: "KES 0";
+    in property <[EntryData]> entries: [
+            { expense-name: "Rent", note: "", source-icon: @image-url("../icons/icons8-time-96.png"),
+              kind: EntryKind.auto-posted, checked: false, amount: "25000" },
+            { expense-name: "Electricity", note: "Edited from 1800", source-icon: @image-url("../icons/icons8-time-96.png"),
+              kind: EntryKind.user-edited, checked: true, amount: "2100" },
+            { expense-name: "Water", note: "", source-icon: @image-url("../icons/icons8-time-96.png"),
+              kind: EntryKind.manually-added, checked: false, amount: "600" },
+            { expense-name: "Internet", note: "", source-icon: @image-url("../icons/icons8-time-96.png"),
+              kind: EntryKind.skipped, checked: false, amount: "0" },
+        ];
+
+    VerticalLayout {
+    // Column header, widths come from EntryCols so it lines up with every row
+    Rectangle {
+        height: 28px;
+        background: #f3f4f6;
+
+        HorizontalLayout {
+            ColHead { width: EntryCols.check;  text: "Select"; horizontal-alignment: center; }
+            ColHead { horizontal-stretch: 1;   text: "Entry"; }
+            ColHead { width: EntryCols.source; text: "Source"; horizontal-alignment: center; }
+            Rectangle {
+                width: EntryCols.amount;
+                ColHead {
+                    width: parent.width - 14px;   // matches the 6px cell padding + 8px input inset in the row
+                    text: "Amount (KES)";
+                    horizontal-alignment: right;
+                }
+            }
+            Rectangle { width: EntryCols.bin; }   // empty, sits above the bin buttons
+        }
+    }
+    Rectangle {
+        height: 32px;
+        background: grey;
+
+        HorizontalLayout {
+                        padding-left: 12px;
+                        padding-right: 12px;
+                        spacing: 8px;
+
+                        Text { text: root.bucket-header; vertical-alignment: center; }
+                        Rectangle { horizontal-stretch: 1; }
+                        Text { text: "Subtotal"; vertical-alignment: center; }
+                        Text { text: root.subtotal-amount; vertical-alignment: center; }
+                    }
+    }
+    for entry in root.entries: EntryRow {
+                expense-name: entry.expense-name;
+                note: entry.note;
+                source-icon: entry.source-icon;
+                kind: entry.kind;
+                checked: entry.checked;
+                amount: entry.amount;
+            }
+    // Key
+    Rectangle {
+        height: 32px;
+        HorizontalLayout {
+            padding-left: 12px;
+            padding-right: 12px;
+            spacing: 20px;
+            alignment: start;
+
+            LegendItem { swatch: white;   label: "Auto-posted"; }
+            LegendItem { swatch: #fdf0c0; label: "User edited"; }
+            LegendItem { swatch: #dce8fb; label: "Manually added"; }
+        }
+    }
+}}

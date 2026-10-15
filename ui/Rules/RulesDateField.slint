@@ -1,0 +1,33 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+// Label above a bordered text box (used for the Wipe all dates, format YYYY-MM-DD)
+export component DateField inherits VerticalLayout {
+    in property <string> label;
+    in-out property <string> text <=> input.text;
+
+    spacing: 4px;
+
+    Text {
+        text: root.label;
+        font-family: Palette.font-body;
+        font-size: 12px;
+        font-weight: 500;
+        color: Palette.muted;
+    }
+    Rectangle {
+        height: 32px;
+        border-radius: 8px;
+        border-width: 1px;
+        border-color: input.has-focus ? Palette.accent : Palette.line;
+        background: Palette.surface;
+
+        input := TextInput {
+            x: 10px;
+            width: parent.width - 20px;
+            font-family: Palette.font-mono;
+            font-size: 13px;
+            color: Palette.fg;
+            vertical-alignment: center;
+        }
+    }
+}

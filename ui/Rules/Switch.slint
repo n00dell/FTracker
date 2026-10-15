@@ -1,0 +1,29 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+export component PesaSwitch inherits Rectangle {
+    in-out property <bool> checked;
+    callback toggled(bool);
+
+    width: 38px;
+    height: 22px;
+    border-radius: 11px;
+    background: root.checked ? Palette.accent : Palette.line;
+    animate background { duration: 150ms; }
+
+    Rectangle {
+        y: 3px;
+        x: root.checked ? 19px : 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 8px;
+        background: white;
+        animate x { duration: 150ms; }
+    }
+
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.checked = !root.checked;
+            root.toggled(root.checked);
+        }
+    }
+}

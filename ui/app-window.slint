@@ -1,23 +1,49 @@
-import { MenuCont} from "./NavMenu/Menu.slint";
+// ===== app-window.slint =====
+// The menu drives `page`; the matching screen is shown next to it.
+// Menu order: 0 Dashboard, 1 Savings, 2 Goals, 3 Reports, 4 Categories, 5 Rules, 6 Log
+
+import { MenuCont } from "./NavMenu/Menu.slint";
 import { DashCont } from "./Dash/Dash.slint";
-import { DateBar } from "Expenses/DateBar.slint";
+import { RulesPage } from "./Rules/Rules.slint";
+
+// Stand-in for screens that are not built yet
+component ComingSoon inherits Rectangle {
+    in property <string> title;
+
+    Text {
+        text: root.title + " is not built yet";
+        font-size: 16px;
+        color: #4B5563;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
 
 export component MainWindow inherits Window {
- preferred-width: 1280px;
-     preferred-height: 800px;
-     min-width: 1000px;
-     min-height: 680px;
+    preferred-width: 1280px;
+    preferred-height: 800px;
+    min-width: 1000px;
+    min-height: 680px;
 
-     // A tinted backdrop. Your old one was almost white, so the glass on the
-     // menu and dashboard had nothing to show through.
-     background: @linear-gradient(160deg, #d9eeea 0%, #f4f8f8 55%, #e3f1ee 100%);
+    // Which screen is showing. Your C++ code can read or set this too.
+    in-out property <int> page: 0;
+    callback page-changed(int);
 
-     HorizontalLayout {
+    // A tinted backdrop so the glass on the menu and pages has something to show through.
+    background: @linear-gradient(160deg, #d9eeea 0%, #f4f8f8 55%, #e3f1ee 100%);
 
-         MenuCont { }                          // keeps its own width: 200px
+    HorizontalLayout {
+        MenuCont {
+            current-index <=> root.page;
+            selected(i) => { root.page-changed(i); }
+        }
 
-         DashCont { horizontal-stretch: 1; }
-
-
-     }
+        if root.page == 0: DashCont { horizontal-stretch: 1; }
+        if root.page == 1: ComingSoon { horizontal-stretch: 1; title: "Savings"; }
+        if root.page == 2: ComingSoon { horizontal-stretch: 1; title: "Goals"; }
+        if root.page == 3: ComingSoon { horizontal-stretch: 1; title: "Reports"; }
+        if root.page == 4: ComingSoon { horizontal-stretch: 1; title: "Categories"; }
+        if root.page == 5: RulesPage { horizontal-stretch: 1; }
+        if root.page == 6: ComingSoon { horizontal-stretch: 1; title: "Log"; }
+    }
 }

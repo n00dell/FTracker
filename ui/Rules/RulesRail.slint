@@ -1,0 +1,115 @@
+import { Card } from "../Dash/Cards.slint";
+import { DateField } from "RulesDateField.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+import { PesaSwitch } from "Switch.slint";
+import { Seg2 } from "Seg2.slint";
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+
+export component RulesRail inherits VerticalLayout {
+    in-out property <int> skip-show: 0;          // 0 show a grey rule-data, 1 show nothing
+    in-out property <int> tell-mode: 0;          // 0 quietly, 1 tell me on launch
+    in-out property <bool> confirm-skip-delete: true;
+    callback preview-wipe(string, string);       // from, to as YYYY-MM-DD
+
+    spacing: 16px;
+    alignment: start;
+
+    Card {
+        VerticalLayout {
+            padding: 18px;
+            spacing: 14px;
+
+            Text {
+                text: "Defaults";
+                font-family: Palette.font-body;
+                font-size: 16px;
+                font-weight: 600;
+                color: Palette.fg;
+            }
+
+            VerticalLayout {
+                spacing: 6px;
+                Text {
+                    text: "When a rule skips a day";
+                    font-family: Palette.font-body;
+                    font-size: 12px;
+                    font-weight: 500;
+                    color: Palette.muted;
+                }
+                Seg2 {
+                    left: "Show a grey rule-data";
+                    right: "Show nothing";
+                    selected <=> root.skip-show;
+                }
+            }
+
+            VerticalLayout {
+                spacing: 6px;
+                Text {
+                    text: "When a rule posts";
+                    font-family: Palette.font-body;
+                    font-size: 12px;
+                    font-weight: 500;
+                    color: Palette.muted;
+                }
+                Seg2 {
+                    left: "Quietly";
+                    right: "Tell me on launch";
+                    selected <=> root.tell-mode;
+                }
+            }
+
+            HorizontalLayout {
+                height: 36px;
+                spacing: 12px;
+                Text {
+                    horizontal-stretch: 1;
+                    text: "Confirm before a skip deletes posted entries";
+                    font-family: Palette.font-body;
+                    font-size: 13px;
+                    color: Palette.fg;
+                    wrap: word-wrap;
+                    vertical-alignment: center;
+                }
+                VerticalLayout {
+                    alignment: center;
+                    PesaSwitch { checked <=> root.confirm-skip-delete; }
+                }
+            }
+        }
+    }
+
+    Card {
+        VerticalLayout {
+            padding: 18px;
+            spacing: 10px;
+
+            Text {
+                text: "Wipe all";
+                font-family: Palette.font-body;
+                font-size: 16px;
+                font-weight: 600;
+                color: Palette.fg;
+            }
+            Text {
+                height: 54px;
+                text: "For days that already passed. Removes entries the rules posted that you never touched.";
+                font-family: Palette.font-body;
+                font-size: 13px;
+                color: Palette.muted;
+                wrap: word-wrap;
+            }
+            HorizontalLayout {
+                spacing: 12px;
+                from-field := DateField { label: "From"; text: "2026-09-28"; }
+                to-field := DateField { label: "To"; text: "2026-10-02"; }
+            }
+            AppButton {
+                text: "Preview wipe";
+                danger: true;
+                clicked => { root.preview-wipe(from-field.text, to-field.text); }
+            }
+        }
+    }
+}

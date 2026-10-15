@@ -1,0 +1,143 @@
+import { CheckBox } from "std-widgets.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+import { Palette } from "../NavMenu/MenuItems.slint";
+export enum EntryKind {
+    auto-posted,
+    user-edited,
+    manually-added,
+    skipped
+}
+export struct EntryData {
+    expense-name: string,
+    note: string,
+    source-icon: image,
+    kind: EntryKind,
+    checked: bool,
+    amount: string,
+}
+export global EntryCols {
+    out property <length> check: 90px;
+    out property <length> source: 70px;
+    out property <length> amount: 120px;
+    out property <length> bin: 44px;
+}
+
+export component EntryRow inherits Rectangle{
+    in property <string> expense-name: "Example expense";
+    in property <string> note: "";               // e.g. "Edited from 190"
+    in property <image> source-icon;
+    in property <EntryKind> kind: EntryKind.auto-posted;
+    in-out property <bool> checked <=> from-savings.checked;
+    in-out property <string> amount <=> amount-input.text;
+    callback toggled(bool);
+        callback amount-edited(string);     // every keystroke
+        callback amount-accepted(string);   // Enter pressed
+        callback delete-clicked();
+property <bool> skipped: root.kind == EntryKind.skipped;
+    height: 36px;
+    background: root.kind == EntryKind.user-edited ? #fdf0c0
+        : root.kind == EntryKind.manually-added ? #dce8fb
+        : root.kind == EntryKind.skipped ? #ebebeb
+        : white;
+
+    // Bottom divider line
+    Rectangle {
+        y: root.height - self.height;
+        height: 1px;
+        background: Palette.divider;
+    }
+
+        HorizontalLayout {
+            // 1. Checkbox column ("From savings"), no label text
+            Rectangle {
+                width: EntryCols.check;
+                HorizontalLayout {
+                    alignment: center;
+                    from-savings := CheckBox {
+                        enabled: !root.skipped;
+                        toggled => { root.toggled(self.checked); }
+                    }
+                }
+            }
+
+            // 2. Name column: takes all leftover space
+            HorizontalLayout {
+                horizontal-stretch: 1;
+                spacing: 8px;
+
+                Text {
+                    horizontal-stretch: 1;
+                    text: root.expense-name;
+                    font-size: 13px;
+                    font-italic: root.skipped;
+                    color: root.skipped ? Palette.muted : Palette.text;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+            if root.note != "": Text {
+                text: root.note;
+                font-size: 11px;
+                color: Palette.muted;
+                vertical-alignment: center;
+            }
+        }
+
+        // 3. Source icon column
+        Rectangle {
+            width: EntryCols.source;
+            Image {
+                source: root.source-icon;
+                width: 16px;
+                height: 16px;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                image-fit: contain;
+                colorize: Palette.muted;
+            }
+        }
+
+        // 4. Editable amount column
+        VerticalLayout {
+            width: EntryCols.amount;
+            padding-left: 6px;
+            padding-right: 6px;
+            alignment: center;
+
+            Rectangle {
+                height: 28px;
+                border-radius: 6px;
+                border-width: 1px;
+                background: root.skipped ? transparent : white;
+                border-color: root.skipped ? transparent
+                    : (amount-input.has-focus ? Palette.teal : Palette.divider);
+
+                amount-input := TextInput {
+                    x: 8px;
+                    width: parent.width - 16px;
+                    horizontal-alignment: right;
+                    vertical-alignment: center;
+                    font-size: 13px;
+                    color: root.skipped ? Palette.muted : Palette.text;
+                    input-type: decimal;         // use `number` if whole shillings only
+                    read-only: root.skipped;
+                    edited => { root.amount-edited(self.text); }
+                    accepted => { root.amount-accepted(self.text); }
+                }
+            }
+        }
+
+        // 5. Bin column
+        VerticalLayout {
+            width: EntryCols.bin;
+            alignment: center;
+            HorizontalLayout {
+                alignment: center;
+                AppButton {
+                    width: 30px;
+                    icon: @image-url("../icons/icons8-trash-100.png");
+                    clicked => { root.delete-clicked(); }
+                }
+            }
+        }
+}
+}

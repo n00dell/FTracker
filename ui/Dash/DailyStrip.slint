@@ -1,0 +1,62 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+export component AppButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> primary: false;   // filled teal
+    in property <bool> ghost: false;     // no border, transparent (icon buttons)
+    in property <bool> danger: false;    // red text / red hover
+    in property <bool> compact: false;   // the design's ".sm" size
+    in property <bool> enabled: true;
+    in property <image> icon;
+    callback clicked();
+
+    property <bool> hot: ta.has-hover && root.enabled;
+    property <color> ink: root.primary ? Palette.accent-fg
+        : root.danger ? (root.ghost && !root.hot ? Palette.faint : Palette.neg)
+        : root.ghost ? Palette.muted
+        : Palette.fg;
+
+    height: root.compact ? 28px : 34px;
+    border-radius: 8px;
+    opacity: root.enabled ? 1.0 : 0.45;
+    border-width: root.ghost ? 0px : 1px;
+    border-color: root.primary
+        ? (root.hot ? Palette.accent-hover : Palette.accent)
+        : (root.hot ? Palette.accent : Palette.line);
+    background: root.primary
+        ? (root.hot ? Palette.accent-hover : Palette.accent)
+        : root.ghost
+            ? (root.hot ? (root.danger ? Palette.neg-soft : Palette.line-soft) : transparent)
+            : Palette.surface;
+    animate background, border-color { duration: 150ms; }
+
+    HorizontalLayout {
+        alignment: center;
+        spacing: 6px;
+        padding-left: root.compact ? 10px : 14px;
+        padding-right: root.compact ? 10px : 14px;
+
+        if root.icon.width > 0: Image {
+            source: root.icon;
+            width: 16px;
+            image-fit: contain;
+            colorize: root.primary ? Palette.accent-fg : (root.ghost || root.danger) ? root.ink : Palette.muted;
+        }
+
+        // Only exists when there is text
+        if root.text != "": Text {
+            text: root.text;
+            color: root.ink;
+            font-family: Palette.font-body;
+            font-size: root.compact ? 13px : 14px;
+            font-weight: 500;
+            vertical-alignment: center;
+        }
+    }
+
+    ta := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

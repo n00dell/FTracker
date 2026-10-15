@@ -1,7 +1,61 @@
 import { Palette } from "../NavMenu/MenuItems.slint";
+
 export component Card inherits Rectangle {
-    background: white;
-    border-radius: 10px;
+    background: Palette.surface;
+    border-radius: 12px;
     border-width: 1px;
-    border-color: Palette.divider;
+    border-color: Palette.line;
+    drop-shadow-blur: 2px;
+    drop-shadow-offset-y: 1px;
+    drop-shadow-color: rgba(17, 24, 39, 0.06);
+}
+
+// Small rounded label. kind: 0 teal, 1 amber, 2 red, 3 grey, 4 blue
+export component Chip inherits Rectangle {
+    in property <string> text;
+    in property <int> kind: 0;
+
+    height: 20px;
+    border-radius: 10px;
+    background: root.kind == 1 ? Palette.warn-soft
+        : root.kind == 2 ? Palette.neg-soft
+        : root.kind == 3 ? Palette.line-soft
+        : root.kind == 4 ? Palette.info-soft
+        : Palette.accent-soft;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        Text {
+            text: root.text;
+            font-family: Palette.font-body;
+            font-size: 12px;
+            font-weight: 500;
+            vertical-alignment: center;
+            color: root.kind == 1 ? Palette.warn
+                : root.kind == 2 ? Palette.neg
+                : root.kind == 3 ? Palette.muted
+                : root.kind == 4 ? Palette.info-ink
+                : Palette.accent-ink;
+        }
+    }
+}
+
+// Teal text that acts like a link. Give it a width (or let the layout stretch it).
+export component LinkText inherits Rectangle {
+    in property <string> text;
+    callback clicked();
+    height: 20px;
+    Text {
+        text: root.text;
+        font-family: Palette.font-body;
+        font-size: 13px;
+        font-weight: 500;
+        color: ta.has-hover ? Palette.accent : Palette.accent-ink;
+        vertical-alignment: center;
+    }
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
 }

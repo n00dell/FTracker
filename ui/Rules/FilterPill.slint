@@ -1,0 +1,31 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+// Round filter tab: All / Charge / Adjust
+export component FilterPill inherits Rectangle {
+    in property <string> text;
+    in property <bool> selected;
+    callback clicked();
+
+    height: 26px;
+    border-radius: 13px;
+    border-width: 1px;
+    border-color: root.selected ? Palette.accent : Palette.line;
+    background: root.selected ? Palette.accent-soft : Palette.surface;
+
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        Text {
+            text: root.text;
+            font-family: Palette.font-body;
+            font-size: 13px;
+            font-weight: root.selected ? 600 : 500;
+            color: root.selected ? Palette.accent-ink : Palette.muted;
+            vertical-alignment: center;
+        }
+    }
+
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

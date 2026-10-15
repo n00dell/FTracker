@@ -1,0 +1,119 @@
+import { PesaSwitch } from "Switch.slint";
+import { Chip } from "../Dash/Cards.slint";
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+export struct Rulerule-data {
+    id: string,
+    name: string,
+    kind: int,            // 0 charge, 1 adjust
+    applies-to: string,
+    amount: string,
+    repeats: string,
+    date-range: string,
+    enabled: bool,
+}
+export global RuleCols {
+    out property <length> applies: 120px;
+    out property <length> amount: 90px;
+    out property <length> repeats: 100px;
+    out property <length> dates: 110px;
+    out property <length> toggle: 56px;
+}
+export component RuleTablerule-data inherits Rectangle {
+    in property <Rulerule-data> rule-data;
+    in property <bool> shown: true;     // false collapses the rule-data (used by the filter tabs)
+    callback edit();
+    callback toggled(bool);
+
+    height: root.shown ? 46px : 0px;
+    visible: root.shown;
+    clip: true;
+
+    // bottom divider
+    Rectangle {
+        y: parent.height - 1px;
+        height: 1px;
+        background: Palette.line-soft;
+    }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 8px;
+
+        // Name + kind chip. The whole cell opens the rule.
+        Rectangle {
+            horizontal-stretch: 1;
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: start;
+                Text {
+                    text: root.rule-data.name;
+                    font-family: Palette.font-body;
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: Palette.fg;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+                VerticalLayout {
+                    alignment: center;
+                    Chip {
+                        text: root.rule-data.kind == 1 ? "adjust" : "charge";
+                        kind: root.rule-data.kind == 1 ? 1 : 0;
+                    }
+                }
+            }
+            TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.edit(); }
+            }
+        }
+
+        Text {
+            width: RuleCols.applies;
+            text: root.rule-data.applies-to;
+            font-family: Palette.font-body;
+            font-size: 13px;
+            color: Palette.muted;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+        Text {
+            width: RuleCols.amount;
+            text: root.rule-data.amount;
+            font-family: Palette.font-mono;
+            font-size: 13px;
+            color: Palette.fg;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+        Text {
+            width: RuleCols.repeats;
+            text: root.rule-data.repeats;
+            font-family: Palette.font-body;
+            font-size: 13px;
+            color: Palette.fg;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+        Text {
+            width: RuleCols.dates;
+            text: root.rule-data.date-range;
+            font-family: Palette.font-body;
+            font-size: 13px;
+            color: Palette.muted;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+        VerticalLayout {
+            width: RuleCols.toggle;
+            alignment: center;
+            PesaSwitch {
+                checked: root.rule-data.enabled;
+                toggled(on) => { root.toggled(on); }
+            }
+        }
+    }
+}

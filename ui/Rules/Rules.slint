@@ -1,0 +1,191 @@
+//import { Palette } from "../NavMenu/MenuItems.slint";
+
+//import { PesaSwitch } from "Switch.slint";
+import { PesaSwitch } from "Switch.slint";
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Card, Chip } from "../Dash/Cards.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+import { FilterPill } from "FilterPill.slint";
+import { SkipChip } from "SkipChip.slint";
+import { RulesRail } from "RulesRail.slint";
+import { Rulerule-data , RuleCols, RuleTablerule-data } from "RuleTableData.slint";
+import { RulesTable } from "RulesTable.slint";
+
+// ---------- data shapes ----------
+
+
+export struct SkipData {
+    id: string,
+    name: string,
+    detail: string,       // e.g. "20 Oct · Transport, Food"
+}
+
+
+
+
+
+
+export component RulesPage inherits Rectangle {
+    // Data in. Defaults match the design so the preview looks right.
+    in property <[Rulerule-data]> rules: [
+        { id: "r1", name: "Workdays commute", kind: 0, applies-to: "Matatu to work, Matatu from", amount: "170 + 190", repeats: "Weekdays", date-range: "1 Jul to never", enabled: true },
+        { id: "r2", name: "Weekday tea", kind: 0, applies-to: "Tea", amount: "60", repeats: "Weekdays", date-range: "1 Jul to never", enabled: true },
+        { id: "r3", name: "Rent", kind: 0, applies-to: "Rent", amount: "15,000", repeats: "Monthly, 1st", date-range: "1 Jul to 31 Dec", enabled: true },
+        { id: "r4", name: "Wi-Fi", kind: 0, applies-to: "Wi-Fi", amount: "3,000", repeats: "Monthly, 5th", date-range: "1 Jul to never", enabled: true },
+        { id: "r5", name: "Weekend lunch", kind: 0, applies-to: "Lunch", amount: "250", repeats: "Saturdays", date-range: "1 Jul to never", enabled: false },
+        { id: "r6", name: "Tea price rise", kind: 1, applies-to: "Tea", amount: "+10", repeats: "Every posting", date-range: "15 Oct to 31 Oct", enabled: true },
+    ];
+    in property <[SkipData]> skips: [
+        { id: "s1", name: "Away", detail: "12 Oct · Transport" },
+        { id: "s2", name: "Public holiday", detail: "20 Oct · Transport, Food" },
+        { id: "s3", name: "Holiday at parents'", detail: "20 Dec to 5 Jan · Transport, Food" },
+    ];
+
+    // Settings the page owns (your backend can read or set these)
+    in-out property <int> filter: 0;
+    in-out property <int> skip-show: 0;
+    in-out property <int> tell-mode: 0;
+    in-out property <bool> confirm-skip-delete: true;
+
+    // Events out
+    callback new-rule();
+    callback edit-rule(string);              // rule id
+    callback rule-toggled(string, bool);     // rule id, new state
+    callback mark-days();
+    callback remove-skip(string);            // skip id
+    callback preview-wipe(string, string);   // from, to
+
+    // Wide: table and rail side by side. Narrule-data: stacked (like the design under 1100px).
+    property <bool> wide: root.width >= 1020px;
+
+    background: @linear-gradient(160deg, rgba(255, 255, 255, 0.78) 0%, rgba(240, 249, 247, 0.62) 100%);
+
+    // Flickable can't size itself from for/if content, so the viewport height is set by hand.
+    Flickable {
+        viewport-height: max(root.height, content.min-height);
+
+        content := VerticalLayout {
+            padding: 24px;
+            spacing: 16px;
+            alignment: start;
+
+            // Header
+            HorizontalLayout {
+                spacing: 16px;
+
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    spacing: 2px;
+                    Text {
+                        text: "Rules";
+                        font-family: Palette.font-body;
+                        font-size: 24px;
+                        font-weight: 600;
+                        color: Palette.fg;
+                    }
+                    Text {
+                        text: "When entries post, change, or skip. Each day runs in this order: skip, then charge, then adjust.";
+                        font-family: Palette.font-body;
+                        font-size: 13px;
+                        color: Palette.muted;
+                        overflow: elide;
+                    }
+                }
+                VerticalLayout {
+                    alignment: end;
+                    AppButton {
+                        width: 110px;
+                        text: "New rule";
+                        primary: true;
+                        clicked => { root.new-rule(); }
+                    }
+                }
+            }
+
+            // Skip days
+            Card {
+                VerticalLayout {
+                    padding: 18px;
+                    spacing: 12px;
+
+                    HorizontalLayout {
+                        spacing: 12px;
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            spacing: 2px;
+                            Text {
+                                text: "Skip days";
+                                font-family: Palette.font-body;
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: Palette.fg;
+                            }
+                            Text {
+                                text: "Each skip names what it skips, so one-offs still go through.";
+                                font-family: Palette.font-body;
+                                font-size: 13px;
+                                color: Palette.muted;
+                            }
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            AppButton {
+                                width: 100px;
+                                compact: true;
+                                text: "Mark days";
+                                clicked => { root.mark-days(); }
+                            }
+                        }
+                    }
+
+                    HorizontalLayout {
+                        spacing: 8px;
+                        alignment: start;
+                        for s in root.skips: SkipChip {
+                            name: s.name;
+                            detail: s.detail;
+                            remove => { root.remove-skip(s.id); }
+                        }
+                    }
+                }
+            }
+
+            // Table + rail
+            if root.wide: HorizontalLayout {
+                spacing: 20px;
+                alignment: start;
+
+                RulesTable {
+                    horizontal-stretch: 1;
+                    rules: root.rules;
+                    filter <=> root.filter;
+                    edit-rule(id) => { root.edit-rule(id); }
+                    rule-toggled(id, on) => { root.rule-toggled(id, on); }
+                }
+                RulesRail {
+                    width: 300px;
+                    skip-show <=> root.skip-show;
+                    tell-mode <=> root.tell-mode;
+                    confirm-skip-delete <=> root.confirm-skip-delete;
+                    preview-wipe(start, end) => { root.preview-wipe(start, end); }
+                }
+            }
+            if !root.wide: VerticalLayout {
+                spacing: 16px;
+
+                RulesTable {
+                    rules: root.rules;
+                    filter <=> root.filter;
+                    edit-rule(id) => { root.edit-rule(id); }
+                    rule-toggled(id, on) => { root.rule-toggled(id, on); }
+                }
+                RulesRail {
+                    skip-show <=> root.skip-show;
+                    tell-mode <=> root.tell-mode;
+                    confirm-skip-delete <=> root.confirm-skip-delete;
+                    preview-wipe(start, end) => { root.preview-wipe(start, end); }
+                }
+            }
+        }
+    }
+}

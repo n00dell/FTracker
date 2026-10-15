@@ -1,39 +1,65 @@
-import { Card } from "Cards.slint";
+import { Chip } from "Cards.slint";
 import { Palette } from "../NavMenu/MenuItems.slint";
-export component EarnedCard inherits Card {
-    in property <string> value;
-    in property <float> spent-fraction;
-    in property <string> spent-label;
-    in property <string> remaining-label;
 
-    VerticalLayout {
-        padding: 16px;
-        spacing: 6px;
+// No longer a boxed card. It is the left half of the summary band in Dash.slint.
+export component EarnedCard inherits VerticalLayout {
+    in property <string> value: "42,300";                       // number only, "KES" is drawn separately
+    in property <string> status-text: "On pace · about 18,200 left at payday";
+    in property <int> status-kind: 0;                           // 0 on pace, 1 tight, 2 over pace
+    in property <bool> low: false;                              // red number when earned is 0 or less
+
+    spacing: 6px;
+    alignment: start;
+
+    HorizontalLayout {
+        spacing: 10px;
         alignment: start;
-
-        Text { text: "Earned remaining"; font-size: 13px; color: Palette.muted; }
-        Text { text: root.value; font-size: 28px; font-weight: 700; color: Palette.teal; }
-
-        Rectangle {
-            height: 4px;
-            border-radius: 2px;
-            background: Palette.divider;
-            Rectangle {
-                x: 0px;
-                width: parent.width * root.spent-fraction;
-                height: parent.height;
-                border-radius: 2px;
-                background: Palette.teal;
-            }
+        Text {
+            text: "EARNED REMAINING";
+            font-family: Palette.font-body;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: Palette.muted;
+            vertical-alignment: center;
         }
-        HorizontalLayout {
-            Text { text: root.spent-label; font-size: 11px; color: Palette.muted; }
-            Text {
-                text: root.remaining-label;
-                font-size: 11px;
-                color: Palette.muted;
-                horizontal-alignment: right;
-            }
+        Chip { text: root.status-text; kind: root.status-kind; }
+    }
+
+    HorizontalLayout {
+        spacing: 8px;
+        alignment: start;
+        Text {
+            text: "KES";
+            font-family: Palette.font-body;
+            font-size: 15px;
+            font-weight: 500;
+            color: Palette.faint;
+            vertical-alignment: center;
         }
+        Text {
+            text: root.value;
+            font-family: Palette.font-mono;
+            font-size: 44px;
+            font-weight: 500;
+            color: root.low ? Palette.neg : Palette.fg;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// Thin bar under the stats: how much of income is spent
+export component SpendMeter inherits Rectangle {
+    in property <float> fraction: 0.4;
+    height: 8px;
+    border-radius: 4px;
+    background: Palette.line-soft;
+    clip: true;
+
+    Rectangle {
+        x: 0px;
+        width: parent.width * clamp(root.fraction, 0, 1);
+        height: parent.height;
+        background: Palette.accent;
     }
 }
