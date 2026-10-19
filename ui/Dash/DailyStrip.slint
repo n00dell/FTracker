@@ -1,62 +1,65 @@
 import { Palette } from "../NavMenu/MenuItems.slint";
+import { Card } from "Cards.slint";
 
-export component AppButton inherits Rectangle {
-    in property <string> text;
-    in property <bool> primary: false;   // filled teal
-    in property <bool> ghost: false;     // no border, transparent (icon buttons)
-    in property <bool> danger: false;    // red text / red hover
-    in property <bool> compact: false;   // the design's ".sm" size
-    in property <bool> enabled: true;
-    in property <image> icon;
-    callback clicked();
+export struct DayBar {
+    label: string,      // "Tue 6 Oct, KES 420" for screen readers
+    fraction: float,    // 0.0 to 1.0, already divided by the biggest day
+    future: bool,       // grey bar for days after today
+    today: bool,        // dot under the bar
+    selected: bool,     // outline on the day shown below
+}
 
-    property <bool> hot: ta.has-hover && root.enabled;
-    property <color> ink: root.primary ? Palette.accent-fg
-        : root.danger ? (root.ghost && !root.hot ? Palette.faint : Palette.neg)
-        : root.ghost ? Palette.muted
-        : Palette.fg;
+// Replaces the old DailyStrip.slint, which was a duplicate copy of AppButton.
+export component DailyStrip inherits Card {
+    in property <[DayBar]> bars;
+    in property <string> left-note: "Daily spending, rent and bills left out";
+    in property <string> right-note: "25 Sep to 24 Oct (expected) · click a day";
+    callback day-clicked(int);          // index into bars
 
-    height: root.compact ? 28px : 34px;
-    border-radius: 8px;
-    opacity: root.enabled ? 1.0 : 0.45;
-    border-width: root.ghost ? 0px : 1px;
-    border-color: root.primary
-        ? (root.hot ? Palette.accent-hover : Palette.accent)
-        : (root.hot ? Palette.accent : Palette.line);
-    background: root.primary
-        ? (root.hot ? Palette.accent-hover : Palette.accent)
-        : root.ghost
-            ? (root.hot ? (root.danger ? Palette.neg-soft : Palette.line-soft) : transparent)
-            : Palette.surface;
-    animate background, border-color { duration: 150ms; }
+    VerticalLayout {
+        padding-top: 14px;
+        padding-left: 18px;
+        padding-right: 18px;
+        padding-bottom: 12px;
+        spacing: 8px;
 
-    HorizontalLayout {
-        alignment: center;
-        spacing: 6px;
-        padding-left: root.compact ? 10px : 14px;
-        padding-right: root.compact ? 10px : 14px;
-
-        if root.icon.width > 0: Image {
-            source: root.icon;
-            width: 16px;
-            image-fit: contain;
-            colorize: root.primary ? Palette.accent-fg : (root.ghost || root.danger) ? root.ink : Palette.muted;
+        HorizontalLayout {
+            spacing: 8px;
+            Text { horizontal-stretch: 1; text: root.left-note; font-family: Palette.font-body; font-size: 12px; color: Palette.muted; overflow: elide; }
+            Text { text: root.right-note; font-family: Palette.font-body; font-size: 12px; color: Palette.muted; }
         }
 
-        // Only exists when there is text
-        if root.text != "": Text {
-            text: root.text;
-            color: root.ink;
-            font-family: Palette.font-body;
-            font-size: root.compact ? 13px : 14px;
-            font-weight: 500;
-            vertical-alignment: center;
-        }
-    }
+        // 56px of bars + 10px underneath for the "today" dot
+        HorizontalLayout {
+            height: 66px;
+            spacing: 4px;
 
-    ta := TouchArea {
-        enabled: root.enabled;
-        mouse-cursor: pointer;
-        clicked => { root.clicked(); }
+            for bar[i] in root.bars: Rectangle {
+                Rectangle {
+                    y: parent.height - 10px - self.height;
+                    height: max(4px, (parent.height - 10px) * clamp(bar.fraction, 0, 1));
+                    border-top-left-radius: 3px;
+                    border-top-right-radius: 3px;
+                    background: bar.future ? Palette.line : Palette.accent;
+                    opacity: bar.future || bar.selected || ta.has-hover ? 1.0 : 0.85;
+                    border-width: bar.selected ? 2px : 0px;
+                    border-color: Palette.fg;
+                }
+                if bar.today: Rectangle {
+                    x: (parent.width - 5px) / 2;
+                    y: parent.height - 7px;
+                    width: 5px;
+                    height: 5px;
+                    border-radius: 2.5px;
+                    background: Palette.fg;
+                }
+                ta := TouchArea {
+                    mouse-cursor: pointer;
+                    accessible-role: button;
+                    accessible-label: bar.label;
+                    clicked => { root.day-clicked(i); }
+                }
+            }
+        }
     }
 }

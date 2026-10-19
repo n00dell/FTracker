@@ -1,0 +1,32 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+
+export component MoneyText inherits Rectangle {
+    in property <string> text;
+    in property <length> size: 14px;
+    in property <int> weight: 500;
+    in property <color> ink: Palette.fg;
+    in property <bool> struck: false;
+
+    min-height: label.preferred-height;
+
+    label := Text {
+        width: parent.width;
+        height: parent.height;
+        text: root.text;
+        font-family: Palette.font-mono;
+        font-size: root.size;
+        font-weight: root.weight;
+        color: root.ink;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+    }
+
+    if root.struck: Rectangle {
+        x: parent.width - label.preferred-width;
+        y: parent.height / 2;
+        width: label.preferred-width;
+        height: 1px;
+        background: root.ink;
+    }
+}

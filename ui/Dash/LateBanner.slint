@@ -1,0 +1,37 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { AppButton } from "DashButton.slint";
+
+// Amber strip shown above the page title when payday has passed without the button.
+export component LateBanner inherits Rectangle {
+    in property <string> title: "Payday is 3 days late.";
+    in property <string> body: "Earned lasts about 4 more days at your pace. Pressing the button when pay arrives starts the next period.";
+    callback cover-clicked();
+    callback move-clicked();
+
+    height: 64px;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: Palette.s-edit;
+    background: Palette.warn-soft;
+
+    HorizontalLayout {
+        padding: 12px;
+        padding-left: 16px;
+        spacing: 12px;
+
+        VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+            Text { text: root.title; font-family: Palette.font-body; font-size: 14px; font-weight: 600; color: Palette.fg; }
+            Text { text: root.body; font-family: Palette.font-body; font-size: 13px; color: Palette.fg; overflow: elide; }
+        }
+        VerticalLayout {
+            alignment: center;
+            AppButton { width: 150px; compact: true; text: "Cover from savings"; clicked => { root.cover-clicked(); } }
+        }
+        VerticalLayout {
+            alignment: center;
+            AppButton { width: 170px; compact: true; text: "Move savings to earned"; clicked => { root.move-clicked(); } }
+        }
+    }
+}

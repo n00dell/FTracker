@@ -1,8 +1,11 @@
 import { Palette } from "../NavMenu/MenuItems.slint";
-// Round filter tab: All / Charge / Adjust
+// Round filter tab: All / Charge / Adjust, and the Dashboard entry filters.
 export component FilterPill inherits Rectangle {
     in property <string> text;
     in property <bool> selected;
+    in property <int> count: -1;                 // NEW: -1 hides the number
+    in property <bool> show-dot: false;          // NEW: coloured state dot
+    in property <color> dot-color: transparent;  // NEW
     callback clicked();
 
     height: 26px;
@@ -12,14 +15,27 @@ export component FilterPill inherits Rectangle {
     background: root.selected ? Palette.accent-soft : Palette.surface;
 
     HorizontalLayout {
-        padding-left: 14px;
-        padding-right: 14px;
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 6px;
+
+        if root.show-dot: VerticalLayout {
+            alignment: center;
+            Rectangle { width: 9px; height: 9px; border-radius: 4.5px; background: root.dot-color; }
+        }
         Text {
             text: root.text;
             font-family: Palette.font-body;
             font-size: 13px;
             font-weight: root.selected ? 600 : 500;
             color: root.selected ? Palette.accent-ink : Palette.muted;
+            vertical-alignment: center;
+        }
+        if root.count >= 0: Text {
+            text: root.count;
+            font-family: Palette.font-mono;
+            font-size: 12px;
+            color: Palette.faint;
             vertical-alignment: center;
         }
     }

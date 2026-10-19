@@ -1,0 +1,88 @@
+import { Card } from "Cards.slint";
+import { MoneyText } from "MoneyText.slint";
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+export struct KvLine {
+    label: string,
+    sub: string,       // small grey line under the label, "" hides it
+    amount: string,
+    struck: bool,      // skipped: grey and struck through
+}
+
+// Card with the small uppercase heading. Children go below the heading.
+export component RailCard inherits Card {
+    in property <string> heading;
+
+    VerticalLayout {
+        padding-top: 16px;
+        padding-bottom: 16px;
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 2px;
+        alignment: start;
+
+        Text {
+            text: root.heading;
+            font-family: Palette.font-body;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: Palette.muted;
+        }
+        Rectangle { height: 4px; }
+        @children
+    }
+}
+
+// label (+ optional sub line) on the left, mono amount on the right
+export component KvRow inherits HorizontalLayout {
+    in property <KvLine> line;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    spacing: 12px;
+
+    VerticalLayout {
+        horizontal-stretch: 1;
+        alignment: center;
+        Text {
+            text: root.line.label;
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: root.line.struck ? Palette.muted : Palette.fg;
+            font-italic: root.line.struck;
+            overflow: elide;
+        }
+        if root.line.sub != "": Text {
+            text: root.line.sub;
+            font-family: Palette.font-body;
+            font-size: 12px;
+            color: Palette.muted;
+        }
+    }
+    MoneyText {
+        width: 80px;
+        text: root.line.amount;
+        struck: root.line.struck;
+        ink: root.line.struck ? Palette.muted : Palette.fg;
+    }
+}
+
+// Divider + "Total" row
+export component RailTotal inherits VerticalLayout {
+    in property <string> amount;
+    spacing: 0px;
+    padding-top: 4px;
+
+    Rectangle { height: 1px; background: Palette.line; }
+    HorizontalLayout {
+        padding-top: 8px;
+        Text {
+            horizontal-stretch: 1;
+            text: "Total";
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.muted;
+        }
+        MoneyText { width: 80px; height: 20px; text: root.amount; }
+    }
+}

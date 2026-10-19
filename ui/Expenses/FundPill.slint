@@ -1,0 +1,28 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+// "Earned" / "Savings" pill. Click flips where the entry is paid from.
+export component FundPill inherits Rectangle {
+    in property <bool> savings: false;
+    callback clicked();
+
+    height: 22px;
+    border-radius: 11px;
+    border-width: 1px;
+    border-color: root.savings || ta.has-hover ? Palette.accent : Palette.line;
+    background: root.savings ? Palette.accent-soft : transparent;
+    animate border-color { duration: 150ms; }
+
+    Text {
+        text: root.savings ? "Savings" : "Earned";
+        font-family: Palette.font-body;
+        font-size: 12px;
+        font-weight: root.savings ? 600 : 500;
+        color: root.savings || ta.has-hover ? Palette.accent-ink : Palette.muted;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

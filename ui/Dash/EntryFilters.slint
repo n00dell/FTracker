@@ -1,0 +1,40 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { FilterPill } from "../Rules/FilterPill.slint";
+
+// All / Auto-posted / Edited / Added / Skipped, each with a count.
+export component EntryFilters inherits Rectangle {
+    in-out property <int> filter: 0;                     // 0 all, 1 auto, 2 edited, 3 added, 4 skipped
+    in property <[int]> counts: [0, 0, 0, 0, 0];
+    callback filter-changed(int);
+
+    property <[{ label: string, dot: color }]> chips: [
+        { label: "All", dot: transparent },
+        { label: "Auto-posted", dot: Palette.s-auto },
+        { label: "Edited", dot: Palette.s-edit },
+        { label: "Added", dot: Palette.s-man },
+        { label: "Skipped", dot: Palette.s-skip },
+    ];
+
+    height: 46px;
+
+    Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line-soft; }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 6px;
+        alignment: start;
+
+        for chip[i] in root.chips: VerticalLayout {
+            alignment: center;
+            FilterPill {
+                text: chip.label;
+                count: root.counts[i];
+                show-dot: i > 0;
+                dot-color: chip.dot;
+                selected: root.filter == i;
+                clicked => { root.filter = i; root.filter-changed(i); }
+            }
+        }
+    }
+}

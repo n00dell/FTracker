@@ -47,6 +47,7 @@ export component LinkText inherits Rectangle {
     callback clicked();
     height: 20px;
     Text {
+        width: parent.width;   // NEW: otherwise the text is centred in the box, which pushed "Add entry" right
         text: root.text;
         font-family: Palette.font-body;
         font-size: 13px;

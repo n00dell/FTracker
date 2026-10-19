@@ -1,0 +1,36 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+// Teal checkbox for select mode. std-widgets CheckBox follows the Fluent theme
+// colours, not the Pesa teal, so this is hand-drawn (18px like the design).
+export component PickBox inherits Rectangle {
+    in-out property <bool> checked: false;
+    in property <bool> enabled: true;
+    callback toggled(bool);
+
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border-width: 1.5px;
+    border-color: root.checked ? Palette.accent : Palette.faint;
+    background: root.checked ? Palette.accent : Palette.surface;
+    opacity: root.enabled ? 1.0 : 0.55;
+
+    if root.checked: Path {
+        width: 18px;
+        height: 18px;
+        viewbox-width: 18;
+        viewbox-height: 18;
+        commands: "M 4.5 9.5 L 7.8 12.5 L 13.5 5.5";
+        stroke: Palette.accent-fg;
+        stroke-width: 2px;
+        fill: transparent;
+    }
+    TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => {
+            root.checked = !root.checked;
+            root.toggled(root.checked);
+        }
+    }
+}

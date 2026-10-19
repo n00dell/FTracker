@@ -1,0 +1,169 @@
+import { AppButton } from "../Dash/DashButton.slint";
+import { LinkText } from "../Dash/Cards.slint";
+import { MoneyText } from "../Dash/MoneyText.slint";
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+export struct SuggestionData {
+    name: string,
+    amount: string,     // default amount from the catalog, "" for the one-off row
+    one-off: bool,      // true for the 'Add "x" as a one-off' row
+}
+
+// Inline add form: name, amount, Add, Cancel. Suggestions list in the layout
+// below it (not floating): the day card clips, and a PopupWindow can take focus
+// away from the text field while you type.
+export component AddEntryRow inherits VerticalLayout {
+    in-out property <string> name-text <=> name-input.text;
+    in-out property <string> amount-text <=> amount-input.text;
+    in property <[SuggestionData]> suggestions;
+    callback name-edited(string);
+    callback suggestion-picked(int);
+    callback saved(string, string);   // name, amount
+    callback cancelled();
+    callback open-categories();
+
+    spacing: 0px;
+
+    Rectangle { height: 1px; background: Palette.line-soft; }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        spacing: 8px;
+
+        Rectangle {
+            horizontal-stretch: 1;
+            height: 32px;
+            border-radius: 8px;
+            border-width: 1px;
+            border-color: name-input.has-focus ? Palette.accent : Palette.line;
+            background: Palette.surface;
+
+            if name-input.text == "": Text {
+                x: 10px;
+                text: "Pick an item or type a one-off";
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.faint;
+                vertical-alignment: center;
+            }
+            name-input := TextInput {
+                x: 10px;
+                width: parent.width - 20px;
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.fg;
+                vertical-alignment: center;
+                single-line: true;
+                edited => { root.name-edited(self.text); }
+                accepted => {
+                    if root.suggestions.length > 0 { root.suggestion-picked(0); }
+                }
+            }
+        }
+        Rectangle {
+            width: 120px;
+            height: 32px;
+            border-radius: 8px;
+            border-width: 1px;
+            border-color: amount-input.has-focus ? Palette.accent : Palette.line;
+            background: Palette.surface;
+
+            if amount-input.text == "": Text {
+                x: 10px;
+                width: parent.width - 20px;
+                text: "KES";
+                font-family: Palette.font-mono;
+                font-size: 14px;
+                color: Palette.faint;
+                horizontal-alignment: right;
+                vertical-alignment: center;
+            }
+            amount-input := TextInput {
+                x: 10px;
+                width: parent.width - 20px;
+                font-family: Palette.font-mono;
+                font-size: 14px;
+                color: Palette.fg;
+                horizontal-alignment: right;
+                vertical-alignment: center;
+                input-type: number;
+                single-line: true;
+                accepted => { root.saved(name-input.text, self.text); }
+            }
+        }
+        VerticalLayout {
+            alignment: center;
+            AppButton { width: 56px; compact: true; primary: true; text: "Add"; clicked => { root.saved(name-input.text, amount-input.text); } }
+        }
+        VerticalLayout {
+            alignment: center;
+            AppButton { width: 70px; compact: true; ghost: true; text: "Cancel"; clicked => { root.cancelled(); } }
+        }
+    }
+
+    // Suggestions
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        padding-bottom: 12px;
+        alignment: start;
+
+        Rectangle {
+            width: 420px;
+            border-radius: 10px;
+            border-width: 1px;
+            border-color: Palette.line;
+            background: Palette.surface;
+            drop-shadow-blur: 12px;
+            drop-shadow-offset-y: 4px;
+            drop-shadow-color: rgba(17, 24, 39, 0.12);
+
+            VerticalLayout {
+                padding: 4px;
+
+                for s[i] in root.suggestions: Rectangle {
+                    height: 32px;
+                    border-radius: 6px;
+                    background: sta.has-hover || i == 0 ? Palette.accent-soft : transparent;
+                    HorizontalLayout {
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        spacing: 12px;
+                        Text {
+                            horizontal-stretch: 1;
+                            text: s.one-off ? "Add “" + s.name + "” as a one-off" : s.name;
+                            font-family: Palette.font-body;
+                            font-size: 14px;
+                            font-weight: s.one-off ? 500 : 400;
+                            color: s.one-off ? Palette.accent-ink : Palette.fg;
+                            vertical-alignment: center;
+                            overflow: elide;
+                        }
+                        MoneyText { width: 70px; text: s.one-off ? "Enter" : s.amount; ink: Palette.muted; weight: 400; size: 13px; }
+                    }
+                    sta := TouchArea {
+                        mouse-cursor: pointer;
+                        clicked => { root.suggestion-picked(i); }
+                    }
+                }
+                Rectangle { height: 1px; background: Palette.line-soft; }
+                HorizontalLayout {
+                    padding: 8px;
+                    padding-bottom: 4px;
+                    spacing: 4px;
+                    Text {
+                        text: "One-offs are not saved to Categories. For a regular item,";
+                        font-family: Palette.font-body;
+                        font-size: 12px;
+                        color: Palette.muted;
+                        vertical-alignment: center;
+                    }
+                    LinkText { width: 100px; text: "open Categories"; clicked => { root.open-categories(); } }
+                }
+            }
+        }
+    }
+}

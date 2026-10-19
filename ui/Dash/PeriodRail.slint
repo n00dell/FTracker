@@ -1,0 +1,71 @@
+import { RailCard, KvRow, RailTotal, KvLine } from "RailCard.slint";
+import { LinkText } from "Cards.slint";
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+// The 300px column right of the day card: income, posts tomorrow, goals due.
+export component PeriodRail inherits VerticalLayout {
+    in property <[KvLine]> income-lines: [
+        { label: "Pay (expected)", sub: "", amount: "+70,000", struck: false },
+        { label: "From Main savings", sub: "", amount: "+5,000", struck: false },
+    ];
+    in property <string> income-total: "75,000";
+    in property <string> tomorrow-heading: "Posts tomorrow · 7 Oct";
+    in property <[KvLine]> tomorrow-lines: [
+        { label: "Matatu to work", sub: "", amount: "170", struck: false },
+        { label: "Matatu from", sub: "", amount: "190", struck: false },
+        { label: "Tea", sub: "", amount: "60", struck: false },
+    ];
+    in property <string> tomorrow-total: "420";
+    in property <[KvLine]> goal-lines: [
+        { label: "Electric guitar", sub: "15 Nov · from savings", amount: "30,000", struck: false },
+    ];
+    callback add-income();
+    callback edit-expected-pay();
+
+    spacing: 16px;
+    alignment: start;
+
+    RailCard {
+        heading: "INCOME THIS PERIOD";
+        for l in root.income-lines: KvRow { line: l; }
+        RailTotal { amount: root.income-total; }
+        HorizontalLayout {
+            padding-top: 6px;
+            spacing: 14px;
+            alignment: start;
+            LinkText { width: 78px; text: "Add income"; clicked => { root.add-income(); } }
+            LinkText { width: 90px; text: "Expected pay"; clicked => { root.edit-expected-pay(); } }
+        }
+    }
+
+    RailCard {
+        heading: root.tomorrow-heading.to-uppercase();
+        for l in root.tomorrow-lines: KvRow { line: l; }
+        if root.tomorrow-lines.length == 0: Text {
+            text: "Nothing is scheduled.";
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.muted;
+        }
+        if root.tomorrow-lines.length > 0: RailTotal { amount: root.tomorrow-total; }
+    }
+
+    RailCard {
+        heading: "GOALS DUE SOON";
+        for l in root.goal-lines: KvRow { line: l; }
+        if root.goal-lines.length == 0: Text {
+            text: "No goals have a date.";
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.muted;
+        }
+    }
+
+    Text {
+        text: "Payday is an estimate. Only the “I got paid” button starts a new period.";
+        font-family: Palette.font-body;
+        font-size: 12px;
+        color: Palette.faint;
+        wrap: word-wrap;
+    }
+}

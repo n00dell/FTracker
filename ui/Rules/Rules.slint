@@ -1,6 +1,3 @@
-//import { Palette } from "../NavMenu/MenuItems.slint";
-
-//import { PesaSwitch } from "Switch.slint";
 import { PesaSwitch } from "Switch.slint";
 import { Palette } from "../NavMenu/MenuItems.slint";
 import { Card, Chip } from "../Dash/Cards.slint";
@@ -10,9 +7,6 @@ import { SkipChip } from "SkipChip.slint";
 import { RulesRail } from "RulesRail.slint";
 import { Rulerule-data , RuleCols, RuleTablerule-data } from "RuleTableData.slint";
 import { RulesTable } from "RulesTable.slint";
-
-// ---------- data shapes ----------
-
 
 export struct SkipData {
     id: string,
@@ -26,7 +20,6 @@ export struct SkipData {
 
 
 export component RulesPage inherits Rectangle {
-    // Data in. Defaults match the design so the preview looks right.
     in property <[Rulerule-data]> rules: [
         { id: "r1", name: "Workdays commute", kind: 0, applies-to: "Matatu to work, Matatu from", amount: "170 + 190", repeats: "Weekdays", date-range: "1 Jul to never", enabled: true },
         { id: "r2", name: "Weekday tea", kind: 0, applies-to: "Tea", amount: "60", repeats: "Weekdays", date-range: "1 Jul to never", enabled: true },
@@ -62,10 +55,16 @@ export component RulesPage inherits Rectangle {
 
     // Flickable can't size itself from for/if content, so the viewport height is set by hand.
     Flickable {
-        viewport-height: max(root.height, content.min-height);
+        min-width: 0px;                 // NEW
+            max-width: 100000px;            // NEW
+            preferred-width: 1000px;        // NEW
+            content-height: max(root.height, content.min-height);
 
         content := VerticalLayout {
-            padding: 24px;
+                min-width: 0px;             // NEW
+                max-width: 100000px;        // NEW
+                preferred-width: 1000px;    // NEW
+                padding: 24px;
             spacing: 16px;
             alignment: start;
 

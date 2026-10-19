@@ -1,143 +1,216 @@
-import { CheckBox } from "std-widgets.slint";
 import { AppButton } from "../Dash/DashButton.slint";
+import { Chip } from "../Dash/Cards.slint";
+import { MoneyText } from "../Dash/MoneyText.slint";
 import { Palette } from "../NavMenu/MenuItems.slint";
+import { FundPill } from "FundPill.slint";
+import { PickBox } from "PickBox.slint";
+
 export enum EntryKind {
     auto-posted,
     user-edited,
     manually-added,
-    skipped
+    skipped,
+    expected        // NEW: future day, not posted yet
 }
+
 export struct EntryData {
+    id: int,                 // NEW: the backend needs this to know which row was clicked
     expense-name: string,
-    note: string,
-    source-icon: image,
+    note: string,            // "was 190" or "Skipped: Public holiday"
     kind: EntryKind,
-    checked: bool,
     amount: string,
+    from-savings: bool,      // NEW: drives the Earned/Savings pill
+    one-off: bool,           // NEW: shows the grey "one-off" chip
+    checked: bool,
 }
+
 export global EntryCols {
-    out property <length> check: 90px;
-    out property <length> source: 70px;
-    out property <length> amount: 120px;
-    out property <length> bin: 44px;
+    out property <length> source: 118px;
+    out property <length> fund: 84px;
+    out property <length> amount: 104px;
+    out property <length> bin: 28px;
 }
 
-export component EntryRow inherits Rectangle{
-    in property <string> expense-name: "Example expense";
-    in property <string> note: "";               // e.g. "Edited from 190"
-    in property <image> source-icon;
-    in property <EntryKind> kind: EntryKind.auto-posted;
-    in-out property <bool> checked <=> from-savings.checked;
-    in-out property <string> amount <=> amount-input.text;
+export component EntryRow inherits Rectangle {
+    in property <EntryData> data;
+    in property <bool> select-mode: false;
     callback toggled(bool);
-        callback amount-edited(string);     // every keystroke
-        callback amount-accepted(string);   // Enter pressed
-        callback delete-clicked();
-property <bool> skipped: root.kind == EntryKind.skipped;
-    height: 36px;
-    background: root.kind == EntryKind.user-edited ? #fdf0c0
-        : root.kind == EntryKind.manually-added ? #dce8fb
-        : root.kind == EntryKind.skipped ? #ebebeb
-        : white;
+    callback amount-accepted(string);
+    callback fund-clicked();
+    callback delete-clicked();
 
-    // Bottom divider line
+    property <bool> posted: root.data.kind == EntryKind.auto-posted
+        || root.data.kind == EntryKind.user-edited
+        || root.data.kind == EntryKind.manually-added;
+    property <bool> dim: root.data.kind == EntryKind.skipped || root.data.kind == EntryKind.expected;
+
+    height: 42px;
+    // teal outline on rows ticked in select mode (the design's .picked)
+    border-width: root.select-mode && root.data.checked && !root.data.from-savings ? 2px : 0px;
+    border-color: Palette.accent;
+    background: root.data.kind == EntryKind.user-edited ? Palette.r-edit
+        : root.data.kind == EntryKind.manually-added ? Palette.r-man
+        : root.data.kind == EntryKind.skipped ? Palette.r-skip
+        : Palette.surface;
+
+    // top divider
+    Rectangle { y: 0px; height: 1px; background: Palette.line-soft; }
+
+    // 3px state stripe. Slint borders are all-sides, so this is its own rectangle.
+    // The design's dashed stripe for "expected" rows is solid grey here.
     Rectangle {
-        y: root.height - self.height;
-        height: 1px;
-        background: Palette.divider;
+        x: 0px;
+        width: 3px;
+        background: root.data.kind == EntryKind.user-edited ? Palette.s-edit
+            : root.data.kind == EntryKind.manually-added ? Palette.s-man
+            : root.data.kind == EntryKind.skipped ? Palette.s-skip
+            : root.data.kind == EntryKind.expected ? Palette.s-exp
+            : Palette.s-auto;
     }
 
+    HorizontalLayout {
+        padding-left: 15px;
+        padding-right: 18px;
+        spacing: 10px;
+
+        // 1. Name (+ checkbox only in select mode, + one-off chip, + note)
         HorizontalLayout {
-            // 1. Checkbox column ("From savings"), no label text
-            Rectangle {
-                width: EntryCols.check;
-                HorizontalLayout {
-                    alignment: center;
-                    from-savings := CheckBox {
-                        enabled: !root.skipped;
-                        toggled => { root.toggled(self.checked); }
-                    }
+            horizontal-stretch: 1;
+            spacing: 10px;
+
+            if root.select-mode && root.posted: VerticalLayout {
+                alignment: center;
+                PickBox {
+                    // rows already paid from savings show ticked and locked
+                    checked: root.data.from-savings || root.data.checked;
+                    enabled: !root.data.from-savings;
+                    toggled(on) => { root.toggled(on); }
                 }
             }
+            Text {
+                text: root.data.expense-name;
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: root.dim ? Palette.muted : Palette.fg;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+            if root.data.one-off: VerticalLayout {
+                alignment: center;
+                Chip { text: "one-off"; kind: 3; }
+            }
+            if root.data.note != "": Text {
+                text: root.data.note;
+                font-family: Palette.font-body;
+                font-size: 12px;
+                font-italic: root.data.kind == EntryKind.skipped;
+                color: Palette.muted;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+            Rectangle { horizontal-stretch: 1; }
+        }
 
-            // 2. Name column: takes all leftover space
-            HorizontalLayout {
-                horizontal-stretch: 1;
-                spacing: 8px;
+        // 2. Source: icon + word, so state is never colour only
+        HorizontalLayout {
+            width: EntryCols.source;
+            spacing: 6px;
+            alignment: start;
 
-                Text {
-                    horizontal-stretch: 1;
-                    text: root.expense-name;
-                    font-size: 13px;
-                    font-italic: root.skipped;
-                    color: root.skipped ? Palette.muted : Palette.text;
-                    vertical-alignment: center;
-                    overflow: elide;
+            VerticalLayout {
+                alignment: center;
+                Image {
+                    width: 16px;
+                    height: 16px;
+                    image-fit: contain;
+                    colorize: Palette.muted;
+                    source: root.data.kind == EntryKind.auto-posted ? @image-url("../icons/icons8-repeat-100.png")
+                        : root.data.kind == EntryKind.user-edited ? @image-url("../icons/icons8-edit-100.png")
+                        : root.data.kind == EntryKind.manually-added ? @image-url("../icons/icons8-plus-100.png")
+                        : root.data.kind == EntryKind.skipped ? @image-url("../icons/icons8-cancel-100.png")
+                        : @image-url("../icons/icons8-time-100.png");
                 }
-            if root.note != "": Text {
-                text: root.note;
-                font-size: 11px;
+            }
+            Text {
+                text: root.data.kind == EntryKind.auto-posted ? "Auto"
+                    : root.data.kind == EntryKind.user-edited ? "Edited"
+                    : root.data.kind == EntryKind.manually-added ? "Added"
+                    : root.data.kind == EntryKind.skipped ? "Skipped"
+                    : "Expected";
+                font-family: Palette.font-body;
+                font-size: 13px;
                 color: Palette.muted;
                 vertical-alignment: center;
             }
         }
 
-        // 3. Source icon column
-        Rectangle {
-            width: EntryCols.source;
-            Image {
-                source: root.source-icon;
-                width: 16px;
-                height: 16px;
-                x: (parent.width - self.width) / 2;
-                y: (parent.height - self.height) / 2;
-                image-fit: contain;
-                colorize: Palette.muted;
+        // 3. Earned / Savings pill (only for posted rows)
+        VerticalLayout {
+            width: EntryCols.fund;
+            alignment: center;
+            HorizontalLayout {
+                alignment: start;
+                if root.posted: FundPill {
+                    width: 72px;
+                    savings: root.data.from-savings;
+                    clicked => { root.fund-clicked(); }
+                }
             }
         }
 
-        // 4. Editable amount column
+        // 4. Amount. Posted rows: editable, border only on hover/focus. Others: plain, struck if skipped.
         VerticalLayout {
             width: EntryCols.amount;
-            padding-left: 6px;
-            padding-right: 6px;
             alignment: center;
 
-            Rectangle {
+            if root.posted: Rectangle {
                 height: 28px;
                 border-radius: 6px;
                 border-width: 1px;
-                background: root.skipped ? transparent : white;
-                border-color: root.skipped ? transparent
-                    : (amount-input.has-focus ? Palette.teal : Palette.divider);
+                border-color: amount-input.has-focus || amount-ta.has-hover ? Palette.accent : transparent;
+                background: amount-input.has-focus ? Palette.surface : transparent;
 
+                // sits BEHIND the input so it can show hover and focus the field when the padding is clicked
+                amount-ta := TouchArea {
+                    mouse-cursor: text;
+                    clicked => { amount-input.focus(); }
+                }
                 amount-input := TextInput {
                     x: 8px;
                     width: parent.width - 16px;
+                    text: root.data.amount;
+                    font-family: Palette.font-mono;
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: Palette.fg;
                     horizontal-alignment: right;
                     vertical-alignment: center;
-                    font-size: 13px;
-                    color: root.skipped ? Palette.muted : Palette.text;
-                    input-type: decimal;         // use `number` if whole shillings only
-                    read-only: root.skipped;
-                    edited => { root.amount-edited(self.text); }
+                    input-type: number;
+                    single-line: true;
                     accepted => { root.amount-accepted(self.text); }
                 }
             }
+            if !root.posted: MoneyText {
+                height: 28px;
+                text: root.data.amount;
+                ink: Palette.muted;
+                weight: 400;
+                struck: root.data.kind == EntryKind.skipped;
+            }
         }
 
-        // 5. Bin column
+        // 5. Delete (posted rows only)
         VerticalLayout {
             width: EntryCols.bin;
             alignment: center;
-            HorizontalLayout {
-                alignment: center;
-                AppButton {
-                    width: 30px;
-                    icon: @image-url("../icons/icons8-trash-100.png");
-                    clicked => { root.delete-clicked(); }
-                }
+            if root.posted: AppButton {
+                width: 28px;
+                compact: true;
+                ghost: true;
+                danger: true;
+                icon: @image-url("../icons/icons8-trash-100.png");
+                clicked => { root.delete-clicked(); }
             }
         }
-}
+    }
 }

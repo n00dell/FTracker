@@ -1,0 +1,29 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { MoneyText } from "MoneyText.slint";
+
+// Footer of the day card: heavy top rule, label + small note, big mono total.
+export component DayTotal inherits Rectangle {
+    in property <string> title: "Day total";
+    in property <string> note: "Skipped rows are not counted.";
+    in property <string> amount: "0";
+
+    height: 66px;
+
+    // y must be explicit: a child with a size but no position is CENTRED in its parent
+    Rectangle { y: 0px; height: 2px; background: Palette.fg; }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        padding-top: 2px;
+        spacing: 12px;
+
+        VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+            Text { text: root.title; font-family: Palette.font-body; font-size: 14px; font-weight: 600; color: Palette.fg; }
+            Text { text: root.note; font-family: Palette.font-body; font-size: 12px; color: Palette.muted; overflow: elide; }
+        }
+        MoneyText { width: 160px; text: root.amount; size: 22px; }
+    }
+}
