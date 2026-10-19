@@ -57,15 +57,25 @@ export component EntryRow inherits Rectangle {
     Rectangle { y: 0px; height: 1px; background: Palette.line-soft; }
 
     // 3px state stripe. Slint borders are all-sides, so this is its own rectangle.
-    // The design's dashed stripe for "expected" rows is solid grey here.
-    Rectangle {
+    if root.data.kind != EntryKind.expected: Rectangle {
         x: 0px;
         width: 3px;
         background: root.data.kind == EntryKind.user-edited ? Palette.s-edit
             : root.data.kind == EntryKind.manually-added ? Palette.s-man
             : root.data.kind == EntryKind.skipped ? Palette.s-skip
-            : root.data.kind == EntryKind.expected ? Palette.s-exp
             : Palette.s-auto;
+    }
+    // "Expected" rows get the design's dashed stripe: 6px dashes, 4px gaps.
+    if root.data.kind == EntryKind.expected: Rectangle {
+        x: 0px;
+        width: 3px;
+        for i in 5: Rectangle {
+            x: 0px;
+            y: i * 10px;
+            width: 3px;
+            height: min(6px, parent.height - i * 10px);
+            background: Palette.s-exp;
+        }
     }
 
     HorizontalLayout {
@@ -101,8 +111,9 @@ export component EntryRow inherits Rectangle {
             }
             if root.data.note != "": Text {
                 text: root.data.note;
-                font-family: Palette.font-body;
-                font-size: 12px;
+                // "was 190" is mono 12px; "Skipped: reason" is italic 13px
+                font-family: root.data.kind == EntryKind.user-edited ? Palette.font-mono : Palette.font-body;
+                font-size: root.data.kind == EntryKind.skipped ? 13px : 12px;
                 font-italic: root.data.kind == EntryKind.skipped;
                 color: Palette.muted;
                 vertical-alignment: center;
@@ -126,7 +137,7 @@ export component EntryRow inherits Rectangle {
                     colorize: Palette.muted;
                     source: root.data.kind == EntryKind.auto-posted ? @image-url("../icons/icons8-repeat-100.png")
                         : root.data.kind == EntryKind.user-edited ? @image-url("../icons/icons8-edit-100.png")
-                        : root.data.kind == EntryKind.manually-added ? @image-url("../icons/icons8-plus-100.png")
+                        : root.data.kind == EntryKind.manually-added ? @image-url("../icons/icons8-add-100.png")
                         : root.data.kind == EntryKind.skipped ? @image-url("../icons/icons8-cancel-100.png")
                         : @image-url("../icons/icons8-time-100.png");
                 }
@@ -194,7 +205,7 @@ export component EntryRow inherits Rectangle {
                 height: 28px;
                 text: root.data.amount;
                 ink: Palette.muted;
-                weight: 400;
+                weight: root.data.kind == EntryKind.skipped ? 400 : 500;
                 struck: root.data.kind == EntryKind.skipped;
             }
         }

@@ -1,0 +1,100 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Card } from "../Dash/Cards.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+import { Seg2 } from "../Rules/Seg2.slint";
+import { InputBox } from "../Savings/InputBox.slint";
+import { Field } from "Field.slint";
+import { SelectBox } from "SelectBox.slint";
+
+// "Purchase | Fund to save for" toggle with the matching form under it.
+export component AddGoalCard inherits Card {
+    in property <[string]> pot-names;          // pots a fund goal can track
+    callback add-purchase(string, string, string, string, bool);   // name, amount, priority, date, paid from savings
+    callback add-fund(string, string, string);                      // name, target, pot name
+
+    // Backend calls this after a successful add.
+    public function clear() {
+        root.name-text = "";
+        root.amount-text = "";
+        root.priority-text = "";
+        root.date-text = "";
+    }
+
+    property <int> mode: 0;                    // 0 purchase, 1 fund
+    property <string> name-text;
+    property <string> amount-text;
+    property <string> priority-text;
+    property <string> date-text;
+    property <int> fund-index: 0;              // 0 Earned, 1 Savings
+    property <int> pot-index: 0;
+
+    VerticalLayout {
+        padding-top: 16px;
+        padding-bottom: 16px;
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 12px;
+        alignment: start;
+
+        HorizontalLayout {
+            alignment: start;
+            Seg2 {
+                width: 290px;
+                left: "Purchase";
+                right: "Fund to save for";
+                selected <=> root.mode;
+            }
+        }
+
+        HorizontalLayout {
+            spacing: 12px;
+            alignment: start;
+
+            Field {
+                width: 210px;
+                label: "Name";
+                InputBox { text <=> root.name-text; placeholder: root.mode == 1 ? "Emergency fund" : "Desk"; }
+            }
+            Field {
+                width: 120px;
+                label: root.mode == 1 ? "Target (KES)" : "Amount (KES)";
+                InputBox { text <=> root.amount-text; placeholder: "12000"; mono: true; numeric: true; right-align: true; }
+            }
+            if root.mode == 0: Field {
+                width: 100px;
+                label: "Priority";
+                InputBox { text <=> root.priority-text; placeholder: "30"; mono: true; numeric: true; right-align: true; }
+            }
+            if root.mode == 0: Field {
+                width: 150px;
+                label: "Date (optional)";
+                InputBox { text <=> root.date-text; placeholder: "YYYY-MM-DD"; mono: true; }
+            }
+            if root.mode == 0: Field {
+                width: 130px;
+                label: "Funded from";
+                SelectBox { options: ["Earned", "Savings"]; current-index <=> root.fund-index; }
+            }
+            if root.mode == 1: Field {
+                width: 170px;
+                label: "Tracks pot";
+                SelectBox { options: root.pot-names; current-index <=> root.pot-index; }
+            }
+            VerticalLayout {
+                alignment: end;
+                AppButton {
+                    width: 100px;
+                    primary: true;
+                    text: "Add goal";
+                    clicked => {
+                        if root.mode == 0 {
+                            root.add-purchase(root.name-text, root.amount-text, root.priority-text, root.date-text, root.fund-index == 1);
+                        } else {
+                            root.add-fund(root.name-text, root.amount-text, root.pot-names[root.pot-index]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,36 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { AppButton } from "DashButton.slint";
+
+// Shown in the day card right after "I got paid", before anything has posted.
+export component EmptyPeriod inherits VerticalLayout {
+    in property <string> title: "A new period has started";
+    in property <string> body: "Rules post when you open the app each day. Nothing has posted yet, and you can add entries now.";
+    callback add-first();
+
+    padding-top: 28px;
+    padding-bottom: 28px;
+    padding-left: 18px;
+    padding-right: 18px;
+    spacing: 8px;
+
+    Text {
+        text: root.title;
+        font-family: Palette.font-body;
+        font-size: 16px;
+        font-weight: 600;
+        color: Palette.fg;
+        horizontal-alignment: center;
+    }
+    Text {
+        text: root.body;
+        font-family: Palette.font-body;
+        font-size: 14px;
+        color: Palette.muted;
+        horizontal-alignment: center;
+        wrap: word-wrap;
+    }
+    HorizontalLayout {
+        alignment: center;
+        AppButton { width: 170px; primary: true; text: "Add the first entry"; clicked => { root.add-first(); } }
+    }
+}

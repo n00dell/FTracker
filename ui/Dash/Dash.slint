@@ -12,10 +12,13 @@ import { EntryFilters } from "EntryFilters.slint";
 import { DayTotal } from "DayTotal.slint";
 import { PeriodRail } from "PeriodRail.slint";
 import { KvLine } from "RailCard.slint";
+import { SearchButton } from "SearchButton.slint";
+import { SelectionBar } from "SelectionBar.slint";
+import { EmptyPeriod } from "EmptyPeriod.slint";
 import { ExpenseBucket, BucketData } from "../Expenses/ExpenseBucket.slint";
 import { EntryKind } from "../Expenses/ExpenseEntryRow.slint";
 import { SuggestionData } from "../Expenses/AddEntryRow.slint";
- 
+
 export component DashCont inherits Rectangle {
     // ---------- Data in: summary band (unchanged) ----------
     in property <string> earned-remaining: "42,300";
@@ -27,35 +30,60 @@ export component DashCont inherits Rectangle {
     in property <string> income: "70,000";
     in property <string> safe-per-day: "1,950";
     in property <float> spent-fraction: 0.396;
- 
+
     // ---------- NEW: header + late banner ----------
     in property <string> sub-title: "Tue 6 Oct · period since 25 Sep";
     in property <bool> payday-late: false;
     in property <string> late-title: "Payday is 3 days late.";
     in property <string> late-body: "Earned lasts about 4 more days at your pace. Pressing the button when pay arrives starts the next period.";
- 
+
     // ---------- NEW: daily strip ----------
     in property <[DayBar]> bars: [
-        { label: "Fri 25 Sep", fraction: 0.5, future: false, today: false, selected: false },
-        { label: "Sat 26 Sep", fraction: 1.0, future: false, today: false, selected: false },
-        { label: "Sun 27 Sep", fraction: 0.4, future: false, today: false, selected: false },
-        { label: "Tue 6 Oct", fraction: 0.7, future: false, today: true, selected: true },
-        { label: "Wed 7 Oct", fraction: 0.2, future: true, today: false, selected: false },
-        { label: "Thu 8 Oct", fraction: 0.2, future: true, today: false, selected: false },
+        { label: "Fri 25 Sep, KES 670", fraction: 0.25, future: false, today: false, selected: false },
+        { label: "Sat 26 Sep, KES 1,800", fraction: 0.67, future: false, today: false, selected: false },
+        { label: "Sun 27 Sep, KES 600", fraction: 0.22, future: false, today: false, selected: false },
+        { label: "Mon 28 Sep, KES 670", fraction: 0.25, future: false, today: false, selected: false },
+        { label: "Tue 29 Sep, KES 700", fraction: 0.26, future: false, today: false, selected: false },
+        { label: "Wed 30 Sep, KES 570", fraction: 0.21, future: false, today: false, selected: false },
+        { label: "Thu 1 Oct, KES 670", fraction: 0.25, future: false, today: false, selected: false },
+        { label: "Fri 2 Oct, KES 670", fraction: 0.25, future: false, today: false, selected: false },
+        { label: "Sat 3 Oct, KES 2,700", fraction: 1.0, future: false, today: false, selected: false },
+        { label: "Sun 4 Oct, KES 450", fraction: 0.17, future: false, today: false, selected: false },
+        { label: "Mon 5 Oct, KES 670", fraction: 0.25, future: false, today: false, selected: false },
+        { label: "Tue 6 Oct, KES 800", fraction: 0.3, future: false, today: true, selected: true },
+        { label: "Wed 7 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Thu 8 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Fri 9 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Sat 10 Oct, upcoming", fraction: 0.07, future: true, today: false, selected: false },
+        { label: "Sun 11 Oct, upcoming", fraction: 0.07, future: true, today: false, selected: false },
+        { label: "Mon 12 Oct, upcoming", fraction: 0.07, future: true, today: false, selected: false },
+        { label: "Tue 13 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Wed 14 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Thu 15 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Fri 16 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Sat 17 Oct, upcoming", fraction: 0.07, future: true, today: false, selected: false },
+        { label: "Sun 18 Oct, upcoming", fraction: 0.07, future: true, today: false, selected: false },
+        { label: "Mon 19 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Tue 20 Oct, upcoming", fraction: 0.07, future: true, today: false, selected: false },
+        { label: "Wed 21 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Thu 22 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Fri 23 Oct, upcoming", fraction: 0.16, future: true, today: false, selected: false },
+        { label: "Sat 24 Oct, upcoming", fraction: 0.07, future: true, today: false, selected: false },
     ];
     in property <string> strip-range: "25 Sep to 24 Oct (expected) · click a day";
- 
+
     // ---------- Date bar ----------
     in property <string> day-label: "Tue 6 Oct";
     in property <bool> day-upcoming: false;
- 
+
     // ---------- Selection ("Cover from savings") ----------
     in property <bool> select-mode: true;          // NEW: replaces "selected-count > 0" as the trigger
     in property <int> selected-count: 2;
     in property <string> selected-total: "KES 340";
- 
+
     // ---------- NEW: filters, buckets, add form ----------
     in-out property <int> filter: 0;
+    in property <bool> fresh-period: false;        // right after "I got paid": shows the empty-period message
     in property <[int]> filter-counts: [6, 3, 1, 2, 0];
     in property <[BucketData]> buckets: [
         { name: "Transport", subtotal: "510", entries: [
@@ -78,7 +106,7 @@ export component DashCont inherits Rectangle {
     in property <string> day-total-title: "Day total";
     in property <string> day-total-note: "500 of it paid from savings. Skipped rows are not counted.";
     in property <string> day-total: "1,070";
- 
+
     // ---------- NEW: right rail ----------
     in property <[KvLine]> income-lines: [
         { label: "Pay (expected)", sub: "", amount: "+70,000", struck: false },
@@ -94,7 +122,7 @@ export component DashCont inherits Rectangle {
     in property <[KvLine]> goal-lines: [
         { label: "Electric guitar", sub: "15 Nov · from savings", amount: "30,000", struck: false },
     ];
- 
+
     // ---------- Events out (existing) ----------
     callback got-paid();
     callback move-to-earned();
@@ -106,8 +134,9 @@ export component DashCont inherits Rectangle {
     callback set-date-today();
     callback add-one-off();
     callback date-picked(int, int, int);
- 
+
     // ---------- Events out (NEW) ----------
+    callback open-palette();                  // Search box / Ctrl+K
     callback strip-day-clicked(int);
     callback filter-changed(int);
     callback add-income();
@@ -122,166 +151,181 @@ export component DashCont inherits Rectangle {
     callback add-suggestion-picked(int);
     callback add-saved(string, string);
     callback add-cancelled();
- 
+
     background: @linear-gradient(160deg, rgba(255, 255, 255, 0.78) 0%, rgba(240, 249, 247, 0.62) 100%);
- 
+
     // Whole page scrolls, like the HTML. Same trick as Rules.slint: the viewport is
     // sized by hand because the content contains `for` loops.
     Flickable {
         content-height: max(root.height, content.min-height);
- 
+
+        // The design's .main: 32px sides, 48px bottom, content capped at 1240px and left-aligned
         content := VerticalLayout {
-            padding: 24px;
+            width: min(root.width, 1240px);
+            padding-top: 24px;
+            padding-bottom: 48px;
+            padding-left: 32px;
+            padding-right: 32px;
             spacing: 16px;
             alignment: start;
- 
+
             if root.payday-late: LateBanner {
                 title: root.late-title;
                 body: root.late-body;
                 cover-clicked => { root.enter-select-mode(); }
                 move-clicked => { root.move-to-earned(); }
             }
- 
-            // ---------- Header ----------
-            VerticalLayout {
-                spacing: 2px;
-                Text { text: "Dashboard"; font-family: Palette.font-body; font-size: 24px; font-weight: 600; color: Palette.fg; }
-                Text { text: root.sub-title; font-family: Palette.font-body; font-size: 13px; color: Palette.muted; }
-            }
- 
-            // ---------- Summary band (unchanged) ----------
-            Card {
-                height: 176px;
-                HorizontalLayout {
-                    padding: 20px;
-                    spacing: 28px;
-                    VerticalLayout {
-                        horizontal-stretch: 1;
-                        spacing: 12px;
-                        alignment: start;
-                        EarnedCard {
-                            value: root.earned-remaining;
-                            status-text: root.status-text;
-                            status-kind: root.status-kind;
-                            low: root.earned-low;
-                        }
-                        HorizontalLayout {
-                            spacing: 36px;
-                            alignment: start;
-                            SavingsCard { value: root.savings; }
-                            StatCard { label: "Spent this period"; value: root.spent; }
-                            StatCard { label: "Income this period"; value: root.income; }
-                            StatCard { label: "Safe to spend per day"; value: root.safe-per-day; }
-                        }
-                        SpendMeter { fraction: root.spent-fraction; }
-                    }
-                    VerticalLayout {
-                        width: 190px;
-                        spacing: 8px;
-                        alignment: center;
-                        AppButton { text: "I got paid"; primary: root.payday-late; clicked => { root.got-paid(); } }
-                        AppButton { text: "Cover from savings"; clicked => { root.enter-select-mode(); } }
-                        AppButton { text: "Move savings to earned"; clicked => { root.move-to-earned(); } }
-                    }
+
+            // ---------- Header: title left, search box right ----------
+            HorizontalLayout {
+                spacing: 16px;
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    spacing: 2px;
+                    alignment: end;
+                    Text { text: "Dashboard"; font-family: Palette.font-body; font-size: 26px; font-weight: 600; letter-spacing: -0.5px; color: Palette.fg; }
+                    Text { text: root.sub-title; font-family: Palette.font-body; font-size: 13px; color: Palette.muted; }
+                }
+                VerticalLayout {
+                    alignment: end;
+                    SearchButton { clicked => { root.open-palette(); } }
                 }
             }
- 
-            // ---------- NEW: daily strip ----------
+
+            // ---------- Summary band ----------
+            // Meter spans the full width under both the numbers and the buttons, like the design.
+            Card {
+                height: 188px;
+                VerticalLayout {
+                    padding-top: 20px;
+                    padding-bottom: 20px;
+                    padding-left: 22px;
+                    padding-right: 22px;
+                    spacing: 14px;
+
+                    HorizontalLayout {
+                        spacing: 28px;
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            spacing: 14px;
+                            alignment: start;
+                            EarnedCard {
+                                value: root.earned-remaining;
+                                status-text: root.status-text;
+                                status-kind: root.status-kind;
+                                low: root.earned-low;
+                            }
+                            HorizontalLayout {
+                                spacing: 36px;
+                                alignment: start;
+                                SavingsCard { value: root.savings; }
+                                StatCard { label: "Spent this period"; value: root.spent; }
+                                StatCard { label: "Income this period"; value: root.income; }
+                                StatCard { label: "Safe to spend per day"; value: root.safe-per-day; }
+                            }
+                        }
+                        VerticalLayout {
+                            width: 210px;
+                            spacing: 8px;
+                            alignment: center;
+                            AppButton {
+                                text: "I got paid";
+                                primary: root.payday-late;
+                                icon: @image-url("../icons/icons8-checkmark-100.png");
+                                clicked => { root.got-paid(); }
+                            }
+                            AppButton { text: "Cover from savings"; clicked => { root.enter-select-mode(); } }
+                            AppButton { text: "Move savings to earned"; clicked => { root.move-to-earned(); } }
+                        }
+                    }
+                    SpendMeter { fraction: root.spent-fraction; }
+                }
+            }
+
+            // ---------- Daily strip ----------
             DailyStrip {
                 bars: root.bars;
                 right-note: root.strip-range;
                 day-clicked(i) => { root.strip-day-clicked(i); }
             }
- 
+
             // ---------- Day card (left) + rail (right) ----------
+            // The design starts both columns at the top (align-items: start) and leaves 20px above them.
             HorizontalLayout {
+                padding-top: 4px;
                 spacing: 20px;
-                // no `alignment: start` here: it switches stretch off, so the day card stayed narrow
- 
-                Card {
+
+                VerticalLayout {
                     horizontal-stretch: 1;
-                    clip: true;
- 
-                    VerticalLayout {
-                        alignment: start;
- 
-                        DateBar {
-                            DateinWords: root.day-label;
-                            upcoming: root.day-upcoming;
-                            date-back => { root.date-back(); }
-                            date-forward => { root.date-forward(); }
-                            set-date-today => { root.set-date-today(); }
-                            add-one-off => { root.add-one-off(); }
-                            date-picker => { picker.open(); }
-                        }
- 
-                        // Selection bar: exists for the whole of select mode, not only once something is ticked
-                        if root.select-mode: Rectangle {
-                            height: 44px;
-                            background: Palette.accent-soft;
-                            HorizontalLayout {
-                                padding-left: 18px;
-                                padding-right: 8px;
-                                padding-top: 6px;
-                                padding-bottom: 6px;
-                                spacing: 8px;
-                                Text {
-                                    text: root.selected-count > 0
-                                        ? root.selected-count + " selected  -  " + root.selected-total + " would come from Main savings"
-                                        : "Select entries to cover";
-                                    font-family: Palette.font-body;
-                                    font-size: 13px;
-                                    font-weight: 600;
-                                    color: Palette.accent-ink;
-                                    vertical-alignment: center;
-                                }
-                                Rectangle { horizontal-stretch: 1; }
-                                AppButton { width: 70px; compact: true; text: "Cancel"; clicked => { root.clear-selection(); } }
-                                AppButton {
-                                    width: 190px;
-                                    compact: true;
-                                    primary: true;
-                                    enabled: root.selected-count > 0;
-                                    text: root.selected-count > 0 ? "Cover " + root.selected-count + " from savings" : "Cover from savings";
-                                    clicked => { root.cover-from-savings(); }
-                                }
+                    alignment: start;
+
+                    Card {
+                        clip: true;
+
+                        VerticalLayout {
+                            alignment: start;
+
+                            DateBar {
+                                DateinWords: root.day-label;
+                                upcoming: root.day-upcoming;
+                                date-back => { root.date-back(); }
+                                date-forward => { root.date-forward(); }
+                                set-date-today => { root.set-date-today(); }
+                                add-one-off => { root.add-one-off(); }
+                                date-picker => { picker.open(); }
                             }
-                        }
- 
-                        EntryFilters {
-                            filter: root.filter;
-                            counts: root.filter-counts;
-                            filter-changed(i) => { root.filter-changed(i); }
-                        }
- 
-                        for b in root.buckets: ExpenseBucket {
-                            bucket-header: b.name;
-                            subtotal-amount: b.subtotal;
-                            entries: b.entries;
-                            select-mode: root.select-mode;
-                            adding: root.adding-bucket == b.name;
-                            add-link-text: b.name == "One-offs" ? "Add one-off" : "Add entry";
-                            suggestions: root.suggestions;
-                            add-requested => { root.add-requested(b.name); }
-                            entry-toggled(id, on) => { root.entry-toggled(id, on); }
-                            amount-accepted(id, t) => { root.entry-amount-accepted(id, t); }
-                            fund-clicked(id) => { root.entry-fund-clicked(id); }
-                            delete-clicked(id) => { root.entry-deleted(id); }
-                            add-name-edited(t) => { root.add-name-edited(t); }
-                            add-suggestion-picked(i) => { root.add-suggestion-picked(i); }
-                            add-saved(n, a) => { root.add-saved(n, a); }
-                            add-cancelled => { root.add-cancelled(); }
-                            open-categories => { root.open-categories(); }
-                        }
- 
-                        DayTotal {
-                            title: root.day-total-title;
-                            note: root.day-total-note;
-                            amount: root.day-total;
+
+                            // Exists for the whole of select mode, not only once something is ticked
+                            if root.select-mode: SelectionBar {
+                                count: root.selected-count;
+                                total: root.selected-total;
+                                cancel => { root.clear-selection(); }
+                                cover => { root.cover-from-savings(); }
+                            }
+
+                            EntryFilters {
+                                filter: root.filter;
+                                counts: root.filter-counts;
+                                filter-changed(i) => { root.filter-changed(i); }
+                            }
+
+                            if root.fresh-period: EmptyPeriod {
+                                add-first => { root.add-requested("Food"); }
+                            }
+
+                            // Hidden: right after "I got paid" (only the bucket being added to shows),
+                            // and for an empty One-offs bucket or an empty bucket under a filter.
+                            for b in root.buckets: ExpenseBucket {
+                                bucket-header: b.name;
+                                subtotal-amount: b.subtotal;
+                                entries: b.entries;
+                                select-mode: root.select-mode;
+                                adding: root.adding-bucket == b.name;
+                                hidden: root.adding-bucket != b.name
+                                    && (root.fresh-period || (b.entries.length == 0 && (b.name == "One-offs" || root.filter != 0)));
+                                add-link-text: b.name == "One-offs" ? "Add one-off" : "Add entry";
+                                suggestions: root.suggestions;
+                                add-requested => { root.add-requested(b.name); }
+                                entry-toggled(id, on) => { root.entry-toggled(id, on); }
+                                amount-accepted(id, t) => { root.entry-amount-accepted(id, t); }
+                                fund-clicked(id) => { root.entry-fund-clicked(id); }
+                                delete-clicked(id) => { root.entry-deleted(id); }
+                                add-name-edited(t) => { root.add-name-edited(t); }
+                                add-suggestion-picked(i) => { root.add-suggestion-picked(i); }
+                                add-saved(n, a) => { root.add-saved(n, a); }
+                                add-cancelled => { root.add-cancelled(); }
+                                open-categories => { root.open-categories(); }
+                            }
+
+                            DayTotal {
+                                title: root.day-total-title;
+                                note: root.day-total-note;
+                                amount: root.day-total;
+                            }
                         }
                     }
                 }
- 
+
                 PeriodRail {
                     width: 300px;
                     income-lines: root.income-lines;
@@ -296,7 +340,7 @@ export component DashCont inherits Rectangle {
             }
         }
     }
- 
+
     // Keep this LAST and outside the layout so it covers the page and the popup centres on it.
     picker := DayPicker {
         picked(y, m, d) => { root.date-picked(y, m, d); }

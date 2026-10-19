@@ -8,7 +8,7 @@ export component LateBanner inherits Rectangle {
     callback cover-clicked();
     callback move-clicked();
 
-    height: 64px;
+    height: 68px;
     border-radius: 12px;
     border-width: 1px;
     border-color: Palette.s-edit;
@@ -23,7 +23,7 @@ export component LateBanner inherits Rectangle {
             horizontal-stretch: 1;
             alignment: center;
             Text { text: root.title; font-family: Palette.font-body; font-size: 14px; font-weight: 600; color: Palette.fg; }
-            Text { text: root.body; font-family: Palette.font-body; font-size: 13px; color: Palette.fg; overflow: elide; }
+            Text { text: root.body; font-family: Palette.font-body; font-size: 14px; color: Palette.fg; overflow: elide; }
         }
         VerticalLayout {
             alignment: center;

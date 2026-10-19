@@ -1,0 +1,20 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { PotData } from "PotCard.slint";
+
+// Stacked bar: one coloured segment per pot, sized by its share of savings.
+export component PotBar inherits Rectangle {
+    in property <[PotData]> pots;
+
+    height: 14px;
+    border-radius: 7px;
+    background: Palette.line-soft;
+    clip: true;
+
+    HorizontalLayout {
+        spacing: 2px;
+        for p in root.pots: Rectangle {
+            horizontal-stretch: max(p.fraction, 0.0);
+            background: p.color;
+        }
+    }
+}

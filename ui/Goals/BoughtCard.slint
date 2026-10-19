@@ -1,0 +1,14 @@
+import { Card } from "../Dash/Cards.slint";
+import { BoughtRow, BoughtData } from "BoughtRow.slint";
+
+// The "Show bought" list.
+export component BoughtCard inherits Card {
+    in property <[BoughtData]> items;
+
+    clip: true;
+
+    VerticalLayout {
+        alignment: start;
+        for b in root.items: BoughtRow { data: b; }
+    }
+}

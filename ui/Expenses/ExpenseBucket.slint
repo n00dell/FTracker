@@ -11,14 +11,14 @@ export struct BucketData {
     entries: [EntryData],
 }
 
-// Now a layout (was a Rectangle) so Flickable in Dash.slint can measure its height.
-// The column header row and the colour key are gone: the filter chips replace the key.
+// A layout (not a Rectangle) so Flickable in Dash.slint can measure its height.
 export component ExpenseBucket inherits VerticalLayout {
     in property <string> bucket-header: "Transport";
     in property <string> subtotal-amount: "0";
     in property <[EntryData]> entries;
     in property <bool> select-mode: false;
     in property <bool> adding: false;                 // show the inline add form
+    in property <bool> hidden: false;                 // draw nothing at all (see Dash.slint for when)
     in property <string> add-link-text: "Add entry";  // "Add one-off" for the One-offs bucket
     in property <[SuggestionData]> suggestions;
 
@@ -35,38 +35,39 @@ export component ExpenseBucket inherits VerticalLayout {
 
     spacing: 0px;
 
-    // Empty and not adding: one slim line
-    if root.entries.length == 0 && !root.adding: Rectangle {
-        height: 42px;
+    // Empty and not adding: one slim line with a top rule only, name in bold
+    if !root.hidden && root.entries.length == 0 && !root.adding: Rectangle {
+        height: 41px;
+        Rectangle { y: 0px; height: 1px; background: Palette.line-soft; }
         HorizontalLayout {
             padding-left: 18px;
             padding-right: 18px;
             spacing: 8px;
-            Text {
+            HorizontalLayout {
                 horizontal-stretch: 1;
-                text: root.bucket-header + " · nothing today";
-                font-family: Palette.font-body;
-                font-size: 13px;
-                color: Palette.muted;
-                vertical-alignment: center;
+                alignment: start;
+                spacing: 0px;
+                Text { text: root.bucket-header; font-family: Palette.font-body; font-size: 13px; font-weight: 600; color: Palette.muted; vertical-alignment: center; }
+                Text { text: " · nothing today"; font-family: Palette.font-body; font-size: 13px; color: Palette.muted; vertical-alignment: center; }
             }
             VerticalLayout {
                 alignment: center;
-                LinkText { width: 80px; text: root.add-link-text; clicked => { root.add-requested(); } }
+                LinkText { width: 84px; size: 13px; text: root.add-link-text; clicked => { root.add-requested(); } }
             }
         }
     }
 
     // Has rows (or is being added to)
-    if root.entries.length > 0 || root.adding: VerticalLayout {
+    if !root.hidden && (root.entries.length > 0 || root.adding): VerticalLayout {
         spacing: 0px;
 
         Rectangle {
-            height: 36px;
+            height: 39px;
             HorizontalLayout {
                 padding-left: 18px;
                 padding-right: 18px;
-                padding-top: 6px;
+                padding-top: 12px;
+                padding-bottom: 6px;
                 spacing: 8px;
                 Text { horizontal-stretch: 1; text: root.bucket-header; font-family: Palette.font-body; font-size: 14px; font-weight: 600; color: Palette.fg; vertical-alignment: center; }
                 MoneyText { width: 100px; text: root.subtotal-amount; size: 13px; ink: Palette.muted; }
@@ -84,9 +85,13 @@ export component ExpenseBucket inherits VerticalLayout {
 
         if !root.adding: Rectangle {
             height: 38px;
+            Rectangle { y: 0px; height: 1px; background: Palette.line-soft; }
             HorizontalLayout {
                 padding-left: 18px;
-                LinkText { width: 100px; text: root.add-link-text; clicked => { root.add-requested(); } }
+                VerticalLayout {
+                    alignment: center;
+                    LinkText { width: 100px; text: root.add-link-text; clicked => { root.add-requested(); } }
+                }
             }
         }
         if root.adding: AddEntryRow {
@@ -97,8 +102,8 @@ export component ExpenseBucket inherits VerticalLayout {
             cancelled => { root.add-cancelled(); }
             open-categories => { root.open-categories(); }
         }
-    }
 
-    // divider between buckets
-    Rectangle { height: 1px; background: Palette.line; }
+        // divider between buckets
+        Rectangle { height: 1px; background: Palette.line; }
+    }
 }

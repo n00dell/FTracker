@@ -1,0 +1,98 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Card } from "../Dash/Cards.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+import { InputBox } from "InputBox.slint";
+import { ColHead } from "ColHead.slint";
+import { MovementRow, MovementData, MoveCols } from "MovementRow.slint";
+
+// Header with the quick "expense paid from savings" form, then the movements table.
+export component MovementsCard inherits Card {
+    in property <[MovementData]> movements;
+    in-out property <string> quick-label <=> label-box.text;
+    in-out property <string> quick-amount <=> amount-box.text;
+    callback quick-add(string, string);      // expense name, amount
+
+    clip: true;
+
+    VerticalLayout {
+        alignment: start;
+
+        // Card header
+        Rectangle {
+            height: 56px;
+            HorizontalLayout {
+                padding-left: 18px;
+                padding-right: 18px;
+                spacing: 8px;
+
+                Text {
+                    horizontal-stretch: 1;
+                    text: "Movements";
+                    font-family: Palette.font-body;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: Palette.fg;
+                    vertical-alignment: center;
+                }
+                VerticalLayout {
+                    alignment: center;
+                    label-box := InputBox {
+                        width: 190px;
+                        placeholder: "Expense paid from savings";
+                        accepted => { root.quick-add(label-box.text, amount-box.text); }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    amount-box := InputBox {
+                        width: 100px;
+                        placeholder: "KES";
+                        mono: true;
+                        numeric: true;
+                        right-align: true;
+                        accepted => { root.quick-add(label-box.text, amount-box.text); }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    AppButton {
+                        width: 56px;
+                        compact: true;
+                        text: "Add";
+                        clicked => { root.quick-add(label-box.text, amount-box.text); }
+                    }
+                }
+            }
+            Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line; }
+        }
+
+        // Column headings
+        Rectangle {
+            height: 34px;
+            HorizontalLayout {
+                padding-left: 18px;
+                padding-right: 18px;
+                spacing: 8px;
+                ColHead { width: MoveCols.date; text: "DATE"; }
+                ColHead { horizontal-stretch: 1; text: "MOVEMENT"; }
+                ColHead { width: MoveCols.pot; text: "POT"; }
+                ColHead { width: MoveCols.amount; text: "AMOUNT"; horizontal-alignment: right; }
+            }
+            Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line; }
+        }
+
+        for m in root.movements: MovementRow { data: m; }
+
+        if root.movements.length == 0: Rectangle {
+            height: 72px;
+            Text {
+                text: "No movements yet.";
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.muted;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+    }
+}

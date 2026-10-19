@@ -1,0 +1,84 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+import { PotData } from "PotCard.slint";
+import { MovementData } from "MovementRow.slint";
+import { SavingsTotalCard } from "SavingsTotalCard.slint";
+import { MovementsCard } from "MovementsCard.slint";
+
+export component SavingsPage inherits Rectangle {
+    // ---------- Data in ----------
+    in property <string> total: "88,500";
+    in property <[PotData]> pots: [
+        { name: "Main savings", note: "Used for covering entries and goals", balance: "35,000", percent: 40, fraction: 0.40, color: Palette.accent },
+        { name: "Lock savings", note: "Locked until Dec", balance: "40,000", percent: 45, fraction: 0.45, color: Palette.s-man },
+        { name: "Sacco", note: "Contributions only", balance: "13,500", percent: 15, fraction: 0.15, color: Palette.s-edit },
+    ];
+    in property <[MovementData]> movements: [
+        { date: "5 Oct", kind: "Moved to earned", note: "Into this period", pot: "Main savings", amount: "−5,000", negative: true },
+        { date: "3 Oct", kind: "Expense cover", note: "Barber", pot: "Main savings", amount: "−500", negative: true },
+        { date: "25 Sep", kind: "Period remainder", note: "Paid on 25 Sep", pot: "Main savings", amount: "+3,500", negative: false },
+        { date: "12 Sep", kind: "Contribution", note: "Sacco", pot: "Sacco", amount: "+15,000", negative: false },
+    ];
+
+    // Quick-add fields. The backend sets these back to "" after a successful add.
+    in-out property <string> quick-label <=> movements-card.quick-label;
+    in-out property <string> quick-amount <=> movements-card.quick-amount;
+
+    // ---------- Events out ----------
+    callback add-to-savings();
+    callback move-to-earned();
+    callback cover-from-savings();
+    callback quick-add(string, string);      // expense name, amount
+
+    background: @linear-gradient(160deg, rgba(255, 255, 255, 0.78) 0%, rgba(240, 249, 247, 0.62) 100%);
+
+    // Whole page scrolls. Viewport height is set by hand because the content has `for` loops.
+    Flickable {
+        content-height: max(root.height, content.min-height);
+
+        content := VerticalLayout {
+            padding: 24px;
+            spacing: 16px;
+            alignment: start;
+
+            // ---------- Header ----------
+            HorizontalLayout {
+                spacing: 16px;
+
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    spacing: 2px;
+                    Text { text: "Savings"; font-family: Palette.font-body; font-size: 24px; font-weight: 600; color: Palette.fg; }
+                    Text { text: "Everything you have set aside, and where it is kept."; font-family: Palette.font-body; font-size: 13px; color: Palette.muted; overflow: elide; }
+                }
+                VerticalLayout {
+                    alignment: end;
+                    HorizontalLayout {
+                        spacing: 8px;
+                        AppButton {
+                            width: 140px;
+                            primary: true;
+                            text: "Add to savings";
+                            icon: @image-url("../icons/icons8-add-100.png");
+                            clicked => { root.add-to-savings(); }
+                        }
+                        AppButton { width: 120px; text: "Move to earned"; clicked => { root.move-to-earned(); } }
+                        AppButton { width: 150px; text: "Cover from savings"; clicked => { root.cover-from-savings(); } }
+                    }
+                }
+            }
+
+            // ---------- Total + pots ----------
+            SavingsTotalCard {
+                total: root.total;
+                pots: root.pots;
+            }
+
+            // ---------- Movements ----------
+            movements-card := MovementsCard {
+                movements: root.movements;
+                quick-add(n, a) => { root.quick-add(n, a); }
+            }
+        }
+    }
+}

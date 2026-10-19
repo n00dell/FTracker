@@ -1,0 +1,76 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { MoneyText } from "../Dash/MoneyText.slint";
+
+export struct MovementData {
+    date: string,        // "25 Sep"
+    kind: string,        // "Period remainder", "Moved to earned", ...
+    note: string,        // "Paid on 25 Sep"
+    pot: string,         // "Main savings"
+    amount: string,      // with sign: "+13,500" or "−1,500"
+    negative: bool,      // red when money left savings, green when it came in
+}
+
+export global MoveCols {
+    out property <length> date: 70px;
+    out property <length> pot: 130px;
+    out property <length> amount: 110px;
+}
+
+// One line of the movements table.
+export component MovementRow inherits Rectangle {
+    in property <MovementData> data;
+
+    height: 42px;
+
+    Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line-soft; }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 8px;
+
+        Text {
+            width: MoveCols.date;
+            text: root.data.date;
+            font-family: Palette.font-mono;
+            font-size: 13px;
+            color: Palette.muted;
+            vertical-alignment: center;
+        }
+        HorizontalLayout {
+            horizontal-stretch: 1;
+            spacing: 6px;
+            alignment: start;
+            Text {
+                text: root.data.kind;
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.fg;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+            if root.data.note != "": Text {
+                text: "· " + root.data.note;
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.muted;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+        }
+        Text {
+            width: MoveCols.pot;
+            text: root.data.pot;
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.fg;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+        MoneyText {
+            width: MoveCols.amount;
+            text: root.data.amount;
+            ink: root.data.negative ? Palette.neg : Palette.pos;
+        }
+    }
+}

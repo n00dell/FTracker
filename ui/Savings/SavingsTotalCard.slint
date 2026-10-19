@@ -1,0 +1,39 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Card } from "../Dash/Cards.slint";
+import { BigAmount } from "BigAmount.slint";
+import { PotBar } from "PotBar.slint";
+import { PotCard, PotData } from "PotCard.slint";
+
+// "Total savings" card: big number, stacked bar, then one tile per pot.
+export component SavingsTotalCard inherits Card {
+    in property <string> total: "0";
+    in property <[PotData]> pots;
+
+    VerticalLayout {
+        padding-top: 16px;
+        padding-bottom: 16px;
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 0px;
+        alignment: start;
+
+        Text {
+            text: "Total savings";
+            font-family: Palette.font-body;
+            font-size: 12px;
+            font-weight: 500;
+            color: Palette.muted;
+        }
+        BigAmount { height: 52px; value: root.total; }
+        Rectangle { height: 12px; }
+        PotBar { pots: root.pots; }
+        Rectangle { height: 14px; }
+        HorizontalLayout {
+            spacing: 12px;
+            for p in root.pots: PotCard {
+                horizontal-stretch: 1;
+                pot: p;
+            }
+        }
+    }
+}

@@ -1,0 +1,54 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Card } from "../Dash/Cards.slint";
+import { ColHead } from "../Savings/ColHead.slint";
+import { GoalRow, GoalData, GoalCols } from "GoalRow.slint";
+
+// Purchase goals in priority order.
+export component GoalsTable inherits Card {
+    in property <[GoalData]> goals;
+    callback fund-clicked(int);              // goal id
+    callback donated-toggled(int, bool);     // goal id, new state
+    callback bought-ticked(int);             // goal id
+
+    clip: true;
+
+    VerticalLayout {
+        alignment: start;
+
+        Rectangle {
+            height: 40px;
+            HorizontalLayout {
+                padding-left: 18px;
+                padding-right: 18px;
+                spacing: 8px;
+                ColHead { width: GoalCols.priority; text: "PRIORITY"; horizontal-alignment: right; }
+                ColHead { horizontal-stretch: 1; text: "GOAL"; }
+                ColHead { width: GoalCols.amount; text: "AMOUNT"; horizontal-alignment: right; }
+                ColHead { width: GoalCols.date; text: "DATE"; }
+                ColHead { width: GoalCols.fund; text: "FUNDED FROM"; }
+                ColHead { width: GoalCols.donated; text: "DONATED"; }
+                ColHead { width: GoalCols.bought; text: "BOUGHT"; }
+            }
+            Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line; }
+        }
+
+        for g in root.goals: GoalRow {
+            data: g;
+            fund-clicked => { root.fund-clicked(g.id); }
+            donated-toggled(on) => { root.donated-toggled(g.id, on); }
+            bought-ticked => { root.bought-ticked(g.id); }
+        }
+
+        if root.goals.length == 0: Rectangle {
+            height: 72px;
+            Text {
+                text: "No goals yet. Add one above.";
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.muted;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+    }
+}

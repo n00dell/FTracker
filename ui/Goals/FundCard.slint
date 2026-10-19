@@ -1,0 +1,50 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Card } from "../Dash/Cards.slint";
+import { SpendMeter } from "../Dash/EarnedCard.slint";
+
+export struct FundData {
+    name: string,        // "Emergency fund"
+    balance: string,     // what the tracked pot holds, number only
+    target: string,      // number only
+    percent: int,        // 0 to 100
+    fraction: float,     // 0.0 to 1.0
+    pot: string,         // "Lock savings"
+    to-go: string,       // "160,000"
+}
+
+// A fund goal. It only reads the pot's balance, nothing is stored twice.
+export component FundCard inherits Card {
+    in property <FundData> fund;
+
+    VerticalLayout {
+        padding-top: 14px;
+        padding-bottom: 14px;
+        padding-left: 16px;
+        padding-right: 16px;
+        spacing: 8px;
+        alignment: start;
+
+        HorizontalLayout {
+            spacing: 8px;
+            Text {
+                horizontal-stretch: 1;
+                text: root.fund.name;
+                font-family: Palette.font-body;
+                font-size: 14px;
+                font-weight: 600;
+                color: Palette.fg;
+                overflow: elide;
+            }
+            Text { text: root.fund.balance; font-family: Palette.font-mono; font-size: 14px; color: Palette.fg; }
+            Text { text: "of " + root.fund.target; font-family: Palette.font-mono; font-size: 14px; color: Palette.muted; }
+        }
+        SpendMeter { fraction: root.fund.fraction; }
+        Text {
+            text: root.fund.percent + "% · tracks " + root.fund.pot + " · " + root.fund.to-go + " to go";
+            font-family: Palette.font-body;
+            font-size: 13px;
+            color: Palette.muted;
+            overflow: elide;
+        }
+    }
+}

@@ -1,0 +1,126 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Chip } from "../Dash/Cards.slint";
+import { MoneyText } from "../Dash/MoneyText.slint";
+import { FundPill } from "../Expenses/FundPill.slint";
+import { PickBox } from "../Expenses/PickBox.slint";
+import { PesaSwitch } from "../Rules/Switch.slint";
+
+export struct GoalData {
+    id: int,                 // the backend needs this to know which row was clicked
+    name: string,
+    priority: int,           // lower comes first
+    amount: string,          // number only, no "KES"
+    date: string,            // "15 Nov", "" shows the grey "no date" chip
+    from-savings: bool,      // Earned / Savings pill
+    donated: bool,           // gift, nothing is deducted
+    status-text: string,     // "Covered by Main savings", "Short by 10,000", "Gift, no deduction"
+    status-kind: int,        // Chip kind: 0 teal covered, 1 amber short, 4 blue gift
+}
+
+export global GoalCols {
+    out property <length> priority: 70px;
+    out property <length> amount: 100px;
+    out property <length> date: 90px;
+    out property <length> fund: 90px;
+    out property <length> donated: 80px;
+    out property <length> bought: 60px;
+}
+
+// One goal in the table.
+export component GoalRow inherits Rectangle {
+    in property <GoalData> data;
+    callback fund-clicked();
+    callback donated-toggled(bool);
+    callback bought-ticked();
+
+    height: 50px;
+
+    Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line-soft; }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 8px;
+
+        Text {
+            width: GoalCols.priority;
+            text: root.data.priority;
+            font-family: Palette.font-mono;
+            font-size: 14px;
+            color: Palette.fg;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+        }
+
+        // Name + status chip
+        HorizontalLayout {
+            horizontal-stretch: 1;
+            spacing: 8px;
+            alignment: start;
+            Text {
+                text: root.data.name;
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.fg;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+            VerticalLayout {
+                alignment: center;
+                Chip { text: root.data.status-text; kind: root.data.status-kind; }
+            }
+        }
+
+        MoneyText { width: GoalCols.amount; text: root.data.amount; size: 14px; weight: 400; }
+
+        HorizontalLayout {
+            width: GoalCols.date;
+            alignment: start;
+            if root.data.date != "": Text {
+                text: root.data.date;
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.fg;
+                vertical-alignment: center;
+            }
+            if root.data.date == "": VerticalLayout {
+                alignment: center;
+                Chip { text: "no date"; kind: 3; }
+            }
+        }
+
+        VerticalLayout {
+            width: GoalCols.fund;
+            alignment: center;
+            HorizontalLayout {
+                alignment: start;
+                FundPill {
+                    width: 72px;
+                    savings: root.data.from-savings;
+                    clicked => { root.fund-clicked(); }
+                }
+            }
+        }
+
+        VerticalLayout {
+            width: GoalCols.donated;
+            alignment: center;
+            HorizontalLayout {
+                alignment: start;
+                PesaSwitch {
+                    checked: root.data.donated;
+                    toggled(on) => { root.donated-toggled(on); }
+                }
+            }
+        }
+
+        VerticalLayout {
+            width: GoalCols.bought;
+            alignment: center;
+            HorizontalLayout {
+                alignment: start;
+                PickBox { toggled(on) => { root.bought-ticked(); } }
+            }
+        }
+    }
+}

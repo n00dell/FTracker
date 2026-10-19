@@ -149,19 +149,39 @@ export component AddEntryRow inherits VerticalLayout {
                         clicked => { root.suggestion-picked(i); }
                     }
                 }
+                if root.suggestions.length == 0: HorizontalLayout {
+                    padding: 10px;
+                    Text {
+                        text: "Type a name for a one-off, or pick an item.";
+                        font-family: Palette.font-body;
+                        font-size: 13px;
+                        color: Palette.muted;
+                        wrap: word-wrap;
+                    }
+                }
                 Rectangle { height: 1px; background: Palette.line-soft; }
-                HorizontalLayout {
+                VerticalLayout {
                     padding: 8px;
                     padding-bottom: 4px;
-                    spacing: 4px;
+                    spacing: 2px;
                     Text {
-                        text: "One-offs are not saved to Categories. For a regular item,";
+                        text: "One-offs are not saved to Categories.";
                         font-family: Palette.font-body;
                         font-size: 12px;
                         color: Palette.muted;
-                        vertical-alignment: center;
                     }
-                    LinkText { width: 100px; text: "open Categories"; clicked => { root.open-categories(); } }
+                    HorizontalLayout {
+                        spacing: 4px;
+                        alignment: start;
+                        Text {
+                            text: "To add a regular item,";
+                            font-family: Palette.font-body;
+                            font-size: 12px;
+                            color: Palette.muted;
+                            vertical-alignment: center;
+                        }
+                        LinkText { width: 100px; size: 12px; text: "open Categories"; clicked => { root.open-categories(); } }
+                    }
                 }
             }
         }

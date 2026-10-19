@@ -8,7 +8,7 @@ export component EarnedCard inherits VerticalLayout {
     in property <int> status-kind: 0;                           // 0 on pace, 1 tight, 2 over pace
     in property <bool> low: false;                              // red number when earned is 0 or less
 
-    spacing: 6px;
+    spacing: 0px;
     alignment: start;
 
     HorizontalLayout {
@@ -27,6 +27,7 @@ export component EarnedCard inherits VerticalLayout {
     }
 
     HorizontalLayout {
+        height: 48px;
         spacing: 8px;
         alignment: start;
         Text {

@@ -1,0 +1,108 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { LinkText } from "../Dash/Cards.slint";
+import { AddGoalCard } from "AddGoalCard.slint";
+import { GoalsTable } from "GoalsTable.slint";
+import { GoalData } from "GoalRow.slint";
+import { FundCard, FundData } from "FundCard.slint";
+import { BoughtCard } from "BoughtCard.slint";
+import { BoughtData } from "BoughtRow.slint";
+
+export component GoalsPage inherits Rectangle {
+    // ---------- Data in ----------
+    in property <[string]> pot-names: ["Main savings", "Lock savings", "Sacco"];
+    in property <[GoalData]> goals: [
+        { id: 1, name: "Electric guitar", priority: 1, amount: "30,000", date: "15 Nov", from-savings: true, donated: false, status-text: "Covered by Main savings", status-kind: 0 },
+        { id: 2, name: "Curtains", priority: 20, amount: "6,500", date: "", from-savings: false, donated: false, status-text: "Covered by earned", status-kind: 0 },
+        { id: 3, name: "Desk", priority: 40, amount: "12,000", date: "", from-savings: false, donated: false, status-text: "Covered by earned", status-kind: 0 },
+        { id: 4, name: "LG soundbar", priority: 60, amount: "45,000", date: "", from-savings: true, donated: false, status-text: "Short by 10,000", status-kind: 1 },
+    ];
+    in property <[FundData]> funds: [
+        { name: "Emergency fund", balance: "40,000", target: "200,000", percent: 20, fraction: 0.2, pot: "Lock savings", to-go: "160,000" },
+    ];
+    in property <[BoughtData]> bought: [
+        { name: "Phone case", amount: "1,500", date: "3 Sep", source: "Savings" },
+    ];
+    in-out property <bool> show-bought: false;
+
+    // ---------- Events out ----------
+    callback add-purchase(string, string, string, string, bool);   // name, amount, priority, date, paid from savings
+    callback add-fund(string, string, string);                      // name, target, pot name
+    callback goal-fund-clicked(int);                                // goal id: flip Earned / Savings
+    callback goal-donated-toggled(int, bool);                       // goal id, new state
+    callback goal-bought(int);                                      // goal id: ask how it was paid
+
+    // Backend calls this after a successful add to empty the form.
+    public function clear-add-form() {
+        add-card.clear();
+    }
+
+    background: @linear-gradient(160deg, rgba(255, 255, 255, 0.78) 0%, rgba(240, 249, 247, 0.62) 100%);
+
+    // Whole page scrolls. Viewport height is set by hand because the content has `for` loops.
+    Flickable {
+        content-height: max(root.height, content.min-height);
+
+        // Same frame as the Dashboard: 32px sides, 48px bottom, capped at 1240px
+        content := VerticalLayout {
+            width: min(root.width, 1240px);
+            padding-top: 24px;
+            padding-bottom: 48px;
+            padding-left: 32px;
+            padding-right: 32px;
+            spacing: 16px;
+            alignment: start;
+
+            // ---------- Header ----------
+            VerticalLayout {
+                spacing: 2px;
+                Text { text: "Goals"; font-family: Palette.font-body; font-size: 26px; font-weight: 600; letter-spacing: -0.5px; color: Palette.fg; }
+                Text { text: "Things to buy, in the order you chose. Lower priority number comes first."; font-family: Palette.font-body; font-size: 13px; color: Palette.muted; overflow: elide; }
+            }
+
+            // ---------- Add form ----------
+            add-card := AddGoalCard {
+                pot-names: root.pot-names;
+                add-purchase(n, a, p, d, s) => { root.add-purchase(n, a, p, d, s); }
+                add-fund(n, t, p) => { root.add-fund(n, t, p); }
+            }
+
+            // ---------- Purchase goals ----------
+            GoalsTable {
+                goals: root.goals;
+                fund-clicked(id) => { root.goal-fund-clicked(id); }
+                donated-toggled(id, on) => { root.goal-donated-toggled(id, on); }
+                bought-ticked(id) => { root.goal-bought(id); }
+            }
+
+            // ---------- Fund goals (two per row) ----------
+            VerticalLayout {
+                padding-top: 6px;
+                spacing: 10px;
+                Text { text: "Funds you are saving for"; font-family: Palette.font-body; font-size: 16px; font-weight: 600; color: Palette.fg; }
+                GridLayout {
+                    spacing: 16px;
+                    for f[i] in root.funds: FundCard {
+                        row: Math.floor(i / 2);
+                        col: Math.mod(i, 2);
+                        fund: f;
+                    }
+                }
+            }
+
+            // ---------- Bought ----------
+            VerticalLayout {
+                padding-top: 4px;
+                spacing: 8px;
+                HorizontalLayout {
+                    alignment: start;
+                    LinkText {
+                        width: 190px;
+                        text: (root.show-bought ? "Hide" : "Show") + " bought (" + root.bought.length + ")";
+                        clicked => { root.show-bought = !root.show-bought; }
+                    }
+                }
+                if root.show-bought: BoughtCard { items: root.bought; }
+            }
+        }
+    }
+}

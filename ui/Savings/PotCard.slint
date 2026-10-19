@@ -1,0 +1,61 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+export struct PotData {
+    name: string,        // "Main savings"
+    note: string,        // "Used for covering entries and goals"
+    balance: string,     // number only, no "KES"
+    percent: int,        // share of total savings, 0 to 100
+    fraction: float,     // same share as 0.0 to 1.0, drives the stacked bar
+    color: color,        // dot and bar colour
+}
+
+// One pot tile: coloured dot + name, big mono balance, share line.
+export component PotCard inherits Rectangle {
+    in property <PotData> pot;
+
+    height: 96px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: Palette.line;
+    background: Palette.surface;
+
+    VerticalLayout {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        padding-left: 14px;
+        padding-right: 14px;
+        spacing: 2px;
+        alignment: center;
+
+        HorizontalLayout {
+            spacing: 8px;
+            alignment: start;
+            VerticalLayout {
+                alignment: center;
+                Rectangle { width: 9px; height: 9px; border-radius: 4.5px; background: root.pot.color; }
+            }
+            Text {
+                text: root.pot.name;
+                font-family: Palette.font-body;
+                font-size: 14px;
+                font-weight: 600;
+                color: Palette.fg;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+        }
+        Text {
+            text: root.pot.balance;
+            font-family: Palette.font-mono;
+            font-size: 20px;
+            color: Palette.fg;
+        }
+        Text {
+            text: root.pot.percent + "% of savings · " + root.pot.note;
+            font-family: Palette.font-body;
+            font-size: 13px;
+            color: Palette.muted;
+            overflow: elide;
+        }
+    }
+}

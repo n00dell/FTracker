@@ -1,0 +1,51 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Chip } from "../Dash/Cards.slint";
+import { MoneyText } from "../Dash/MoneyText.slint";
+
+export struct BoughtData {
+    name: string,
+    amount: string,      // number only
+    date: string,        // "3 Sep"
+    source: string,      // "Savings", "Earned" or "Gift"
+}
+
+export component BoughtRow inherits Rectangle {
+    in property <BoughtData> data;
+
+    height: 46px;
+
+    Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line-soft; }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 8px;
+
+        Text {
+            horizontal-stretch: 1;
+            text: root.data.name;
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.fg;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+        MoneyText { width: 100px; text: root.data.amount; size: 14px; weight: 400; }
+        Text {
+            width: 90px;
+            text: root.data.date;
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.fg;
+            vertical-alignment: center;
+        }
+        HorizontalLayout {
+            width: 90px;
+            alignment: start;
+            VerticalLayout {
+                alignment: center;
+                Chip { text: root.data.source; kind: 3; }
+            }
+        }
+    }
+}

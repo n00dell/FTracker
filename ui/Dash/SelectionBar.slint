@@ -1,0 +1,73 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { AppButton } from "DashButton.slint";
+
+// Teal strip under the date bar while "Cover from savings" select mode is on.
+export component SelectionBar inherits Rectangle {
+    in property <int> count: 0;
+    in property <string> total: "KES 0";
+    callback cancel();
+    callback cover();
+
+    height: 52px;
+    background: Palette.accent-soft;
+
+    // top and bottom rules in the accent colour
+    Rectangle { y: 0px; height: 1px; background: Palette.accent; }
+    Rectangle { y: parent.height - 1px; height: 1px; background: Palette.accent; }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 8px;
+
+        HorizontalLayout {
+            horizontal-stretch: 1;
+            alignment: start;
+            spacing: 0px;
+            Text {
+                text: root.count > 0 ? root.count + " selected" : "Select entries to cover";
+                font-family: Palette.font-body;
+                font-size: 14px;
+                font-weight: 600;
+                color: Palette.accent-ink;
+                vertical-alignment: center;
+            }
+            Text {
+                text: " · ";
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.accent-ink;
+                vertical-alignment: center;
+            }
+            if root.count > 0: Text {
+                text: root.total;
+                font-family: Palette.font-mono;
+                font-size: 14px;
+                color: Palette.accent-ink;
+                vertical-alignment: center;
+            }
+            Text {
+                text: root.count > 0 ? " would come from Main savings" : "tick the boxes, then press the button";
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.accent-ink;
+                vertical-alignment: center;
+            }
+        }
+        VerticalLayout {
+            alignment: center;
+            AppButton { width: 70px; compact: true; text: "Cancel"; clicked => { root.cancel(); } }
+        }
+        VerticalLayout {
+            alignment: center;
+            AppButton {
+                width: 190px;
+                compact: true;
+                primary: true;
+                enabled: root.count > 0;
+                text: root.count > 0 ? "Cover " + root.count + " from savings" : "Cover from savings";
+                clicked => { root.cover(); }
+            }
+        }
+    }
+}

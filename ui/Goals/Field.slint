@@ -1,0 +1,17 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+// Small label above whatever you put inside (InputBox, SelectBox, ...).
+export component Field inherits VerticalLayout {
+    in property <string> label;
+
+    spacing: 4px;
+
+    Text {
+        text: root.label;
+        font-family: Palette.font-body;
+        font-size: 12px;
+        font-weight: 500;
+        color: Palette.muted;
+    }
+    @children
+}

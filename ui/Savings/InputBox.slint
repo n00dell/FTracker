@@ -1,0 +1,44 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+// Bordered single-line text box. Teal border while focused.
+// Reusable anywhere a plain field is needed (name, amount, ...).
+export component InputBox inherits Rectangle {
+    in-out property <string> text <=> input.text;
+    in property <string> placeholder;
+    in property <bool> mono: false;          // JetBrains Mono, for amounts
+    in property <bool> numeric: false;       // digits only
+    in property <bool> right-align: false;   // amounts line up on the right
+    callback edited(string);
+    callback accepted(string);               // Enter pressed
+
+    height: 32px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: input.has-focus ? Palette.accent : Palette.line;
+    background: Palette.surface;
+
+    if input.text == "": Text {
+        x: 10px;
+        width: parent.width - 20px;
+        text: root.placeholder;
+        font-family: root.mono ? Palette.font-mono : Palette.font-body;
+        font-size: 14px;
+        color: Palette.faint;
+        horizontal-alignment: root.right-align ? TextHorizontalAlignment.right : TextHorizontalAlignment.left;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+    input := TextInput {
+        x: 10px;
+        width: parent.width - 20px;
+        font-family: root.mono ? Palette.font-mono : Palette.font-body;
+        font-size: 14px;
+        color: Palette.fg;
+        horizontal-alignment: root.right-align ? TextHorizontalAlignment.right : TextHorizontalAlignment.left;
+        vertical-alignment: center;
+        input-type: root.numeric ? InputType.number : InputType.text;
+        single-line: true;
+        edited => { root.edited(self.text); }
+        accepted => { root.accepted(self.text); }
+    }
+}

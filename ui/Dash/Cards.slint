@@ -41,19 +41,28 @@ export component Chip inherits Rectangle {
     }
 }
 
-// Teal text that acts like a link. Give it a width (or let the layout stretch it).
+// Teal underlined text that acts like a link (the design's .link). Give it a width.
+// Slint has no text-decoration property, so the underline is its own 1px rectangle.
 export component LinkText inherits Rectangle {
     in property <string> text;
+    in property <length> size: 14px;
     callback clicked();
     height: 20px;
-    Text {
-        width: parent.width;   // NEW: otherwise the text is centred in the box, which pushed "Add entry" right
+    label := Text {
+        width: parent.width;   // otherwise the text is centred in the box
         text: root.text;
         font-family: Palette.font-body;
-        font-size: 13px;
+        font-size: root.size;
         font-weight: 500;
         color: ta.has-hover ? Palette.accent : Palette.accent-ink;
         vertical-alignment: center;
+    }
+    Rectangle {
+        x: 0px;
+        y: parent.height / 2 + label.preferred-height / 2 - 1px;
+        width: min(label.preferred-width, parent.width);
+        height: 1px;
+        background: ta.has-hover ? Palette.accent : Palette.accent-ink;
     }
     ta := TouchArea {
         mouse-cursor: pointer;

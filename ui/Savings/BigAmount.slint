@@ -1,0 +1,27 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+// Small grey "KES" followed by a large mono number (the design's .hero .v).
+export component BigAmount inherits HorizontalLayout {
+    in property <string> value: "0";
+    in property <color> ink: Palette.fg;
+
+    spacing: 8px;
+    alignment: start;
+
+    Text {
+        text: "KES";
+        font-family: Palette.font-body;
+        font-size: 15px;
+        font-weight: 500;
+        color: Palette.faint;
+        vertical-alignment: center;
+    }
+    Text {
+        text: root.value;
+        font-family: Palette.font-mono;
+        font-size: 44px;
+        font-weight: 500;
+        color: root.ink;
+        vertical-alignment: center;
+    }
+}

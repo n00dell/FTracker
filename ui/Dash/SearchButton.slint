@@ -1,0 +1,68 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+// "Search or jump to…  Ctrl K" box in the page header. Opens the command palette.
+export component SearchButton inherits Rectangle {
+    in property <string> text: "Search or jump to…";
+    in property <string> shortcut: "Ctrl K";
+    callback clicked();
+
+    width: 240px;
+    height: 34px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: Palette.line;
+    background: Palette.surface;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        spacing: 8px;
+
+        VerticalLayout {
+            alignment: center;
+            Image {
+                source: @image-url("../icons/icons8-search-100.png");
+                width: 16px;
+                height: 16px;
+                image-fit: contain;
+                colorize: Palette.faint;
+            }
+        }
+        Text {
+            horizontal-stretch: 1;
+            text: root.text;
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.faint;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+        // the little "kbd" tag
+        VerticalLayout {
+            alignment: center;
+            Rectangle {
+                height: 18px;
+                border-radius: 4px;
+                border-width: 1px;
+                border-color: Palette.line;
+                background: Palette.surface;
+                HorizontalLayout {
+                    padding-left: 5px;
+                    padding-right: 5px;
+                    Text {
+                        text: root.shortcut;
+                        font-family: Palette.font-mono;
+                        font-size: 11px;
+                        color: Palette.faint;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+    }
+
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

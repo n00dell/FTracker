@@ -37,31 +37,45 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ced2d428-5f87-47df-88bd-3eee4bb3ced2" name="Changes" comment="Rules page created.">
-      <change afterPath="$PROJECT_DIR$/ui/Dash/DayTotal.slint" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/Dash/EntryFilters.slint" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/Dash/LateBanner.slint" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/Dash/MoneyText.slint" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/Dash/PeriodRail.slint" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/Dash/RailCard.slint" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/Expenses/AddEntryRow.slint" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/Expenses/FundPill.slint" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/Expenses/PickBox.slint" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/icons/icons8-add-100.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/icons/icons8-cancel-100.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/icons/icons8-edit-100.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ui/icons/icons8-repeat-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="ced2d428-5f87-47df-88bd-3eee4bb3ced2" name="Changes" comment="Dash mostly done in the general GUI part">
+      <change afterPath="$PROJECT_DIR$/ui/Dash/EmptyPeriod.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Dash/SearchButton.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Dash/SelectionBar.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Goals/AddGoalCard.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Goals/BoughtCard.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Goals/BoughtRow.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Goals/Field.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Goals/FundCard.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Goals/GoalRow.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Goals/GoalsPage.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Goals/GoalsTable.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Goals/SelectBox.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Savings/BigAmount.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Savings/ColHead.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Savings/InputBox.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Savings/MovementRow.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Savings/MovementsCard.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Savings/PotBar.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Savings/PotCard.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Savings/SavingsPage.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/Savings/SavingsTotalCard.slint" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/icons/icons8-checkmark-100.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/icons/icons8-search-100.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/Dash/Cards.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/Cards.slint" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/Dash/DailyStrip.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/DailyStrip.slint" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/Dash/Dash.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/Dash.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/Dash/DateBar.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/DateBar.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/Dash/DayTotal.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/DayTotal.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/Dash/EarnedCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/EarnedCard.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/Dash/LateBanner.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/LateBanner.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/Dash/PeriodRail.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/PeriodRail.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/Dash/RailCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Dash/RailCard.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/Expenses/AddEntryRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Expenses/AddEntryRow.slint" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/Expenses/ExpenseBucket.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Expenses/ExpenseBucket.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Expenses/ExpenseCont.slint" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/Expenses/ExpenseEntryRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Expenses/ExpenseEntryRow.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/FilterPill.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Rules/FilterPill.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/Rules.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Rules/Rules.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/NavMenu/MenuItems.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/NavMenu/MenuItems.slint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/app-window.slint" beforeDir="false" afterPath="$PROJECT_DIR$/ui/app-window.slint" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -110,61 +124,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0000000101039874" />
-      <entry key="S5" value="1.0006335736692458" />
-      <entry key="S10" value="1.0251708893217084" />
-      <entry key="S30" value="1.2930665813599656" />
-      <entry key="S60" value="1.541684980501287" />
-      <entry key="M2" value="1.7610771316834957" />
-      <entry key="M5" value="2.37768883974577" />
-      <entry key="M10" value="4.875549155701561" />
-      <entry key="M15" value="9.468229894788532" />
-      <entry key="M30" value="27.801373905256142" />
-      <entry key="H1" value="59.39117125192914" />
-      <entry key="H2" value="109.76515442173952" />
-      <entry key="H4" value="214.34523038727974" />
-      <entry key="D1" value="679.4452877785789" />
-      <entry key="W1" value="898.75947575766" />
+      <entry key="MS100" value="3.414867267466981E-58" />
+      <entry key="MS500" value="3.2213927074100816E-12" />
+      <entry key="S2" value="0.0017440142444262322" />
+      <entry key="S5" value="0.1346684918245289" />
+      <entry key="S10" value="0.6205533060957662" />
+      <entry key="S30" value="1.7748079113274258" />
+      <entry key="S60" value="2.4424277171266486" />
+      <entry key="M2" value="3.1610845981650835" />
+      <entry key="M5" value="4.0591362258919235" />
+      <entry key="M10" value="5.067628548378556" />
+      <entry key="M15" value="6.905219415319402" />
+      <entry key="M30" value="18.091571656906503" />
+      <entry key="H1" value="45.89056590290956" />
+      <entry key="H2" value="96.27462267755126" />
+      <entry key="H4" value="200.53814381853894" />
+      <entry key="D1" value="675.0668968496688" />
+      <entry key="W1" value="903.5955151849881" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="0.0" />
-      <entry key="S5" value="1.6877545473851153E-177" />
-      <entry key="S10" value="6.884207606130555E-89" />
-      <entry key="S30" value="1.1321978013960276E-29" />
-      <entry key="S60" value="8.54721444070293E-15" />
-      <entry key="M2" value="2.946364851695398E-7" />
-      <entry key="M5" value="0.013944959693897788" />
-      <entry key="M10" value="0.6015694732914725" />
-      <entry key="M15" value="2.275498048447184" />
-      <entry key="M30" value="9.682333149216161" />
-      <entry key="H1" value="22.197219534493037" />
-      <entry key="H2" value="42.63329517576327" />
-      <entry key="H4" value="87.3712339843282" />
-      <entry key="D1" value="277.64204968015133" />
-      <entry key="W1" value="363.49034744510965" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0000392206136066" />
+      <entry key="S5" value="1.025526056817391" />
+      <entry key="S10" value="1.2249470373214393" />
+      <entry key="S30" value="1.9644545066626011" />
+      <entry key="S60" value="2.3886788175988194" />
+      <entry key="M2" value="2.6664887465973948" />
+      <entry key="M5" value="2.8593505011917895" />
+      <entry key="M10" value="2.981621569173505" />
+      <entry key="M15" value="3.4041025326879604" />
+      <entry key="M30" value="7.291932342162004" />
+      <entry key="H1" value="17.808103274337324" />
+      <entry key="H2" value="37.82983150431441" />
+      <entry key="H4" value="81.97522160342233" />
+      <entry key="D1" value="276.00731556812497" />
+      <entry key="W1" value="365.61727385179506" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.039830019603726945" />
-      <entry key="MS500" value="0.5248583418115337" />
-      <entry key="S2" value="0.8511586765376887" />
-      <entry key="S5" value="0.9381767582395759" />
-      <entry key="S10" value="0.9928927466257369" />
-      <entry key="S30" value="1.2801878791167827" />
-      <entry key="S60" value="1.5342851013151642" />
-      <entry key="M2" value="1.7565789336906927" />
-      <entry key="M5" value="2.3875185946810804" />
-      <entry key="M10" value="5.471789117368386" />
-      <entry key="M15" value="11.736889467605707" />
-      <entry key="M30" value="37.474420248505346" />
-      <entry key="H1" value="81.57892389102376" />
-      <entry key="H2" value="152.38900398399662" />
-      <entry key="H4" value="301.70562231179866" />
-      <entry key="D1" value="957.0808670018249" />
-      <entry key="W1" value="1262.248593085369" />
+      <entry key="MS100" value="3.423387870183684E-8" />
+      <entry key="MS500" value="0.03212855708611798" />
+      <entry key="S2" value="0.4251295422631462" />
+      <entry key="S5" value="0.8656645996385364" />
+      <entry key="S10" value="1.6724245159073066" />
+      <entry key="S30" value="3.6621993868119285" />
+      <entry key="S60" value="4.787475540379806" />
+      <entry key="M2" value="5.8040893486327425" />
+      <entry key="M5" value="6.908585577197658" />
+      <entry key="M10" value="8.043746544628409" />
+      <entry key="M15" value="10.304579479720955" />
+      <entry key="M30" value="25.37765185626578" />
+      <entry key="H1" value="63.6914850868024" />
+      <entry key="H2" value="134.0963021975422" />
+      <entry key="H4" value="282.5033472835755" />
+      <entry key="D1" value="951.0678136066421" />
+      <entry key="W1" value="1269.2115566778582" />
     </decayedShown>
   </component>
   <component name="ProjectApplicationVersion">
@@ -211,7 +225,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "python.packages.toolwindow.project.migrated.to.right.top.v2": "true",
-    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "to.speed.mode.migration.done": "true",
     "ts.external.directory.path": "/home/lee/.local/share/JetBrains/Toolbox/apps/clion/plugins/javascript-plugin/jsLanguageServicesImpl/external"
   }
@@ -232,6 +246,11 @@
       </method>
     </configuration>
     <configuration name="_cargo-build_slint_cpp" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="my_application" TARGET_NAME="_cargo-build_slint_cpp" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -346,7 +365,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="modified the dash and also added the date card. I'm yet to define the callbacks and behaviors of the buttons" />
     <MESSAGE value="Rules page created." />
-    <option name="LAST_COMMIT_MESSAGE" value="Rules page created." />
+    <MESSAGE value="Dash mostly done in the general GUI part" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dash mostly done in the general GUI part" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
