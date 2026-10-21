@@ -1,0 +1,33 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { LogRow, LogEntryData } from "LogRow.slint";
+
+export struct LogDayData {
+    heading: string,                // "Today · Tue 6 Oct", "Yesterday · Mon 5 Oct", "Sat 3 Oct"
+    entries: [LogEntryData],
+}
+
+// Grey day heading followed by that day's events.
+export component LogDay inherits VerticalLayout {
+    in property <LogDayData> day;
+
+    spacing: 0px;
+
+    Rectangle {
+        height: 32px;
+        background: Palette.line-soft;
+        Text {
+            x: 18px;
+            width: parent.width - 36px;
+            text: root.day.heading;
+            font-family: Palette.font-body;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: Palette.muted;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+    }
+
+    for e in root.day.entries: LogRow { data: e; }
+}

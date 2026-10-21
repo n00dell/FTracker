@@ -1,0 +1,121 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+import { InputBox } from "../Savings/InputBox.slint";
+import { Field } from "../Goals/Field.slint";
+import { SelectBox } from "../Goals/SelectBox.slint";
+import { PickBox } from "../Expenses/PickBox.slint";
+
+// The "add a debt" form under each table. Labels are inputs, so the same
+// component serves "Owed to you" (lend) and "You owe" (borrow).
+export component DebtForm inherits VerticalLayout {
+    in property <string> who-label: "Who";
+    in property <string> who-placeholder: "e.g. Joe";
+    in property <string> total-placeholder: "10,000";
+    in property <string> usual-label: "Usual payment (optional)";
+    in property <string> usual-placeholder: "2,000";
+    in property <string> next-label: "Next expected (optional)";
+    in property <bool> show-frequency: true;
+    in property <string> check-label: "I just lent this out. Take it from";
+    in property <string> hint: "Leave the date empty if nothing is agreed. Pesa only asks about a payment once it has a date.";
+    in property <[string]> pot-options;
+    // name, total, usual payment, next date, frequency index, money moved now, pot index
+    callback add(string, string, string, string, int, bool, int);
+
+    // Backend calls this after a successful add.
+    public function clear() {
+        root.name-text = "";
+        root.total-text = "";
+        root.usual-text = "";
+        root.next-text = "";
+        root.moved-now = false;
+    }
+
+    property <[string]> freq-options: ["One-off", "With my pay", "Monthly", "Every 3 months", "Yearly"];
+    property <string> name-text;
+    property <string> total-text;
+    property <string> usual-text;
+    property <string> next-text;
+    property <int> freq-index: 2;               // Monthly
+    property <bool> moved-now: false;
+    property <int> pot-index: 0;
+
+    padding-top: 16px;
+    padding-bottom: 16px;
+    padding-left: 18px;
+    padding-right: 18px;
+    spacing: 10px;
+    alignment: start;
+
+    HorizontalLayout {
+        spacing: 12px;
+
+        Field {
+            horizontal-stretch: 1;
+            label: root.who-label;
+            InputBox { text <=> root.name-text; placeholder: root.who-placeholder; }
+        }
+        Field {
+            horizontal-stretch: 1;
+            label: "Total owed";
+            InputBox { text <=> root.total-text; placeholder: root.total-placeholder; mono: true; numeric: true; right-align: true; }
+        }
+        Field {
+            horizontal-stretch: 1;
+            label: root.usual-label;
+            InputBox { text <=> root.usual-text; placeholder: root.usual-placeholder; mono: true; numeric: true; right-align: true; }
+        }
+        Field {
+            horizontal-stretch: 1;
+            label: root.next-label;
+            InputBox { text <=> root.next-text; placeholder: "YYYY-MM-DD"; mono: true; }
+        }
+        if root.show-frequency: Field {
+            horizontal-stretch: 1;
+            label: "How often";
+            SelectBox { options: root.freq-options; current-index <=> root.freq-index; }
+        }
+        VerticalLayout {
+            alignment: end;
+            AppButton {
+                width: 70px;
+                primary: true;
+                text: "Add";
+                clicked => {
+                    root.add(root.name-text, root.total-text, root.usual-text, root.next-text,
+                        root.freq-index, root.moved-now, root.pot-index);
+                }
+            }
+        }
+    }
+
+    HorizontalLayout {
+        spacing: 8px;
+        alignment: start;
+
+        VerticalLayout {
+            alignment: center;
+            PickBox { checked <=> root.moved-now; }
+        }
+        VerticalLayout {
+            alignment: center;
+            Text {
+                text: root.check-label;
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.fg;
+            }
+        }
+        VerticalLayout {
+            alignment: center;
+            SelectBox { width: 150px; options: root.pot-options; current-index <=> root.pot-index; }
+        }
+    }
+
+    Text {
+        text: root.hint;
+        font-family: Palette.font-body;
+        font-size: 12px;
+        color: Palette.faint;
+        wrap: word-wrap;
+    }
+}

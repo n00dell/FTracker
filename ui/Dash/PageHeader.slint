@@ -1,0 +1,32 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+// Page title + grey subtitle on the left. Anything you put inside goes on the right
+// (a search box, a button...). Same look as the header in Dash.slint.
+export component PageHeader inherits HorizontalLayout {
+    in property <string> title;
+    in property <string> subtitle;
+
+    spacing: 16px;
+
+    VerticalLayout {
+        horizontal-stretch: 1;
+        spacing: 2px;
+        alignment: end;
+        Text {
+            text: root.title;
+            font-family: Palette.font-body;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            color: Palette.fg;
+        }
+        Text {
+            text: root.subtitle;
+            font-family: Palette.font-body;
+            font-size: 13px;
+            color: Palette.muted;
+            overflow: elide;
+        }
+    }
+    @children
+}

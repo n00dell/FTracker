@@ -1,0 +1,125 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Chip } from "../Dash/Cards.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+import { MoneyText } from "../Dash/MoneyText.slint";
+import { SpendMeter } from "../Dash/EarnedCard.slint";
+import { InputBox } from "../Savings/InputBox.slint";
+import { SelectBox } from "../Goals/SelectBox.slint";
+
+// One debt. The same shape is used for "Owed to you" and "You owe".
+export struct DebtData {
+    id: int,                 // the backend needs this to know which row was clicked
+    name: string,            // "Joe", "Sacco loan"
+    plan-text: string,       // "Monthly, next 28 Oct, 3,000" or "No plan yet"
+    plan-kind: int,          // Chip kind: 3 grey, 1 amber (due within 7 days)
+    paid-text: string,       // "9,000 of 24,000"
+    fraction: float,         // 0.0 to 1.0, how much is paid
+    left: string,            // number only
+    usual-amount: string,    // pre-fills the amount box, "" for empty
+    pot-index: int,          // pre-selected entry in pot-options
+}
+
+export global DebtCols {
+    out property <length> plan: 220px;
+    out property <length> paid: 160px;
+    out property <length> left: 90px;
+    out property <length> actions: 440px;
+}
+
+export component DebtRow inherits Rectangle {
+    in property <DebtData> data;
+    in property <[string]> pot-options;          // "Earned", "Main savings", "Sacco"
+    in property <string> action-label: "Received"; // "I paid" for the You owe list
+    callback record(string, int);                // amount text, index in pot-options
+    callback remove();
+
+    height: 60px;
+
+    Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line-soft; }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 8px;
+
+        Text {
+            horizontal-stretch: 1;
+            text: root.data.name;
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.fg;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+
+        HorizontalLayout {
+            width: DebtCols.plan;
+            alignment: start;
+            VerticalLayout {
+                alignment: center;
+                Chip { text: root.data.plan-text; kind: root.data.plan-kind; }
+            }
+        }
+
+        VerticalLayout {
+            width: DebtCols.paid;
+            alignment: center;
+            spacing: 4px;
+            SpendMeter { fraction: root.data.fraction; }
+            Text {
+                text: root.data.paid-text;
+                font-family: Palette.font-mono;
+                font-size: 12px;
+                color: Palette.muted;
+            }
+        }
+
+        MoneyText { width: DebtCols.left; text: root.data.left; size: 14px; weight: 400; }
+
+        HorizontalLayout {
+            width: DebtCols.actions;
+            spacing: 8px;
+            alignment: start;
+
+            VerticalLayout {
+                alignment: center;
+                amount-box := InputBox {
+                    width: 92px;
+                    text: root.data.usual-amount;
+                    placeholder: "Amount";
+                    mono: true;
+                    numeric: true;
+                    right-align: true;
+                    accepted => { root.record(amount-box.text, pot-box.current-index); }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+                pot-box := SelectBox {
+                    width: 150px;
+                    options: root.pot-options;
+                    current-index: root.data.pot-index;
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+                AppButton {
+                    width: 84px;
+                    compact: true;
+                    text: root.action-label;
+                    clicked => { root.record(amount-box.text, pot-box.current-index); }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+                AppButton {
+                    width: 70px;
+                    compact: true;
+                    ghost: true;
+                    text: "Remove";
+                    clicked => { root.remove(); }
+                }
+            }
+        }
+    }
+}

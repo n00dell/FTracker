@@ -1,0 +1,51 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Card } from "../Dash/Cards.slint";
+import { DebtTable } from "DebtTable.slint";
+import { DebtData } from "DebtRow.slint";
+
+// Heading + card with the table. Put a DebtForm inside it and it appears at the bottom of the card.
+export component DebtSection inherits VerticalLayout {
+    in property <string> heading: "Owed to you";
+    in property <[DebtData]> rows;
+    in property <[string]> pot-options;
+    in property <string> who-heading: "WHO";
+    in property <string> plan-heading: "PLAN";
+    in property <string> paid-heading: "PAID BACK";
+    in property <string> actions-heading: "RECORD A PAYMENT, INTO";
+    in property <string> action-label: "Received";
+    in property <string> empty-text: "Nobody owes you anything.";
+    callback record(int, string, int);
+    callback remove(int);
+
+    spacing: 10px;
+    alignment: start;
+
+    Text {
+        text: root.heading;
+        font-family: Palette.font-body;
+        font-size: 16px;
+        font-weight: 600;
+        color: Palette.fg;
+    }
+
+    Card {
+        VerticalLayout {
+            alignment: start;
+
+            DebtTable {
+                rows: root.rows;
+                pot-options: root.pot-options;
+                who-heading: root.who-heading;
+                plan-heading: root.plan-heading;
+                paid-heading: root.paid-heading;
+                actions-heading: root.actions-heading;
+                action-label: root.action-label;
+                empty-text: root.empty-text;
+                record(id, a, p) => { root.record(id, a, p); }
+                remove(id) => { root.remove(id); }
+            }
+
+            @children
+        }
+    }
+}

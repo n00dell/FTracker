@@ -1,0 +1,76 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { PageHeader } from "../Dash/PageHeader.slint";
+import { CategoryList } from "CategoryList.slint";
+import { CategoryData } from "CategoryRow.slint";
+import { ItemsCard } from "ItemsCard.slint";
+import { ItemData } from "ItemRow.slint";
+
+export component CategoriesPage inherits Rectangle {
+    // ---------- Data in ----------
+    in property <[CategoryData]> categories: [
+        { name: "Transport", count-text: "3 items", total: "3,160" },
+        { name: "Food", count-text: "3 items", total: "7,310" },
+        { name: "Home", count-text: "2 items", total: "18,000" },
+        { name: "Personal", count-text: "1 items", total: "500" },
+    ];
+    in-out property <int> selected: 0;
+    // Items of the selected category. The backend swaps this when category-selected fires.
+    in property <string> selected-name: "Transport";
+    in property <[ItemData]> items: [
+        { id: 1, name: "Matatu to work", amount: "170", rule: "Workdays commute" },
+        { id: 2, name: "Matatu from", amount: "190", rule: "Workdays commute" },
+        { id: 3, name: "Tuktuk", amount: "150", rule: "" },
+    ];
+
+    // ---------- Events out ----------
+    callback category-selected(int);         // index into categories
+    callback new-category();
+    callback add-item();
+    callback edit-item(int);                 // item id
+
+    background: @linear-gradient(160deg, rgba(255, 255, 255, 0.78) 0%, rgba(240, 249, 247, 0.62) 100%);
+
+    Flickable {
+        content-height: max(root.height, content.min-height);
+
+        content := VerticalLayout {
+            width: min(root.width, 1240px);
+            padding-top: 24px;
+            padding-bottom: 48px;
+            padding-left: 32px;
+            padding-right: 32px;
+            spacing: 16px;
+            alignment: start;
+
+            PageHeader {
+                title: "Categories";
+                subtitle: "Items live here. On the Dashboard you pick from this list, or add a one-off that is not saved.";
+            }
+
+            HorizontalLayout {
+                spacing: 16px;
+
+                VerticalLayout {
+                    width: 280px;
+                    alignment: start;
+                    CategoryList {
+                        categories: root.categories;
+                        selected <=> root.selected;
+                        category-selected(i) => { root.category-selected(i); }
+                        new-category => { root.new-category(); }
+                    }
+                }
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    alignment: start;
+                    ItemsCard {
+                        category-name: root.selected-name;
+                        items: root.items;
+                        add-item => { root.add-item(); }
+                        edit-item(id) => { root.edit-item(id); }
+                    }
+                }
+            }
+        }
+    }
+}

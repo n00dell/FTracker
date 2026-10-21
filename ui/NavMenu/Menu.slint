@@ -1,12 +1,14 @@
 import { NavItems, NavGroup, DateDisplay, NavText, Palette } from "MenuItems.slint";
 
 export component MenuCont inherits Rectangle {
+    // Order here = page numbers in app-window.slint
     in property <[NavText]> nav_text: [
         { name: "Dashboard",  icon: @image-url("../icons/icons8-dashboard-100.png"),  group: "DAILY" },
         { name: "Savings",    icon: @image-url("../icons/icons8-piggy-bank-100.png"), group: "" },
         { name: "Goals",      icon: @image-url("../icons/icons8-flag-100.png"),       group: "" },
-        { name: "Reports",    icon: @image-url("../icons/icons8-graph-100.png"),  group: "INSIGHT" },
-        { name: "Categories", icon: @image-url("../icons/icons8-tag-100.png"),       group: "SETUP" },
+        { name: "Debts",      icon: @image-url("../icons/icons8-wallet-100.png"),     group: "" },   // swap for your own debt icon
+        { name: "Reports",    icon: @image-url("../icons/icons8-graph-100.png"),      group: "INSIGHT" },
+        { name: "Categories", icon: @image-url("../icons/icons8-tag-100.png"),        group: "SETUP" },
         { name: "Rules",      icon: @image-url("../icons/icons8-slider-100.png"),     group: "" },
         { name: "Log",        icon: @image-url("../icons/icons8-time-100.png"),       group: "" },
     ];
@@ -15,7 +17,10 @@ export component MenuCont inherits Rectangle {
     in property <int> issue-count: 1;          // red badge on Log, 0 hides it
     in-out property <int> current-index: 0;
     callback selected(int);                    // lets the main window switch pages
-    callback configure-ai();
+    callback configure-ai();                   // footer: Configure AI popup
+    callback backup-and-lock();                // footer: Backup and lock popup
+    callback switch-theme();                   // footer: light / dark
+    callback preview-state(string);            // footer: "Preview states" list
 
     width: 224px;
     background: Palette.surface;
@@ -28,65 +33,75 @@ export component MenuCont inherits Rectangle {
         background: Palette.line;
     }
 
-    VerticalLayout {
-        padding-top: 20px;
-        padding-bottom: 16px;
-        padding-left: 14px;
-        padding-right: 14px;
-        spacing: 2px;
+    // The sidebar scrolls when it is taller than the window (the design uses overflow-y: auto).
+    // This matters now that "Preview states" can be expanded.
+    Flickable {
+        content-height: max(root.height, content.min-height);
 
-        // Brand
-        HorizontalLayout {
-            padding-left: 8px;
-            padding-bottom: 18px;
-            spacing: 10px;
-            alignment: start;
-            Rectangle {
-                width: 30px;
-                height: 30px;
-                border-radius: 8px;
-                background: Palette.accent;
-                Image {
-                    source: @image-url("../icons/icons8-wallet-100.png");
-                    width: 16px;
-                    height: 16px;
-                    x: (parent.width - self.width) / 2;
-                    y: (parent.height - self.height) / 2;
-                    image-fit: contain;
-                    colorize: white;
+        content := VerticalLayout {
+            width: root.width;
+            padding-top: 20px;
+            padding-bottom: 16px;
+            padding-left: 14px;
+            padding-right: 14px;
+            spacing: 2px;
+
+            // Brand
+            HorizontalLayout {
+                padding-left: 8px;
+                padding-bottom: 18px;
+                spacing: 10px;
+                alignment: start;
+                Rectangle {
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 8px;
+                    background: Palette.accent;
+                    Image {
+                        source: @image-url("../icons/icons8-wallet-100.png");
+                        width: 16px;
+                        height: 16px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                        image-fit: contain;
+                        colorize: white;
+                    }
+                }
+                Text {
+                    text: "Pesa";
+                    font-family: Palette.font-body;
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: Palette.fg;
+                    vertical-alignment: center;
                 }
             }
-            Text {
-                text: "Pesa";
-                font-family: Palette.font-body;
-                font-size: 18px;
-                font-weight: 600;
-                color: Palette.fg;
-                vertical-alignment: center;
-            }
-        }
 
-        // Nav items, with a small label above the first item of each group
-        for data[i] in root.nav_text: VerticalLayout {
-            if data.group != "": NavGroup { label: data.group; }
-            NavItems {
-                item: data;
-                badge: data.name == "Log" ? root.issue-count : 0;
-                active: i == root.current-index;
-                clicked => {
-                    root.current-index = i;
-                    root.selected(i);
+            // Nav items, with a small label above the first item of each group
+            for data[i] in root.nav_text: VerticalLayout {
+                if data.group != "": NavGroup { label: data.group; }
+                NavItems {
+                    item: data;
+                    badge: data.name == "Log" ? root.issue-count : 0;
+                    active: i == root.current-index;
+                    clicked => {
+                        root.current-index = i;
+                        root.selected(i);
+                    }
                 }
             }
-        }
 
-        // Pushes the footer to the bottom
-        Rectangle { vertical-stretch: 1; }
+            // Pushes the footer to the bottom
+            Rectangle { vertical-stretch: 1; }
 
-        DateDisplay {
-            period: root.period;
-            payday: root.payday;
-            configure-ai => { root.configure-ai(); }
+            DateDisplay {
+                period: root.period;
+                payday: root.payday;
+                configure-ai => { root.configure-ai(); }
+                backup-and-lock => { root.backup-and-lock(); }
+                switch-theme => { root.switch-theme(); }
+                preview-state(key) => { root.preview-state(key); }
+            }
         }
     }
 }

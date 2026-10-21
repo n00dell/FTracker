@@ -1,0 +1,50 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { MoneyText } from "../Dash/MoneyText.slint";
+
+export struct CategoryData {
+    name: string,         // "Transport"
+    count-text: string,   // "3 items"
+    total: string,        // spent this period, number only
+}
+
+// One entry in the category list (the design's .catitem).
+export component CategoryRow inherits Rectangle {
+    in property <CategoryData> data;
+    in property <bool> selected: false;
+    callback clicked();
+
+    height: 54px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: root.selected ? Palette.accent : transparent;
+    background: root.selected ? Palette.accent-soft : ta.has-hover ? Palette.line-soft : transparent;
+
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 8px;
+
+        VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+            Text { text: root.data.name; font-family: Palette.font-body; font-size: 14px; font-weight: 600; color: Palette.fg; overflow: elide; }
+            Text { text: root.data.count-text; font-family: Palette.font-body; font-size: 12px; color: Palette.muted; }
+        }
+        VerticalLayout {
+            alignment: center;
+            MoneyText { width: 100px; height: 20px; text: root.data.total; size: 14px; weight: 400; }
+            Text {
+                text: "this period";
+                font-family: Palette.font-body;
+                font-size: 11px;
+                color: Palette.muted;
+                horizontal-alignment: right;
+            }
+        }
+    }
+
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

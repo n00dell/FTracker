@@ -1,0 +1,69 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { PageHeader } from "../Dash/PageHeader.slint";
+import { LogFilters } from "LogFilters.slint";
+import { LogCard } from "LogCard.slint";
+import { LogDayData } from "LogDay.slint";
+import { LogKind } from "LogRow.slint";
+
+export component LogsPage inherits Rectangle {
+    // ---------- Data in ----------
+    in-out property <int> filter: 0;             // 0 all, 1 auto, 2 edits, 3 savings moves, 4 skipped, 5 issues
+    in property <int> issue-count: 1;
+    // The backend sends only the days and events that match `filter`.
+    in property <[LogDayData]> days: [
+        { heading: "Today · Tue 6 Oct", entries: [
+            { time: "18:40", kind: LogKind.edited, text: "Edited Matatu from · 190 → 170" },
+            { time: "17:05", kind: LogKind.manual, text: "Added Tuktuk · KES 150" },
+            { time: "13:12", kind: LogKind.manual, text: "Added Lunch · KES 250" },
+            { time: "08:12", kind: LogKind.auto-posted, text: "Auto-posted Matatu to work, Matatu from, Tea · KES 420" },
+        ] },
+        { heading: "Yesterday · Mon 5 Oct", entries: [
+            { time: "09:05", kind: LogKind.savings-move, text: "Moved KES 5,000 from Main savings to earned" },
+            { time: "08:10", kind: LogKind.auto-posted, text: "Auto-posted Wi-Fi · KES 3,000 and 3 weekday entries · KES 420" },
+        ] },
+        { heading: "Sat 3 Oct", entries: [
+            { time: "20:15", kind: LogKind.savings-move, text: "Barber · KES 500 paid from Main savings" },
+        ] },
+        { heading: "Thu 1 Oct", entries: [
+            { time: "08:05", kind: LogKind.auto-posted, text: "Auto-posted Rent · KES 15,000" },
+        ] },
+        { heading: "Wed 30 Sep", entries: [
+            { time: "21:02", kind: LogKind.auto-posted, text: "Catch-up: the app was closed on 29 Sep. Posted 1 day · KES 420" },
+        ] },
+        { heading: "Sat 26 Sep", entries: [
+            { time: "08:01", kind: LogKind.issue, text: "Could not post “Weekend lunch”: Lunch has no default amount. Nothing posted." },
+        ] },
+    ];
+
+    // ---------- Events out ----------
+    callback filter-changed(int);
+
+    background: @linear-gradient(160deg, rgba(255, 255, 255, 0.78) 0%, rgba(240, 249, 247, 0.62) 100%);
+
+    Flickable {
+        content-height: max(root.height, content.min-height);
+
+        content := VerticalLayout {
+            width: min(root.width, 1240px);
+            padding-top: 24px;
+            padding-bottom: 48px;
+            padding-left: 32px;
+            padding-right: 32px;
+            spacing: 16px;
+            alignment: start;
+
+            PageHeader {
+                title: "Log";
+                subtitle: "Every change, in order. Problems with a run show up under Issues.";
+            }
+
+            LogFilters {
+                filter <=> root.filter;
+                issue-count: root.issue-count;
+                filter-changed(i) => { root.filter-changed(i); }
+            }
+
+            LogCard { days: root.days; }
+        }
+    }
+}

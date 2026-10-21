@@ -1,0 +1,55 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { ColHead } from "../Savings/ColHead.slint";
+import { DebtRow, DebtData, DebtCols } from "DebtRow.slint";
+
+// Column headings + one DebtRow per debt. No card around it (DebtSection adds that).
+export component DebtTable inherits VerticalLayout {
+    in property <[DebtData]> rows;
+    in property <[string]> pot-options;
+    in property <string> who-heading: "WHO";
+    in property <string> plan-heading: "PLAN";
+    in property <string> paid-heading: "PAID BACK";
+    in property <string> actions-heading: "RECORD A PAYMENT, INTO";
+    in property <string> action-label: "Received";
+    in property <string> empty-text: "Nobody owes you anything.";
+    callback record(int, string, int);           // debt id, amount text, pot index
+    callback remove(int);                        // debt id
+
+    alignment: start;
+
+    Rectangle {
+        height: 40px;
+        HorizontalLayout {
+            padding-left: 18px;
+            padding-right: 18px;
+            spacing: 8px;
+            ColHead { horizontal-stretch: 1; text: root.who-heading; }
+            ColHead { width: DebtCols.plan; text: root.plan-heading; }
+            ColHead { width: DebtCols.paid; text: root.paid-heading; }
+            ColHead { width: DebtCols.left; text: "LEFT"; horizontal-alignment: right; }
+            ColHead { width: DebtCols.actions; text: root.actions-heading; }
+        }
+        Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line; }
+    }
+
+    for r in root.rows: DebtRow {
+        data: r;
+        pot-options: root.pot-options;
+        action-label: root.action-label;
+        record(amount, pot) => { root.record(r.id, amount, pot); }
+        remove => { root.remove(r.id); }
+    }
+
+    if root.rows.length == 0: Rectangle {
+        height: 72px;
+        Text {
+            text: root.empty-text;
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.muted;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+        Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line-soft; }
+    }
+}

@@ -1,0 +1,76 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+
+export enum LogKind {
+    auto-posted,
+    manual,
+    edited,
+    savings-move,
+    skipped,
+    issue
+}
+
+export struct LogEntryData {
+    time: string,       // "18:40"
+    kind: LogKind,
+    text: string,
+}
+
+// One event line: time, coloured dot, text, kind word (so colour is never the only signal).
+export component LogRow inherits Rectangle {
+    in property <LogEntryData> data;
+
+    property <color> dot: root.data.kind == LogKind.auto-posted ? Palette.s-auto
+        : root.data.kind == LogKind.manual ? Palette.s-man
+        : root.data.kind == LogKind.edited ? Palette.s-edit
+        : root.data.kind == LogKind.savings-move ? #8B5CF6
+        : root.data.kind == LogKind.skipped ? Palette.s-skip
+        : Palette.neg;
+    property <string> kind-name: root.data.kind == LogKind.auto-posted ? "Rule"
+        : root.data.kind == LogKind.manual ? "Manual"
+        : root.data.kind == LogKind.edited ? "Edit"
+        : root.data.kind == LogKind.savings-move ? "Savings"
+        : root.data.kind == LogKind.skipped ? "Skipped"
+        : "Issue";
+
+    height: 42px;
+
+    Rectangle { y: 0px; height: 1px; background: Palette.line-soft; }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 12px;
+
+        Text {
+            width: 90px;
+            text: root.data.time;
+            font-family: Palette.font-mono;
+            font-size: 14px;
+            color: Palette.muted;
+            vertical-alignment: center;
+        }
+        VerticalLayout {
+            width: 9px;
+            alignment: center;
+            Rectangle { width: 9px; height: 9px; border-radius: 4.5px; background: root.dot; }
+        }
+        Text {
+            horizontal-stretch: 1;
+            text: root.data.text;
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.fg;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+        Text {
+            width: 70px;
+            text: root.kind-name;
+            font-family: Palette.font-body;
+            font-size: 13px;
+            color: Palette.muted;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+        }
+    }
+}

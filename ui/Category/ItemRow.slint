@@ -1,0 +1,71 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Chip } from "../Dash/Cards.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+import { MoneyText } from "../Dash/MoneyText.slint";
+
+export struct ItemData {
+    id: int,
+    name: string,
+    amount: string,     // default amount, number only
+    rule: string,       // rule name, "" shows "No rule"
+}
+
+export global ItemCols {
+    out property <length> amount: 130px;
+    out property <length> rule: 220px;
+    out property <length> edit: 56px;
+}
+
+// One catalog item in the items table.
+export component ItemRow inherits Rectangle {
+    in property <ItemData> data;
+    callback edit-clicked();
+
+    height: 46px;
+
+    Rectangle { y: parent.height - 1px; height: 1px; background: Palette.line-soft; }
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 8px;
+
+        Text {
+            horizontal-stretch: 1;
+            text: root.data.name;
+            font-family: Palette.font-body;
+            font-size: 14px;
+            color: Palette.fg;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+        MoneyText { width: ItemCols.amount; text: root.data.amount; size: 14px; weight: 400; }
+
+        HorizontalLayout {
+            width: ItemCols.rule;
+            alignment: start;
+            if root.data.rule != "": VerticalLayout {
+                alignment: center;
+                Chip { text: root.data.rule; kind: 0; }
+            }
+            if root.data.rule == "": Text {
+                text: "No rule";
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.muted;
+                vertical-alignment: center;
+            }
+        }
+
+        VerticalLayout {
+            width: ItemCols.edit;
+            alignment: center;
+            AppButton {
+                compact: true;
+                ghost: true;
+                text: "Edit";
+                clicked => { root.edit-clicked(); }
+            }
+        }
+    }
+}

@@ -1,12 +1,15 @@
 // ===== app-window.slint =====
 // The menu drives `page`; the matching screen is shown next to it.
-// Menu order: 0 Dashboard, 1 Savings, 2 Goals, 3 Reports, 4 Categories, 5 Rules, 6 Log
+// Menu order: 0 Dashboard, 1 Savings, 2 Goals, 3 Debts, 4 Reports, 5 Categories, 6 Rules, 7 Log
 
 import { MenuCont } from "./NavMenu/Menu.slint";
 import { DashCont } from "./Dash/Dash.slint";
 import { RulesPage } from "./Rules/Rules.slint";
 import { SavingsPage } from "Savings/SavingsPage.slint";
 import { GoalsPage } from "Goals/GoalsPage.slint";
+import { LogsPage } from "Logs/LogsPage.slint";
+import { CategoriesPage } from "Category/CategoriesPage.slint";
+import { DebtsPage } from "Debt/DebtsPage.slint";
 
 // Stand-in for screens that are not built yet
 component ComingSoon inherits Rectangle {
@@ -31,6 +34,18 @@ export component MainWindow inherits Window {
     in-out property <int> page: 0;
     callback page-changed(int);
 
+    // Sidebar footer. Popups and theme are for the backend / next step.
+    callback configure-ai();
+    callback backup-and-lock();
+    callback switch-theme();
+    // Every "Preview states" pick also comes here. Keys:
+    // late, fresh, due, bulk, wipe, first, skipday, nopay, clock
+    callback preview-state(string);
+
+    // Dashboard demo flags toggled by "Preview states". Slint handles these two itself.
+    in-out property <bool> payday-late: false;
+    in-out property <bool> fresh-period: false;
+
     // A tinted backdrop so the glass on the menu and pages has something to show through.
     background: @linear-gradient(160deg, #d9eeea 0%, #f4f8f8 55%, #e3f1ee 100%);
 
@@ -38,14 +53,36 @@ export component MainWindow inherits Window {
         MenuCont {
             current-index <=> root.page;
             selected(i) => { root.page-changed(i); }
+            configure-ai => { root.configure-ai(); }
+            backup-and-lock => { root.backup-and-lock(); }
+            switch-theme => { root.switch-theme(); }
+            preview-state(key) => {
+                // Like the design: these states live on the Dashboard, so jump there.
+                if key == "late" {
+                    root.payday-late = !root.payday-late;
+                    root.page = 0;
+                } else if key == "fresh" {
+                    root.fresh-period = !root.fresh-period;
+                    root.page = 0;
+                } else if key == "skipday" || key == "nopay" || key == "clock" {
+                    root.page = 0;
+                }
+                // due, bulk, wipe, first are popups: the backend opens them
+                root.preview-state(key);
+            }
         }
 
-        if root.page == 0: DashCont { horizontal-stretch: 1; }
-        if root.page == 1: SavingsPage { horizontal-stretch: 1;}
-        if root.page == 2: GoalsPage { horizontal-stretch: 1;}
-        if root.page == 3: ComingSoon { horizontal-stretch: 1; title: "Reports"; }
-        if root.page == 4: ComingSoon { horizontal-stretch: 1; title: "Categories"; }
-        if root.page == 5: RulesPage { horizontal-stretch: 1; }
-        if root.page == 6: ComingSoon { horizontal-stretch: 1; title: "Log"; }
+        if root.page == 0: DashCont {
+            horizontal-stretch: 1;
+            payday-late: root.payday-late;
+            fresh-period: root.fresh-period;
+        }
+        if root.page == 1: SavingsPage { horizontal-stretch: 1; }
+        if root.page == 2: GoalsPage { horizontal-stretch: 1; }
+        if root.page == 3: DebtsPage { horizontal-stretch: 1; }
+        if root.page == 4: ComingSoon { horizontal-stretch: 1; title: "Reports"; }
+        if root.page == 5: CategoriesPage { horizontal-stretch: 1; }
+        if root.page == 6: RulesPage { horizontal-stretch: 1; }
+        if root.page == 7: LogsPage { horizontal-stretch: 1; }
     }
 }

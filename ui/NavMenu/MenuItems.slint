@@ -146,11 +146,108 @@ export component NavItems inherits Rectangle {
     }
 }
 
-// Bottom block of the sidebar: period, estimated payday, Configure AI link
+// ============================================================
+// In MenuItems.slint: DELETE the old `DateDisplay` component at the
+// bottom of the file and paste everything below in its place.
+// Nothing else in MenuItems.slint changes.
+// ============================================================
+
+// Underlined teal text link (the design's .link).
+// Cards.slint has LinkText, but Cards.slint imports this file, so importing it
+// here would be a circular import. This is a small local copy.
+// Give it a width, or let a VerticalLayout stretch it: the underline only covers the text.
+component FooterLink inherits Rectangle {
+    in property <string> text;
+    callback clicked();
+
+    height: 18px;
+
+    label := Text {
+        width: parent.width;
+        text: root.text;
+        font-family: Palette.font-body;
+        font-size: 12px;
+        font-weight: 500;
+        color: ta.has-hover ? Palette.accent : Palette.accent-ink;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+    Rectangle {
+        x: 0px;
+        y: parent.height / 2 + label.preferred-height / 2 - 1px;
+        width: min(label.preferred-width, parent.width);
+        height: 1px;
+        background: ta.has-hover ? Palette.accent : Palette.accent-ink;
+    }
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+// The "Preview states" line: small chevron + text, no underline (like <summary>).
+component FooterToggle inherits Rectangle {
+    in property <string> text;
+    in property <bool> open: false;
+    callback clicked();
+
+    height: 18px;
+
+    HorizontalLayout {
+        spacing: 6px;
+        alignment: start;
+        VerticalLayout {
+            alignment: center;
+            Path {
+                width: 12px;
+                height: 12px;
+                viewbox-width: 12;
+                viewbox-height: 12;
+                commands: root.open ? "M 2.5 4.5 L 6 8 L 9.5 4.5" : "M 4.5 2.5 L 8 6 L 4.5 9.5";
+                stroke: ta.has-hover ? Palette.accent : Palette.accent-ink;
+                stroke-width: 1.6px;
+                fill: transparent;
+            }
+        }
+        Text {
+            text: root.text;
+            font-family: Palette.font-body;
+            font-size: 12px;
+            font-weight: 500;
+            color: ta.has-hover ? Palette.accent : Palette.accent-ink;
+            vertical-alignment: center;
+        }
+    }
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+// Bottom block of the sidebar, same order as the design:
+// period, payday, [Configure AI | Backup and lock], [Switch theme | Example data],
+// then the collapsible "Preview states" list.
 export component DateDisplay inherits VerticalLayout {
     in property <string> period: "Period since 25 Sep";
     in property <string> payday: "Payday expected about 24 Oct";
-    callback configure-ai();
+    in property <string> data-note: "Example data";   // grey note at the right of the theme row, "" hides it
+    callback configure-ai();            // popup
+    callback backup-and-lock();         // popup
+    callback switch-theme();
+    callback preview-state(string);     // key: late, fresh, due, bulk, wipe, first, skipday, nopay, clock
+
+    property <bool> demo-open: false;
+    property <[{ key: string, label: string }]> demos: [
+        { key: "late", label: "Payday is late" },
+        { key: "fresh", label: "New period, no entries" },
+        { key: "due", label: "Goal due dialog" },
+        { key: "bulk", label: "Past-dated rule preview" },
+        { key: "wipe", label: "Wipe all preview" },
+        { key: "first", label: "First-run setup" },
+        { key: "skipday", label: "Jump to a skipped day" },
+        { key: "nopay", label: "No expected pay set" },
+        { key: "clock", label: "Computer clock is behind" },
+    ];
 
     spacing: 0px;
 
@@ -161,23 +258,46 @@ export component DateDisplay inherits VerticalLayout {
     VerticalLayout {
         padding-top: 12px;
         padding-left: 8px;
+        padding-right: 8px;
         spacing: 8px;
 
         Text { text: root.period; font-family: Palette.font-body; font-size: 12px; color: Palette.muted; }
         Text { text: root.payday; font-family: Palette.font-body; font-size: 12px; color: Palette.muted; }
-        Rectangle {
+
+        HorizontalLayout {
             height: 18px;
+            FooterLink { width: 76px; text: "Configure AI"; clicked => { root.configure-ai(); } }
+            Rectangle { horizontal-stretch: 1; }
+            FooterLink { width: 104px; text: "Backup and lock"; clicked => { root.backup-and-lock(); } }
+        }
+
+        HorizontalLayout {
+            height: 18px;
+            FooterLink { width: 84px; text: "Switch theme"; clicked => { root.switch-theme(); } }
+            Rectangle { horizontal-stretch: 1; }
             Text {
-                text: "Configure AI";
+                text: root.data-note;
                 font-family: Palette.font-body;
                 font-size: 12px;
-                font-weight: 500;
-                color: Palette.accent-ink;
+                color: Palette.faint;
                 vertical-alignment: center;
             }
-            TouchArea {
-                mouse-cursor: pointer;
-                clicked => { root.configure-ai(); }
+        }
+
+        FooterToggle {
+            text: "Preview states";
+            open: root.demo-open;
+            clicked => { root.demo-open = !root.demo-open; }
+        }
+
+        if root.demo-open: VerticalLayout {
+            spacing: 4px;
+            for d in root.demos: FooterLink {
+                text: d.label;
+                clicked => {
+                    root.demo-open = false;     // the design closes the list after a pick
+                    root.preview-state(d.key);
+                }
             }
         }
     }

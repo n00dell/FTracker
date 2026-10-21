@@ -1,0 +1,111 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { PageHeader } from "../Dash/PageHeader.slint";
+import { NetPositionCard } from "NetPositionCard.slint";
+import { DebtSection } from "DebtSection.slint";
+import { DebtForm } from "DebtForm.slint";
+import { DebtData } from "DebtRow.slint";
+
+export component DebtsPage inherits Rectangle {
+    // ---------- Data in ----------
+    in property <string> net: "5,000";
+    in property <int> net-sign: -1;                 // 1 positive, 0 zero, -1 negative
+    in property <string> owed-total: "10,000";
+    in property <string> owe-total: "15,000";
+    in property <[string]> pot-options: ["Earned", "Main savings", "Sacco"];   // unlocked pots only
+    in property <[DebtData]> owed-rows: [
+        { id: 1, name: "Joe", plan-text: "No plan yet", plan-kind: 3, paid-text: "0 of 10,000", fraction: 0.0, left: "10,000", usual-amount: "", pot-index: 0 },
+    ];
+    in property <[DebtData]> owe-rows: [
+        { id: 2, name: "Sacco loan", plan-text: "28 Oct, 3,000", plan-kind: 3, paid-text: "9,000 of 24,000", fraction: 0.375, left: "15,000", usual-amount: "3,000", pot-index: 0 },
+    ];
+
+    // ---------- Events out ----------
+    // name, total, usual payment, next date, frequency index, money moved now, pot index
+    callback add-owed(string, string, string, string, int, bool, int);
+    callback add-owe(string, string, string, string, int, bool, int);
+    callback owed-received(int, string, int);       // debt id, amount, "into" pot index
+    callback owed-remove(int);
+    callback owe-paid(int, string, int);            // debt id, amount, "taken from" pot index
+    callback owe-remove(int);
+
+    // Backend calls these after a successful add to empty the form.
+    public function clear-owed-form() { owed-form.clear(); }
+    public function clear-owe-form() { owe-form.clear(); }
+
+    background: @linear-gradient(160deg, rgba(255, 255, 255, 0.78) 0%, rgba(240, 249, 247, 0.62) 100%);
+
+    Flickable {
+        content-height: max(root.height, content.min-height);
+
+        content := VerticalLayout {
+            width: min(root.width, 1240px);
+            padding-top: 24px;
+            padding-bottom: 48px;
+            padding-left: 32px;
+            padding-right: 32px;
+            spacing: 16px;
+            alignment: start;
+
+            PageHeader {
+                title: "Debts";
+                subtitle: "Money people owe you, and money you owe. A balance only changes by what really moves.";
+            }
+
+            NetPositionCard {
+                net: root.net;
+                net-sign: root.net-sign;
+                owed-total: root.owed-total;
+                owe-total: root.owe-total;
+            }
+
+            // ---------- Owed to you ----------
+            DebtSection {
+                heading: "Owed to you";
+                rows: root.owed-rows;
+                pot-options: root.pot-options;
+                who-heading: "WHO";
+                plan-heading: "PLAN";
+                paid-heading: "PAID BACK";
+                actions-heading: "RECORD A PAYMENT, INTO";
+                action-label: "Received";
+                empty-text: "Nobody owes you anything.";
+                record(id, a, p) => { root.owed-received(id, a, p); }
+                remove(id) => { root.owed-remove(id); }
+
+                owed-form := DebtForm {
+                    pot-options: root.pot-options;
+                    add(n, t, u, d, f, moved, p) => { root.add-owed(n, t, u, d, f, moved, p); }
+                }
+            }
+
+            // ---------- You owe ----------
+            DebtSection {
+                heading: "You owe";
+                rows: root.owe-rows;
+                pot-options: root.pot-options;
+                who-heading: "TO";
+                plan-heading: "NEXT PAYMENT";
+                paid-heading: "PAID OFF";
+                actions-heading: "RECORD A PAYMENT, TAKEN FROM";
+                action-label: "I paid";
+                empty-text: "You owe nobody.";
+                record(id, a, p) => { root.owe-paid(id, a, p); }
+                remove(id) => { root.owe-remove(id); }
+
+                owe-form := DebtForm {
+                    who-label: "To";
+                    who-placeholder: "e.g. Sacco loan";
+                    total-placeholder: "24,000";
+                    usual-label: "Usual payment";
+                    usual-placeholder: "3,000";
+                    next-label: "Next due";
+                    show-frequency: false;
+                    check-label: "I just received this money. Put it into";
+                    hint: "Pressing “I paid” takes the money from the place you pick (earned counts as an expense) and lowers the balance.";
+                    pot-options: root.pot-options;
+                    add(n, t, u, d, f, moved, p) => { root.add-owe(n, t, u, d, f, moved, p); }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,30 @@
+import { Card } from "../Dash/Cards.slint";
+import { AppButton } from "../Dash/DashButton.slint";
+import { CategoryRow, CategoryData } from "CategoryRow.slint";
+
+// Left column: the categories plus "New category".
+export component CategoryList inherits Card {
+    in property <[CategoryData]> categories;
+    in-out property <int> selected: 0;
+    callback category-selected(int);
+    callback new-category();
+
+    VerticalLayout {
+        padding: 10px;
+        spacing: 4px;
+        alignment: start;
+
+        for c[i] in root.categories: CategoryRow {
+            data: c;
+            selected: root.selected == i;
+            clicked => {
+                root.selected = i;
+                root.category-selected(i);
+            }
+        }
+
+        Rectangle { height: 2px; }
+        // The design's border is dashed. Slint borders cannot be dashed, so this is a normal button.
+        AppButton { text: "New category"; clicked => { root.new-category(); } }
+    }
+}

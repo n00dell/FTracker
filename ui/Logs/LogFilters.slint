@@ -1,0 +1,24 @@
+import { FilterPill } from "../Rules/FilterPill.slint";
+
+// All / Auto-posted / Edits / Savings moves / Skipped / Issues (n)
+export component LogFilters inherits HorizontalLayout {
+    in-out property <int> filter: 0;     // 0 all, 1 auto, 2 edits, 3 savings moves, 4 skipped, 5 issues
+    in property <int> issue-count: 0;    // shown in the Issues tab, 0 hides the number
+    callback filter-changed(int);
+
+    property <[string]> labels: ["All", "Auto-posted", "Edits", "Savings moves", "Skipped"];
+
+    spacing: 6px;
+    alignment: start;
+
+    for l[i] in root.labels: FilterPill {
+        text: l;
+        selected: root.filter == i;
+        clicked => { root.filter = i; root.filter-changed(i); }
+    }
+    FilterPill {
+        text: root.issue-count > 0 ? "Issues (" + root.issue-count + ")" : "Issues";
+        selected: root.filter == 5;
+        clicked => { root.filter = 5; root.filter-changed(5); }
+    }
+}

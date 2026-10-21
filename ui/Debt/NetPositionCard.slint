@@ -1,0 +1,71 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Card } from "../Dash/Cards.slint";
+
+// "Net position" strip at the top of Debts. Information only.
+export component NetPositionCard inherits Card {
+    in property <string> net: "5,000";              // number only, no sign, no "KES"
+    in property <int> net-sign: -1;                 // 1 green, 0 plain, -1 red
+    in property <string> owed-total: "10,000";      // what people owe you
+    in property <string> owe-total: "15,000";       // what you owe
+    in property <string> note: "Shown for your information. It is not counted in earned remaining or savings until money actually moves.";
+
+    property <color> net-ink: root.net-sign > 0 ? Palette.pos : root.net-sign < 0 ? Palette.neg : Palette.fg;
+    property <string> net-prefix: root.net-sign > 0 ? "+" : root.net-sign < 0 ? "−" : "";
+
+    height: 84px;
+
+    HorizontalLayout {
+        padding-top: 16px;
+        padding-bottom: 16px;
+        padding-left: 18px;
+        padding-right: 18px;
+        spacing: 32px;
+
+        VerticalLayout {
+            alignment: center;
+            spacing: 2px;
+            Text {
+                text: "NET POSITION";
+                font-family: Palette.font-body;
+                font-size: 12px;
+                letter-spacing: 0.8px;
+                color: Palette.muted;
+            }
+            Text {
+                text: root.net-prefix + "KES " + root.net;
+                font-family: Palette.font-mono;
+                font-size: 28px;
+                font-weight: 500;
+                color: root.net-ink;
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+            HorizontalLayout {
+                spacing: 6px;
+                Text { text: "Owed to you"; font-family: Palette.font-body; font-size: 14px; color: Palette.muted; vertical-alignment: center; }
+                Text { text: root.owed-total; font-family: Palette.font-mono; font-size: 14px; font-weight: 600; color: Palette.pos; vertical-alignment: center; }
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+            HorizontalLayout {
+                spacing: 6px;
+                Text { text: "You owe"; font-family: Palette.font-body; font-size: 14px; color: Palette.muted; vertical-alignment: center; }
+                Text { text: root.owe-total; font-family: Palette.font-mono; font-size: 14px; font-weight: 600; color: Palette.neg; vertical-alignment: center; }
+            }
+        }
+
+        Text {
+            horizontal-stretch: 1;
+            text: root.note;
+            font-family: Palette.font-body;
+            font-size: 13px;
+            color: Palette.muted;
+            wrap: word-wrap;
+            vertical-alignment: center;
+        }
+    }
+}

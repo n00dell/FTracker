@@ -1,0 +1,39 @@
+import { Palette } from "../NavMenu/MenuItems.slint";
+import { Card } from "../Dash/Cards.slint";
+import { LogDay, LogDayData } from "LogDay.slint";
+
+// The log: one LogDay per day, newest first. Empty state when the filter matches nothing.
+export component LogCard inherits Card {
+    in property <[LogDayData]> days;
+
+    clip: true;
+
+    VerticalLayout {
+        alignment: start;
+
+        for d in root.days: LogDay { day: d; }
+
+        if root.days.length == 0: VerticalLayout {
+            padding-top: 28px;
+            padding-bottom: 28px;
+            padding-left: 18px;
+            padding-right: 18px;
+            spacing: 8px;
+            Text {
+                text: "Nothing here";
+                font-family: Palette.font-body;
+                font-size: 16px;
+                font-weight: 600;
+                color: Palette.fg;
+                horizontal-alignment: center;
+            }
+            Text {
+                text: "No events match this filter.";
+                font-family: Palette.font-body;
+                font-size: 14px;
+                color: Palette.muted;
+                horizontal-alignment: center;
+            }
+        }
+    }
+}
