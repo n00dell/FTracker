@@ -30,6 +30,7 @@ public:
 
     [[nodiscard]] std::string  text(int column) const;     // columns start at 0
     [[nodiscard]] std::int64_t integer(int column) const;
+    [[nodiscard]] bool         isNull(int column) const;     // for optional columns
 
 private:
     sqlite3* db_;   // not owned, only used to read error messages
@@ -44,12 +45,15 @@ public:
     [[nodiscard]] Statement prepare(std::string_view sql);
     [[nodiscard]] std::int64_t lastInsertId() const;
     [[nodiscard]] int changes() const;            // rows touched by the last write
+    [[nodiscard]] bool inTransaction() const;
 
 private:
     std::unique_ptr<sqlite3, DbCloser> db_;
 };
 
 // All-or-nothing block. If commit() is never reached (an exception), it rolls back.
+// Nestable: inside another Transaction it simply joins it, so a bigger job (like the
+// daily job) can wrap many smaller operations that each use their own Transaction.
 class Transaction {
 public:
     explicit Transaction(Database& db);
@@ -60,6 +64,7 @@ public:
 
 private:
     Database& db_;
+    bool owner_;          // true only for the outermost Transaction
     bool done_ = false;
 };
 

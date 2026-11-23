@@ -30,10 +30,6 @@ Item readItem(const detail::Statement& st) {
 
 std::string noItem(ItemId id) { return "No item with id " + std::to_string(id) + "."; }
 
-void requirePositive(Money amount) {
-    if (amount <= 0) throw Error("The amount must be more than 0.");
-}
-
 // Throws unless the category exists, is not deleted and is active.
 void requireUsableCategory(detail::Database& db, CategoryId id) {
     auto st = db.prepare("SELECT is_active FROM categories WHERE id = ? AND is_deleted = 0");
@@ -62,7 +58,7 @@ bool nameTaken(detail::Database& db, CategoryId categoryId, const std::string& n
 
 ItemId Items::add(const NewItem& item) {
     const std::string name = detail::cleanName(item.name, kEmptyName);
-    requirePositive(item.defaultAmount);
+    detail::requirePositive(item.defaultAmount);
     requireUsableCategory(db_, item.categoryId);
     if (nameTaken(db_, item.categoryId, name, 0)) {
         throw Error("'" + name + "' already exists in that category.");
@@ -87,7 +83,7 @@ void Items::rename(ItemId id, std::string_view newName) {
 }
 
 void Items::setDefaultAmount(ItemId id, Money amount) {
-    requirePositive(amount);
+    detail::requirePositive(amount);
     db_.prepare("UPDATE items SET default_amount = ? WHERE id = ? AND is_deleted = 0")
         .bind(1, amount).bind(2, id).run();
     if (db_.changes() == 0) throw Error(noItem(id));

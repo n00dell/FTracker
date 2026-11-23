@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="BackendCodeEditorMiscSettings">
-    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="59" type="long" />
+    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="69" type="long" />
     <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
   </component>
   <component name="CMakePresetLoader">{
@@ -41,150 +41,36 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ced2d428-5f87-47df-88bd-3eee4bb3ced2" name="Changes" comment="Created Goals page and modded dash a bit">
-      <change afterPath="$PROJECT_DIR$/cli/category_cmd.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cli/cli.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cli/item_cmd.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cli/main.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cli/util.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/include/pesa/categories.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/include/pesa/common.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/include/pesa/items.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/include/pesa/pesa.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/categories.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/db.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/db.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/items.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/migrations.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/migrations.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/paths.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/pesa.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/util.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/weekday_set.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/src/backend/Controllers/DashController.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/src/backend/Controllers/DashController.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/src/format.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/main.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/temp_db.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_categories.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_items.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_migrations.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_weekdays.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/gui/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/editor.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/editor.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="ced2d428-5f87-47df-88bd-3eee4bb3ced2" name="Changes" comment="Started on the logic and the db creation">
+      <change afterPath="$PROJECT_DIR$/cli/day_cmd.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cli/entry_cmd.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/include/pesa/date.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/include/pesa/days.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/include/pesa/entries.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/date.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/days.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/entries.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/entry_sql.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/entry_sql.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/raw_sql.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_date.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_entries.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/extensions.json" beforeDir="false" afterPath="$PROJECT_DIR$/gui/.vscode/extensions.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/launch.json" beforeDir="false" afterPath="$PROJECT_DIR$/gui/.vscode/launch.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/gui/LICENSE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/gui/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/gui/android/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gui/android/gradle.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gui/android/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/gui/android/settings.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/gui/android/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Dash/dash.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Category/CategoriesPage.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Category/CategoriesPage.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Category/CategoryList.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Category/CategoryList.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Category/CategoryRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Category/CategoryRow.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Category/ItemRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Category/ItemRow.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Category/ItemsCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Category/ItemsCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/Cards.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/Cards.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/DailyStrip.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/DailyStrip.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/Dash.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/Dash.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/DashButton.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/DashButton.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/DateBar.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/DateBar.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/DatePicker.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/DatePicker.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/DayTotal.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/DayTotal.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/EarnedCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/EarnedCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/EmptyPeriod.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/EmptyPeriod.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/EntryFilters.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/EntryFilters.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/LateBanner.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/LateBanner.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/MoneyText.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/MoneyText.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/PageHeader.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/PageHeader.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/PeriodRail.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/PeriodRail.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/RailCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/RailCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/SavingsCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/SavingsCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/SearchButton.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/SearchButton.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/SelectionBar.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/SelectionBar.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Dash/StatCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Dash/StatCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Debt/DebtForm.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Debt/DebtForm.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Debt/DebtRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Debt/DebtRow.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Debt/DebtSection.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Debt/DebtSection.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Debt/DebtTable.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Debt/DebtTable.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Debt/DebtsPage.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Debt/DebtsPage.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Debt/NetPositionCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Debt/NetPositionCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Expenses/AddEntryRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Expenses/AddEntryRow.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Expenses/ExpenseBucket.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Expenses/ExpenseBucket.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Expenses/ExpenseEntryRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Expenses/ExpenseEntryRow.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Expenses/FundPill.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Expenses/FundPill.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Expenses/PickBox.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Expenses/PickBox.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Goals/AddGoalCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Goals/AddGoalCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Goals/BoughtCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Goals/BoughtCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Goals/BoughtRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Goals/BoughtRow.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Goals/Field.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Goals/Field.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Goals/FundCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Goals/FundCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Goals/GoalRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Goals/GoalRow.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Goals/GoalsPage.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Goals/GoalsPage.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Goals/GoalsTable.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Goals/GoalsTable.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Goals/SelectBox.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Goals/SelectBox.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Logs/LogCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Logs/LogCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Logs/LogDay.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Logs/LogDay.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Logs/LogFilters.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Logs/LogFilters.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Logs/LogRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Logs/LogRow.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Logs/LogsPage.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Logs/LogsPage.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/NavMenu/Menu.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/NavMenu/Menu.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/NavMenu/MenuItems.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/NavMenu/MenuItems.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/FilterPill.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Rules/FilterPill.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/RuleTableData.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Rules/RuleTableData.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/Rules.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Rules/Rules.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/RulesDateField.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Rules/RulesDateField.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/RulesRail.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Rules/RulesRail.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/RulesTable.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Rules/RulesTable.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/Seg2.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Rules/Seg2.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/SkipChip.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Rules/SkipChip.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Rules/Switch.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Rules/Switch.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Savings/BigAmount.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Savings/BigAmount.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Savings/ColHead.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Savings/ColHead.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Savings/InputBox.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Savings/InputBox.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Savings/MovementRow.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Savings/MovementRow.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Savings/MovementsCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Savings/MovementsCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Savings/PotBar.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Savings/PotBar.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Savings/PotCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Savings/PotCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Savings/SavingsPage.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Savings/SavingsPage.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Savings/SavingsTotalCard.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/Savings/SavingsTotalCard.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/app-window.slint" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/app-window.slint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/fonts/DMSans-Medium.ttf" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/fonts/DMSans-Medium.ttf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/fonts/DMSans-Regular.ttf" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/fonts/DMSans-Regular.ttf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/fonts/DMSans-SemiBold.ttf" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/fonts/DMSans-SemiBold.ttf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/fonts/JetBrainsMono-Medium.ttf" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/fonts/JetBrainsMono-Medium.ttf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/fonts/JetBrainsMono-Regular.ttf" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/fonts/JetBrainsMono-Regular.ttf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons.zip" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-add-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-add-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-back-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-back-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-cancel-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-cancel-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-checkmark-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-checkmark-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-dashboard-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-dashboard-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-date-picker-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-date-picker-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-debt-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-debt-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-edit-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-edit-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-flag-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-flag-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-forward-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-forward-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-graph-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-graph-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-piggy-bank-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-piggy-bank-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-repeat-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-repeat-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-search-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-search-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-slider-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-slider-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-tag-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-tag-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-time-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-time-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-trash-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-trash-100.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/icons/icons8-wallet-100.png" beforeDir="false" afterPath="$PROJECT_DIR$/gui/ui/icons/icons8-wallet-100.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cli/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/cli.h" beforeDir="false" afterPath="$PROJECT_DIR$/cli/cli.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/item_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/item_cmd.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/util.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/util.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/core/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/common.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/common.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/pesa.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/pesa.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/db.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/db.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/db.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/db.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/items.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/items.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/migrations.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/migrations.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/pesa.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/pesa.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/util.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/util.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tests/CMakeLists.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -237,23 +123,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.475024254856214" />
-      <entry key="MS500" value="2.9355938574802227" />
-      <entry key="S2" value="3.9689390880387334" />
-      <entry key="S5" value="6.500696696190855" />
-      <entry key="S10" value="10.260145271429158" />
-      <entry key="S30" value="19.660669811819478" />
-      <entry key="S60" value="25.536258765225735" />
-      <entry key="M2" value="29.699582304263675" />
-      <entry key="M5" value="33.88507278321521" />
-      <entry key="M10" value="39.44543749085602" />
-      <entry key="M15" value="43.692461408594674" />
-      <entry key="M30" value="50.92945291959781" />
-      <entry key="H1" value="61.35740803839588" />
-      <entry key="H2" value="90.97966657947141" />
-      <entry key="H4" value="176.7099747723436" />
-      <entry key="D1" value="884.8369472506214" />
-      <entry key="W1" value="1411.819131184864" />
+      <entry key="MS100" value="1.0188740658072069" />
+      <entry key="MS500" value="1.668786323125714" />
+      <entry key="S2" value="3.3608548533519436" />
+      <entry key="S5" value="6.236847032817411" />
+      <entry key="S10" value="8.93359341662736" />
+      <entry key="S30" value="13.613759964949926" />
+      <entry key="S60" value="20.943166303388725" />
+      <entry key="M2" value="31.27802468034207" />
+      <entry key="M5" value="42.697632145156064" />
+      <entry key="M10" value="47.894044167561894" />
+      <entry key="M15" value="49.82073811649667" />
+      <entry key="M30" value="51.86625993121096" />
+      <entry key="H1" value="53.86345439614529" />
+      <entry key="H2" value="64.77875780440851" />
+      <entry key="H4" value="116.07448339282176" />
+      <entry key="D1" value="797.7574206221793" />
+      <entry key="W1" value="1431.2247906978037" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -261,37 +147,37 @@
       <entry key="S2" value="0.0" />
       <entry key="S5" value="0.0" />
       <entry key="S10" value="0.0" />
-      <entry key="S30" value="8.50835749978508E-201" />
-      <entry key="S60" value="2.332934534446457E-100" />
-      <entry key="M2" value="4.359679779352088E-50" />
-      <entry key="M5" value="6.669092662697296E-20" />
-      <entry key="M10" value="7.888241228840653E-10" />
-      <entry key="M15" value="1.8453477730221748E-6" />
-      <entry key="M30" value="0.004608646803037845" />
-      <entry key="H1" value="0.2499734725158835" />
-      <entry key="H2" value="2.5803267328059305" />
-      <entry key="H4" value="17.001767047421996" />
-      <entry key="D1" value="232.84619507695146" />
-      <entry key="W1" value="415.2659430759825" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="6.08844932537834E-209" />
+      <entry key="M2" value="2.2271868982731066E-104" />
+      <entry key="M5" value="1.280523580923116E-41" />
+      <entry key="M10" value="1.093051432093967E-20" />
+      <entry key="M15" value="1.0645968283141395E-13" />
+      <entry key="M30" value="1.106947178019077E-6" />
+      <entry key="H1" value="0.00387409850372361" />
+      <entry key="H2" value="0.3212277602892935" />
+      <entry key="H4" value="5.998784287398951" />
+      <entry key="D1" value="195.73298059991816" />
+      <entry key="W1" value="405.092453530165" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.4272249736936444" />
-      <entry key="MS500" value="2.909147063835679" />
-      <entry key="S2" value="3.9589934735453007" />
-      <entry key="S5" value="6.49342823755038" />
-      <entry key="S10" value="10.254291075489459" />
-      <entry key="S30" value="19.657186269651" />
-      <entry key="S60" value="25.534078617814608" />
-      <entry key="M2" value="29.69834031840565" />
-      <entry key="M5" value="33.884509503050616" />
-      <entry key="M10" value="39.445104441982046" />
-      <entry key="M15" value="43.69221430576868" />
-      <entry key="M30" value="50.93389517987177" />
-      <entry key="H1" value="61.606815319102374" />
-      <entry key="H2" value="93.55785414398132" />
-      <entry key="H4" value="193.70723764455423" />
-      <entry key="D1" value="1117.6765777481753" />
-      <entry key="W1" value="1827.0834709994988" />
+      <entry key="MS100" value="0.9072006309330913" />
+      <entry key="MS500" value="1.6415612678257736" />
+      <entry key="S2" value="3.350077957877629" />
+      <entry key="S5" value="6.22860790878665" />
+      <entry key="S10" value="8.92751268776035" />
+      <entry key="S30" value="13.610548728745677" />
+      <entry key="S60" value="20.94058817570525" />
+      <entry key="M2" value="31.276041817631036" />
+      <entry key="M5" value="42.696530854748886" />
+      <entry key="M10" value="47.893423264491325" />
+      <entry key="M15" value="49.82030680265529" />
+      <entry key="M30" value="51.866036168155865" />
+      <entry key="H1" value="53.86720491645266" />
+      <entry key="H2" value="65.09966124622848" />
+      <entry key="H4" value="122.071649299213" />
+      <entry key="D1" value="993.4848780856379" />
+      <entry key="W1" value="1836.3156795466218" />
     </decayedShown>
   </component>
   <component name="ProjectApplicationVersion">
@@ -528,7 +414,8 @@
     <MESSAGE value="Rules page created." />
     <MESSAGE value="Dash mostly done in the general GUI part" />
     <MESSAGE value="Created Goals page and modded dash a bit" />
-    <option name="LAST_COMMIT_MESSAGE" value="Created Goals page and modded dash a bit" />
+    <MESSAGE value="Started on the logic and the db creation" />
+    <option name="LAST_COMMIT_MESSAGE" value="Started on the logic and the db creation" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

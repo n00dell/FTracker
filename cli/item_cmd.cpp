@@ -10,26 +10,6 @@ namespace cli {
 
 namespace {
 
-std::string lower(std::string s) {
-    std::ranges::transform(s, s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-    return s;
-}
-
-// "2" -> id 2.  "Transport" -> the id of the category with that name.
-pesa::CategoryId resolveCategory(pesa::Pesa& app, const std::string& ref) {
-    if (const auto id = parseInt(ref)) return *id;
-    for (const auto& c : app.categories().list(pesa::Visibility::IncludeInactive)) {
-        if (lower(c.name) == lower(ref)) return c.id;
-    }
-    throw pesa::Error("No category named '" + ref + "'.");
-}
-
-pesa::Money parseAmount(const std::string& text) {
-    const auto amount = parseInt(text);
-    if (!amount) throw pesa::Error("The amount must be a whole number, got '" + text + "'.");
-    return *amount;
-}
-
 void printItems(const std::vector<pesa::Item>& items) {
     if (items.empty()) { std::cout << "No items.\n"; return; }
     std::cout << std::left << std::setw(5) << "ID" << std::setw(16) << "Category"

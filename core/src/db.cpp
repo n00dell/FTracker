@@ -1,7 +1,7 @@
 // FTracker/core/src/db.cpp
 #include "db.h"
 
-#include <pesa/pesa.h>
+#include <pesa/common.h>
 
 namespace pesa::detail {
 
@@ -45,6 +45,10 @@ std::int64_t Statement::integer(int column) const {
     return sqlite3_column_int64(stmt_.get(), column);
 }
 
+bool Statement::isNull(int column) const {
+    return sqlite3_column_type(stmt_.get(), column) == SQLITE_NULL;
+}
+
 // ---------- Database ----------
 
 Database::Database(const std::filesystem::path& file) {
@@ -80,19 +84,22 @@ Statement Database::prepare(std::string_view sql) { return Statement(db_.get(), 
 
 std::int64_t Database::lastInsertId() const { return sqlite3_last_insert_rowid(db_.get()); }
 int Database::changes() const { return sqlite3_changes(db_.get()); }
+bool Database::inTransaction() const { return sqlite3_get_autocommit(db_.get()) == 0; }
 
 // ---------- Transaction ----------
 
-Transaction::Transaction(Database& db) : db_(db) { db_.exec("BEGIN IMMEDIATE;"); }
+Transaction::Transaction(Database& db) : db_(db), owner_(!db.inTransaction()) {
+    if (owner_) db_.exec("BEGIN IMMEDIATE;");
+}
 
 Transaction::~Transaction() {
-    if (!done_) {
+    if (owner_ && !done_) {
         try { db_.exec("ROLLBACK;"); } catch (...) {}   // destructors must never throw
     }
 }
 
 void Transaction::commit() {
-    db_.exec("COMMIT;");
+    if (owner_) db_.exec("COMMIT;");
     done_ = true;
 }
 

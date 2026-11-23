@@ -15,6 +15,14 @@ add_library(pesa_core STATIC
         src/items.cpp
         src/util.h
         src/weekday_set.cpp
+        include/pesa/date.h
+        include/pesa/days.h
+        include/pesa/entries.h
+        src/date.cpp
+        src/days.cpp
+        src/entries.cpp
+        src/entry_sql.cpp
+        src/entry_sql.h
         #        ../tests/test_categories.cpp
 )
 

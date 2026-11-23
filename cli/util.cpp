@@ -2,6 +2,7 @@
 #include "cli.h"
 
 #include <algorithm>
+#include <cctype>
 #include <charconv>
 #include <iostream>
 
@@ -27,7 +28,14 @@ void printUsage() {
         "  item deactivate <id>\n"
         "  item activate <id>\n"
         "  item delete <id>\n"
-        "  item restore <id>\n";
+        "  item restore <id>\n\n"
+        "Entries and days  (<date> is today, tomorrow, yesterday or 2026-11-23)\n"
+        "  day [<date>]                                   show a day\n"
+        "  entry add <date> <item-id> [<amount>] [--savings]\n"
+        "  entry oneoff <date> <category> <amount> <name> [--savings]\n"
+        "  entry amount <id> <amount>\n"
+        "  entry fund <id> earned|savings\n"
+        "  entry delete <id>\n";
 }
 
 std::optional<std::int64_t> parseInt(const std::string& text) {
@@ -69,6 +77,38 @@ pesa::Visibility takeVisibility(Args& args) {
     if (deleted) return pesa::Visibility::DeletedOnly;
     if (all)     return pesa::Visibility::IncludeInactive;
     return pesa::Visibility::ActiveOnly;
+}
+
+namespace {
+
+std::string lower(std::string s) {
+    std::ranges::transform(s, s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return s;
+}
+
+} // namespace
+
+pesa::Money parseAmount(const std::string& text) {
+    const auto amount = parseInt(text);
+    if (!amount) throw pesa::Error("The amount must be a whole number, got '" + text + "'.");
+    return *amount;
+}
+
+pesa::Date parseDate(const std::string& text) {
+    const std::string t = lower(text);
+    if (t == "today")     return pesa::Date::today();
+    if (t == "tomorrow")  return pesa::Date::today().nextDay();
+    if (t == "yesterday") return pesa::Date::today().previousDay();
+    return pesa::Date::parse(text);
+}
+
+// "2" -> id 2.  "Transport" -> the id of the category with that name.
+pesa::CategoryId resolveCategory(pesa::Pesa& app, const std::string& ref) {
+    if (const auto id = parseInt(ref)) return *id;
+    for (const auto& c : app.categories().list(pesa::Visibility::IncludeInactive)) {
+        if (lower(c.name) == lower(ref)) return c.id;
+    }
+    throw pesa::Error("No category named '" + ref + "'.");
 }
 
 } // namespace cli

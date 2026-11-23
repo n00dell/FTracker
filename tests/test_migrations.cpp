@@ -3,6 +3,7 @@
 #include <pesa/pesa.h>
 #include <sqlite3.h>   // available because pesa_core links SQLite publicly
 
+#include "raw_sql.h"
 #include "temp_db.h"
 
 using pesa::Error;
@@ -10,32 +11,6 @@ using pesa::Pesa;
 using pesa::Visibility;
 
 namespace {
-
-// Runs raw SQL on a file. Used to fake "a database an older Pesa created".
-void rawSql(const std::filesystem::path& file, const char* sql) {
-    sqlite3* db = nullptr;
-    REQUIRE(sqlite3_open(file.string().c_str(), &db) == SQLITE_OK);
-    char* err = nullptr;
-    const int rc = sqlite3_exec(db, sql, nullptr, nullptr, &err);
-    sqlite3_free(err);
-    sqlite3_close(db);
-    REQUIRE(rc == SQLITE_OK);
-}
-
-// Runs a query and returns the first column of the first row as text.
-std::string firstValue(const std::filesystem::path& file, const char* sql) {
-    sqlite3* db = nullptr;
-    REQUIRE(sqlite3_open(file.string().c_str(), &db) == SQLITE_OK);
-    std::string result;
-    auto onRow = [](void* out, int columns, char** values, char**) -> int {
-        if (columns > 0 && values[0]) *static_cast<std::string*>(out) = values[0];
-        return 0;
-    };
-    const int rc = sqlite3_exec(db, sql, onRow, &result, nullptr);
-    sqlite3_close(db);
-    REQUIRE(rc == SQLITE_OK);
-    return result;
-}
 
 // Frozen copies of what older Pesa versions created. NEVER change these:
 // they are the "old files" the upgrade code has to cope with.
@@ -68,7 +43,7 @@ constexpr const char* kV2 = R"sql(
 
 TEST_CASE("a new database is created at the latest version") {
     Pesa app(":memory:");
-    CHECK(app.schemaVersion() == 3);
+    CHECK(app.schemaVersion() == 4);
 }
 
 TEST_CASE("a version 1 file is upgraded all the way and keeps its data") {
@@ -76,7 +51,7 @@ TEST_CASE("a version 1 file is upgraded all the way and keeps its data") {
     rawSql(file.path, kV1);
 
     Pesa app(file.path);
-    CHECK(app.schemaVersion() == 3);
+    CHECK(app.schemaVersion() == 4);
     REQUIRE(app.categories().list().size() == 1);   // old data is still there
     const auto cat = app.categories().list()[0].id;
     CHECK_NOTHROW(app.items().add({.categoryId = cat, .name = "Milk", .defaultAmount = 60}));
@@ -88,7 +63,7 @@ TEST_CASE("a version 2 file survives the table rebuild of migration 3") {
 
     {
         Pesa app(file.path);
-        CHECK(app.schemaVersion() == 3);
+        CHECK(app.schemaVersion() == 4);
 
         // Categories: both kept, with their on/off state and order.
         const auto cats = app.categories().list(Visibility::IncludeInactive);

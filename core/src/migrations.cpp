@@ -71,6 +71,30 @@ constexpr std::array kMigrations = {
         ALTER TABLE items_new RENAME TO items;
         CREATE UNIQUE INDEX ux_items_name ON items(category_id, name) WHERE is_deleted = 0;
     )sql"},
+
+    // Days and entries. A day is one row (the date is the primary key, so it is unique),
+    // and every entry points at its day. Nothing is rebuilt here, so no data is touched.
+    Migration{4, R"sql(
+        CREATE TABLE days (
+            date       TEXT    PRIMARY KEY
+                       CHECK (date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            calculated INTEGER NOT NULL DEFAULT 0 CHECK (calculated IN (0, 1)),
+            result     INTEGER                    -- saved total of the day; NULL = recalculate
+        );
+
+        CREATE TABLE entries (
+            id              INTEGER PRIMARY KEY,
+            date            TEXT    NOT NULL REFERENCES days(date),
+            item_id         INTEGER REFERENCES items(id),       -- NULL means a one-off
+            category_id     INTEGER NOT NULL REFERENCES categories(id),
+            name            TEXT    NOT NULL,
+            amount          INTEGER NOT NULL CHECK (amount > 0),
+            original_amount INTEGER CHECK (original_amount > 0), -- set when an auto entry is edited
+            kind            INTEGER NOT NULL CHECK (kind BETWEEN 0 AND 3),
+            funded_from     INTEGER NOT NULL DEFAULT 0 CHECK (funded_from IN (0, 1))
+        );
+        CREATE INDEX idx_entries_date ON entries(date);
+    )sql"},
 };
 
 // While tables are being rebuilt, foreign keys must be switched off (SQLite ignores

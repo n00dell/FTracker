@@ -5,6 +5,9 @@
 
 #include <pesa/categories.h>
 #include <pesa/common.h>
+#include <pesa/date.h>
+#include <pesa/days.h>
+#include <pesa/entries.h>
 #include <pesa/items.h>
 
 #include <filesystem>
@@ -27,6 +30,10 @@ namespace pesa {
         const Categories& categories() const;
         Items&            items();
         const Items&      items() const;
+        Entries&          entries();
+        const Entries&    entries() const;
+        Days&             days();
+        const Days&       days() const;
 
         // Version of the database layout currently in the file.
         [[nodiscard]] int schemaVersion() const;

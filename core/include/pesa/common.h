@@ -19,6 +19,7 @@ public:
 using Money      = std::int64_t;   // whole KES, no decimals
 using CategoryId = std::int64_t;
 using ItemId     = std::int64_t;
+using EntryId    = std::int64_t;
 
 // Declared here (not defined) so feature classes can hold a reference to the
 // database without this public header ever including SQLite.

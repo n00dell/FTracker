@@ -16,6 +16,8 @@ int main(int argc, char** argv) {
 
         if (args[0] == "category") return cli::runCategory(app, args);
         if (args[0] == "item")     return cli::runItem(app, args);
+        if (args[0] == "entry")    return cli::runEntry(app, args);
+        if (args[0] == "day")      return cli::runDay(app, args);
 
         cli::printUsage();
         return 2;
