@@ -1,29 +1,25 @@
 cmake_minimum_required(VERSION 3.21)
-project(my_application LANGUAGES CXX)
+project(pesa LANGUAGES CXX)
 
-find_package(Slint QUIET)
-if (NOT Slint_FOUND)
-  message("Slint could not be located in the CMake module search path. Downloading it from Git and building it locally")
-  include(FetchContent)
-  FetchContent_Declare(
-    Slint
-    GIT_REPOSITORY https://github.com/slint-ui/slint.git
-    # `release/1` will auto-upgrade to the latest Slint >= 1.0.0 and < 2.0.0
-    # `release/1.0` will auto-upgrade to the latest Slint >= 1.0.0 and < 1.1.0
-    GIT_TAG release/1.18
-    SOURCE_SUBDIR api/cpp
-  )
-  FetchContent_MakeAvailable(Slint)
-endif (NOT Slint_FOUND)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-if(ANDROID)
-    add_library(my_application SHARED src/main.cpp)
-else()
-    add_executable(my_application src/main.cpp)
+option(PESA_BUILD_CLI "Build the command line app" ON)
+option(PESA_BUILD_GUI "Build the Slint desktop app" ON)
+option(PESA_BUILD_TESTS "Build the core unit tests" ON)
+
+add_subdirectory(core)
+add_subdirectory(cli)
+
+#if(PESA_BUILD_CLI)
+#    add_subdirectory(cli)
+#endif()
+if(PESA_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
 endif()
-target_link_libraries(my_application PRIVATE Slint::Slint)
-slint_target_sources(my_application ui/app-window.slint)
-# On Windows, copy the Slint DLL next to the application binary so that it's found.
-if (WIN32)
-    add_custom_command(TARGET my_application POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:my_application> $<TARGET_FILE_DIR:my_application> COMMAND_EXPAND_LISTS)
+if(PESA_BUILD_GUI)
+    add_subdirectory(gui)
 endif()
