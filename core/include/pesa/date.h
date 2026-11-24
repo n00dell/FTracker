@@ -26,6 +26,7 @@ namespace pesa {
         [[nodiscard]] int month() const;     // 1-12
         [[nodiscard]] int day() const;       // 1-31
         [[nodiscard]] Weekday weekday() const;
+        [[nodiscard]] int daysInMonth() const;   // 28-31, knows leap years
 
         [[nodiscard]] Date addDays(int n) const;          // n may be negative
         [[nodiscard]] Date nextDay() const     { return addDays(1); }

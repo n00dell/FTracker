@@ -27,6 +27,11 @@ Statement& Statement::bind(int index, std::int64_t value) {
     return *this;
 }
 
+Statement& Statement::bindNull(int index) {
+    if (sqlite3_bind_null(stmt_.get(), index) != SQLITE_OK) throw Error(sqlite3_errmsg(db_));
+    return *this;
+}
+
 bool Statement::step() {
     const int rc = sqlite3_step(stmt_.get());
     if (rc == SQLITE_ROW)  return true;

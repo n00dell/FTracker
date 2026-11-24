@@ -1,3 +1,4 @@
+# FTracker/gui/CMakeLists.txt
 # Slint is looked up here, not at the top level, so a CLI-only build never needs it.
 find_package(Slint QUIET)          # QUIET, not REQUIRED, so the fallback below can run
 if(NOT Slint_FOUND)

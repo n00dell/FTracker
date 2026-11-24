@@ -16,7 +16,6 @@ namespace pesa {
         std::string  categoryName;      // filled in for convenience (read only)
         std::string  name;
         Money        defaultAmount = 0;
-        WeekdaySet   days;              // days it posts by default
         bool         isActive = true;   // false = paused (name stays reserved)
         bool         isDeleted = false; // true  = soft deleted (name is free to reuse)
     };
@@ -25,7 +24,6 @@ namespace pesa {
         CategoryId  categoryId = 0;
         std::string name;
         Money       defaultAmount = 0;
-        WeekdaySet  days = WeekdaySet::everyDay();
     };
 
     // Created and owned by Pesa. Use it through app.items().
@@ -36,7 +34,6 @@ namespace pesa {
         ItemId add(const NewItem& item);
         void   rename(ItemId id, std::string_view newName);
         void   setDefaultAmount(ItemId id, Money amount);
-        void   setDays(ItemId id, WeekdaySet days);
         void   setActive(ItemId id, bool active);
         void   remove(ItemId id);    // soft delete: hides it, keeps the row
         void   restore(ItemId id);   // undo a delete (its category must exist, its name be free)

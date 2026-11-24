@@ -12,7 +12,7 @@ constexpr const char* kEmptyName = "An item name cannot be empty.";
 
 // One SELECT used by list() and find(). JOIN pulls in the category's name.
 constexpr const char* kSelectItem =
-    "SELECT i.id, i.category_id, c.name, i.name, i.default_amount, i.weekdays, i.is_active, i.is_deleted "
+    "SELECT i.id, i.category_id, c.name, i.name, i.default_amount, i.is_active, i.is_deleted "
     "FROM items i JOIN categories c ON c.id = i.category_id ";
 
 Item readItem(const detail::Statement& st) {
@@ -22,9 +22,8 @@ Item readItem(const detail::Statement& st) {
         .categoryName  = st.text(2),
         .name          = st.text(3),
         .defaultAmount = st.integer(4),
-        .days          = WeekdaySet::fromBits(static_cast<unsigned>(st.integer(5))),
-        .isActive      = st.integer(6) != 0,
-        .isDeleted     = st.integer(7) != 0,
+        .isActive      = st.integer(5) != 0,
+        .isDeleted     = st.integer(6) != 0,
     };
 }
 
@@ -64,11 +63,10 @@ ItemId Items::add(const NewItem& item) {
         throw Error("'" + name + "' already exists in that category.");
     }
 
-    db_.prepare("INSERT INTO items(category_id, name, default_amount, weekdays) VALUES (?, ?, ?, ?)")
+    db_.prepare("INSERT INTO items(category_id, name, default_amount) VALUES (?, ?, ?)")
         .bind(1, item.categoryId)
         .bind(2, name)
         .bind(3, item.defaultAmount)
-        .bind(4, static_cast<std::int64_t>(item.days.bits()))
         .run();
     return db_.lastInsertId();
 }
@@ -86,12 +84,6 @@ void Items::setDefaultAmount(ItemId id, Money amount) {
     detail::requirePositive(amount);
     db_.prepare("UPDATE items SET default_amount = ? WHERE id = ? AND is_deleted = 0")
         .bind(1, amount).bind(2, id).run();
-    if (db_.changes() == 0) throw Error(noItem(id));
-}
-
-void Items::setDays(ItemId id, WeekdaySet days) {
-    db_.prepare("UPDATE items SET weekdays = ? WHERE id = ? AND is_deleted = 0")
-        .bind(1, static_cast<std::int64_t>(days.bits())).bind(2, id).run();
     if (db_.changes() == 0) throw Error(noItem(id));
 }
 
@@ -147,7 +139,7 @@ std::vector<Item> Items::list(std::optional<CategoryId> category, Visibility sho
         sql += "i.is_deleted = 1 ";   // items of a deleted category come back with the category
     }
     if (category) sql += "AND i.category_id = ? ";
-    sql += "ORDER BY c.sort_order, c.id, i.id";
+    sql += "ORDER BY c.is_system, c.sort_order, c.id, i.id";
 
     auto st = db_.prepare(sql);
     if (category) st.bind(1, *category);

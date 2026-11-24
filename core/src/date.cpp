@@ -56,6 +56,12 @@ Weekday Date::weekday() const {
     return static_cast<Weekday>(chr::weekday{days_}.iso_encoding() - 1);
 }
 
+int Date::daysInMonth() const {
+    const chr::year_month_day ymd{days_};
+    const chr::year_month_day_last last{ymd.year() / ymd.month() / chr::last};
+    return static_cast<int>(static_cast<unsigned>(last.day()));
+}
+
 Date Date::addDays(int n) const { return Date(days_ + chr::days{n}); }
 
 int Date::daysUntil(const Date& later) const {

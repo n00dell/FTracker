@@ -1,3 +1,4 @@
+// FTracker/tests/test_items.cpp
 #include <doctest/doctest.h>
 
 #include <pesa/pesa.h>
@@ -8,7 +9,7 @@ using pesa::Visibility;
 using pesa::Weekday;
 using pesa::WeekdaySet;
 
-TEST_CASE("adding an item stores everything and defaults to every day") {
+TEST_CASE("adding an item stores everything") {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Transport");
     const auto id = app.items().add({.categoryId = cat, .name = "  Matatu to town ", .defaultAmount = 50});
@@ -19,20 +20,8 @@ TEST_CASE("adding an item stores everything and defaults to every day") {
     CHECK(item->categoryName == "Transport");
     CHECK(item->categoryId == cat);
     CHECK(item->defaultAmount == 50);
-    CHECK(item->days == WeekdaySet::everyDay());
     CHECK(item->isActive);
     CHECK_FALSE(item->isDeleted);
-}
-
-TEST_CASE("an item can post only on chosen days") {
-    Pesa app(":memory:");
-    const auto cat = app.categories().add("Transport");
-    const auto id = app.items().add({.categoryId = cat, .name = "Matatu", .defaultAmount = 50,
-                                     .days = WeekdaySet::workDays()});
-    CHECK(app.items().find(id)->days == WeekdaySet::workDays());
-
-    app.items().setDays(id, WeekdaySet{Weekday::Sat});
-    CHECK(app.items().find(id)->days == WeekdaySet{Weekday::Sat});
 }
 
 TEST_CASE("bad input is refused") {
@@ -87,7 +76,6 @@ TEST_CASE("unknown ids are reported") {
     CHECK_FALSE(app.items().find(42).has_value());
     CHECK_THROWS_AS(app.items().rename(42, "X"), Error);
     CHECK_THROWS_AS(app.items().setDefaultAmount(42, 10), Error);
-    CHECK_THROWS_AS(app.items().setDays(42, WeekdaySet::everyDay()), Error);
     CHECK_THROWS_AS(app.items().setActive(42, false), Error);
     CHECK_THROWS_AS(app.items().remove(42), Error);
     CHECK_THROWS_AS(app.items().restore(42), Error);
@@ -143,7 +131,6 @@ TEST_CASE("a deleted item cannot be edited") {
     app.items().remove(milk);
     CHECK_THROWS_AS(app.items().rename(milk, "X"), Error);
     CHECK_THROWS_AS(app.items().setDefaultAmount(milk, 70), Error);
-    CHECK_THROWS_AS(app.items().setDays(milk, WeekdaySet::weekend()), Error);
     CHECK_THROWS_AS(app.items().setActive(milk, false), Error);
     CHECK_THROWS_AS(app.items().remove(milk), Error);
 }
@@ -203,4 +190,9 @@ TEST_CASE("an item cannot be restored while its category is deleted") {
     app.categories().restore(food);
     CHECK_NOTHROW(app.items().restore(milk));
     CHECK(app.items().list().size() == 1);
+}
+TEST_CASE("an item can live in the built-in Misc category") {
+    Pesa app(":memory:");
+    const auto id = app.items().add({.categoryId = app.categories().misc(), .name = "Bank fee", .defaultAmount = 30});
+    CHECK(app.items().find(id)->categoryName == "Misc");
 }

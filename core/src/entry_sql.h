@@ -1,3 +1,4 @@
+// FTracker/core/src/entry_sql.h
 // FTracker/core/src/entry_sql.h  (PRIVATE)
 // SQL shared by Entries and Days.
 #pragma once

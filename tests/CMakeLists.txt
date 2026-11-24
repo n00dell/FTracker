@@ -1,4 +1,4 @@
-
+# FTracker/tests/CMakeLists.txt
 include(FetchContent)
 FetchContent_Declare(doctest
         GIT_REPOSITORY https://github.com/doctest/doctest.git
@@ -6,14 +6,20 @@ FetchContent_Declare(doctest
 set(DOCTEST_WITH_TESTS OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(doctest)
 
-add_executable(pesa_tests test_categories.cpp
-        temp_db.h
-        test_items.cpp
-        test_migrations.cpp
-        test_weekdays.cpp
+add_executable(pesa_tests
         main.cpp
-        raw_sql.h
+        test_weekdays.cpp
         test_date.cpp
-        test_entries.cpp)
-target_link_libraries(pesa_tests PRIVATE pesa_core doctest::doctest)
+        test_categories.cpp
+        test_items.cpp
+        test_entries.cpp
+        test_migrations.cpp
+        test_cli_text.cpp
+        test_cli_commands.cpp
+        test_settings.cpp
+        test_rules.cpp
+)
+target_link_libraries(pesa_tests PRIVATE pesa_core pesa_cli_lib doctest::doctest)
 add_test(NAME pesa_tests COMMAND pesa_tests)
+include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
+doctest_discover_tests(pesa_tests)

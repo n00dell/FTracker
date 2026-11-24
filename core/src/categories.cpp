@@ -9,7 +9,7 @@ namespace pesa {
 namespace {
 
 constexpr const char* kEmptyName = "A category name cannot be empty.";
-constexpr const char* kSelect = "SELECT id, name, sort_order, is_active, is_deleted FROM categories ";
+constexpr const char* kSelect = "SELECT id, name, sort_order, is_active, is_deleted, is_system FROM categories ";
 
 Category readCategory(const detail::Statement& st) {
     return Category{
@@ -18,6 +18,7 @@ Category readCategory(const detail::Statement& st) {
         .sortOrder = static_cast<int>(st.integer(2)),
         .isActive  = st.integer(3) != 0,
         .isDeleted = st.integer(4) != 0,
+        .isSystem  = st.integer(5) != 0,
     };
 }
 
@@ -29,6 +30,13 @@ bool nameTaken(detail::Database& db, const std::string& name, CategoryId exceptI
 }
 
 std::string noCategory(CategoryId id) { return "No category with id " + std::to_string(id) + "."; }
+
+// Misc is built in. Call this before rename / pause / delete.
+void requireNotSystem(detail::Database& db, CategoryId id) {
+    auto st = db.prepare("SELECT name FROM categories WHERE id = ? AND is_system = 1");
+    st.bind(1, id);
+    if (st.step()) throw Error("'" + st.text(0) + "' is built in and cannot be renamed, paused or deleted.");
+}
 
 // The name of a DELETED category, or throws if there is no such deleted category.
 std::string deletedName(detail::Database& db, CategoryId id) {
@@ -55,6 +63,7 @@ CategoryId Categories::add(std::string_view rawName) {
 
 void Categories::rename(CategoryId id, std::string_view newName) {
     const std::string name = detail::cleanName(newName, kEmptyName);
+    requireNotSystem(db_, id);
     if (nameTaken(db_, name, id)) {
         throw Error("A category named '" + name + "' already exists.");
     }
@@ -64,12 +73,14 @@ void Categories::rename(CategoryId id, std::string_view newName) {
 }
 
 void Categories::setActive(CategoryId id, bool active) {
+    requireNotSystem(db_, id);
     db_.prepare("UPDATE categories SET is_active = ? WHERE id = ? AND is_deleted = 0")
         .bind(1, active ? 1 : 0).bind(2, id).run();
     if (db_.changes() == 0) throw Error(noCategory(id));
 }
 
 void Categories::remove(CategoryId id) {
+    requireNotSystem(db_, id);
     db_.prepare("UPDATE categories SET is_deleted = 1 WHERE id = ? AND is_deleted = 0")
         .bind(1, id).run();
     if (db_.changes() == 0) throw Error(noCategory(id));
@@ -81,6 +92,12 @@ void Categories::restore(CategoryId id) {
         throw Error("Cannot restore: another category is now called '" + name + "'. Rename it first.");
     }
     db_.prepare("UPDATE categories SET is_deleted = 0 WHERE id = ?").bind(1, id).run();
+}
+
+CategoryId Categories::misc() const {
+    auto st = db_.prepare("SELECT id FROM categories WHERE is_system = 1 AND is_deleted = 0");
+    if (!st.step()) throw Error("The built-in Misc category is missing.");
+    return st.integer(0);
 }
 
 std::optional<Category> Categories::find(CategoryId id) const {
@@ -95,7 +112,7 @@ std::vector<Category> Categories::list(Visibility show) const {
     if (show == Visibility::ActiveOnly)            sql += "is_deleted = 0 AND is_active = 1 ";
     else if (show == Visibility::IncludeInactive)  sql += "is_deleted = 0 ";
     else                                           sql += "is_deleted = 1 ";
-    sql += "ORDER BY sort_order, id";
+    sql += "ORDER BY is_system, sort_order, id";   // Misc always comes last
 
     auto st = db_.prepare(sql);
     std::vector<Category> out;

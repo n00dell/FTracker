@@ -1,3 +1,4 @@
+// FTracker/gui/android/settings.gradle.kts
 pluginManagement {
     repositories {
         google()

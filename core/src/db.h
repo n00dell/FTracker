@@ -1,3 +1,4 @@
+// FTracker/core/src/db.h
 // FTracker/core/src/db.h  (PRIVATE: not visible to CLI/GUI)
 // Thin RAII wrappers around the SQLite C API.
 #pragma once
@@ -24,6 +25,7 @@ public:
     // Fill in a "?" placeholder. Indexes start at 1 (SQLite's rule).
     Statement& bind(int index, std::string_view value);
     Statement& bind(int index, std::int64_t value);
+    Statement& bindNull(int index);   // for optional columns (an empty std::optional)
 
     bool step();   // advance one row. true = a row is ready, false = finished
     void run();    // for INSERT/UPDATE/DELETE: execute once

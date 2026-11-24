@@ -1,3 +1,4 @@
+# FTracker/core/CMakeLists.txt
 find_package(SQLite3 REQUIRED)
 
 add_library(pesa_core STATIC
@@ -7,23 +8,25 @@ add_library(pesa_core STATIC
         src/db.h
         src/migrations.cpp
         src/migrations.h
-        src/paths.cpp
-        include/pesa/common.h
-        include/pesa/items.h
-        include/pesa/categories.h
         src/categories.cpp
         src/items.cpp
         src/util.h
         src/weekday_set.cpp
-        include/pesa/date.h
-        include/pesa/days.h
-        include/pesa/entries.h
         src/date.cpp
         src/days.cpp
         src/entries.cpp
         src/entry_sql.cpp
         src/entry_sql.h
-        #        ../tests/test_categories.cpp
+        src/rules.cpp
+        src/settings.cpp
+        include/pesa/common.h
+        include/pesa/items.h
+        include/pesa/categories.h
+        include/pesa/date.h
+        include/pesa/days.h
+        include/pesa/entries.h
+        include/pesa/rules.h
+        include/pesa/settings.h
 )
 
 # PUBLIC: anything linking pesa_core can #include <pesa/pesa.h>

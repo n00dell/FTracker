@@ -16,6 +16,7 @@ namespace pesa {
         int         sortOrder = 0;
         bool        isActive = true;    // false = paused (name stays reserved)
         bool        isDeleted = false;  // true  = soft deleted (name is free to reuse)
+        bool        isSystem = false;   // true  = built in (Misc): cannot be renamed, paused or deleted
     };
 
     // Created and owned by Pesa. Use it through app.categories().
@@ -28,6 +29,9 @@ namespace pesa {
         void       setActive(CategoryId id, bool active);
         void       remove(CategoryId id);    // soft delete: hides it, keeps the row
         void       restore(CategoryId id);   // undo a delete (fails if the name is taken again)
+
+        // The built-in "Misc" category: home for anything that fits nowhere else.
+        [[nodiscard]] CategoryId misc() const;
 
         // Finds a row even if it is deleted, so history can still look it up.
         [[nodiscard]] std::optional<Category> find(CategoryId id) const;

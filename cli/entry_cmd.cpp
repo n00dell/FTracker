@@ -1,66 +1,145 @@
-//
-// Created by lee on 11/23/26.
-//
 // FTracker/cli/entry_cmd.cpp
-#include "cli.h"
+#include <cli/commands.h>
 
-#include <iostream>
+#include <cli/display.h>
+#include <cli/pickers.h>
 
 namespace cli {
 
-int runEntry(pesa::Pesa& app, const Args& args) {
+namespace {
+
+pesa::CategoryId categoryRef(Context& ctx, const std::string& text) {
+    if (const auto id = parseInt(text)) return *id;
+    for (const auto& c : ctx.app.categories().list(pesa::Visibility::IncludeInactive)) {
+        if (toLower(c.name) == toLower(text)) return c.id;
+    }
+    throw pesa::Error("No category named '" + text + "'.");
+}
+
+// The entry id typed, or: ask for a day, then pick from that day's entries.
+pesa::EntryId entryIdArg(Context& ctx, ArgReader& reader, bool& guided) {
+    if (const auto text = reader.next()) return parseId(*text, "entry");
+    guided = true;
+    return pickEntry(ctx, ctx.io.askDate("Which day", pesa::Date::today()));
+}
+
+pesa::Entry requireEntry(Context& ctx, pesa::EntryId id) {
+    const auto entry = ctx.app.entries().find(id);
+    if (!entry) throw pesa::Error("No entry with id " + std::to_string(id) + ".");
+    return *entry;
+}
+
+} // namespace
+
+int runEntry(Context& ctx, const Args& args) {
+    auto& entries = ctx.app.entries();
+    auto& io = ctx.io;
+
     Args rest = args;
-    const bool savings = takeFlag(rest, "--savings");
-    const auto fund = savings ? pesa::FundedFrom::Savings : pesa::FundedFrom::Earned;
-    if (rest.size() < 2) { printUsage(); return 2; }
-    const std::string& sub = rest[1];
+    const bool savingsFlag = takeFlag(rest, "--savings");
+    const auto categoryOption = takeOption(rest, "--category");
+    const std::string sub = rest.size() >= 2
+        ? rest[1]
+        : chooseSubcommand(io, "Entries", {{"Add an entry from the catalog", "add"}, {"Add a one-off (Misc unless you pick)", "oneoff"},
+                                           {"Change an amount", "amount"}, {"Change earned/savings", "fund"},
+                                           {"Delete an entry", "delete"}});
+    ArgReader reader(rest, 2);
+    pesa::FundedFrom fund = savingsFlag ? pesa::FundedFrom::Savings : pesa::FundedFrom::Earned;
 
-    // entry add <date> <item-id> [<amount>]
-    if (sub == "add" && (rest.size() == 4 || rest.size() == 5)) {
-        const auto itemId = parseInt(rest[3]);
-        if (!itemId) { std::cerr << "Not a valid item id: " << rest[3] << "\n"; return 2; }
+    auto askSource = [&](bool guided) {
+        if (guided && !savingsFlag) {
+            fund = io.askChoice("Paid from", {"Earned money", "Savings"}, 0) == 1 ? pesa::FundedFrom::Savings
+                                                                                  : pesa::FundedFrom::Earned;
+        }
+    };
+
+    if (sub == "add") {
+        bool guided = false;
+
+        pesa::Date date;
+        if (const auto text = reader.next()) date = parseDate(*text);
+        else { guided = true; date = io.askDate("Date", pesa::Date::today()); }
+
+        pesa::ItemId itemId = 0;
+        if (const auto text = reader.next()) itemId = parseId(*text, "item");
+        else {
+            guided = true;
+            const auto category = pickCategory(ctx, pesa::Visibility::ActiveOnly, "Which category");
+            itemId = pickItem(ctx, category, pesa::Visibility::ActiveOnly, "Which item");
+        }
+
         std::optional<pesa::Money> amount;
-        if (rest.size() == 5) amount = parseAmount(rest[4]);
-
-        const auto id = app.entries().addFromItem(parseDate(rest[2]), *itemId, amount, fund);
-        std::cout << "Added entry #" << id << "\n";
-        return 0;
-    }
-
-    // entry oneoff <date> <category> <amount> <name...>
-    if (sub == "oneoff" && rest.size() >= 6) {
-        const auto id = app.entries().addOneOff(parseDate(rest[2]), resolveCategory(app, rest[3]),
-                                                joinFrom(rest, 5), parseAmount(rest[4]), fund);
-        std::cout << "Added one-off entry #" << id << "\n";
-        return 0;
-    }
-
-    if (rest.size() >= 3) {
-        const auto id = parseInt(rest[2]);
-        if (!id) { std::cerr << "Not a valid id: " << rest[2] << "\n"; return 2; }
-
-        if (sub == "amount" && rest.size() == 4) {
-            app.entries().setAmount(*id, parseAmount(rest[3]));
-            std::cout << "Amount updated.\n";
-            return 0;
+        if (const auto text = reader.next()) amount = parseAmount(*text);
+        else if (guided) {
+            const auto item = ctx.app.items().find(itemId);
+            amount = io.askAmount("Amount", item ? std::optional(item->defaultAmount) : std::nullopt);
         }
-        if (sub == "fund" && rest.size() == 4) {
-            if (rest[3] != "earned" && rest[3] != "savings") {
-                std::cerr << "Use 'earned' or 'savings'.\n";
-                return 2;
+        askSource(guided);
+
+        const auto id = entries.addFromItem(date, itemId, amount, fund);
+        io.out() << "Added entry #" << id << ".\n\n";
+        printDay(io, ctx.app.days().view(date));
+        return 0;
+    }
+
+    if (sub == "oneoff") {
+        bool guided = false;
+
+        pesa::Date date;
+        if (const auto text = reader.next()) date = parseDate(*text);
+        else { guided = true; date = io.askDate("Date", pesa::Date::today()); }
+
+        const auto amountText = reader.next();
+        const auto nameText = reader.rest();
+
+        std::string name;
+        if (nameText) name = *nameText; else { guided = true; name = io.askText("What was it for"); }
+
+        pesa::Money amount = 0;
+        if (amountText) amount = parseAmount(*amountText);
+        else { guided = true; amount = io.askAmount("Amount"); }
+
+        // A one-off lands in Misc unless you say otherwise.
+        pesa::CategoryId category = ctx.app.categories().misc();
+        if (categoryOption) category = categoryRef(ctx, *categoryOption);
+        else if (guided) category = pickCategory(ctx, pesa::Visibility::ActiveOnly, "Which category", {}, category);
+        askSource(guided);
+
+        const auto id = entries.addOneOff(date, category, name, amount, fund);
+        io.out() << "Added one-off #" << id << " (for this day only; the catalog is unchanged).\n\n";
+        printDay(io, ctx.app.days().view(date));
+        return 0;
+    }
+
+    if (sub == "amount" || sub == "fund" || sub == "delete") {
+        bool guided = false;
+        const auto id = entryIdArg(ctx, reader, guided);
+        const auto before = requireEntry(ctx, id);
+
+        if (sub == "amount") {
+            const auto text = reader.next();
+            entries.setAmount(id, text ? parseAmount(*text) : io.askAmount("New amount", before.amount));
+            io.out() << "Amount updated.\n\n";
+        } else if (sub == "fund") {
+            std::string choice;
+            if (const auto text = reader.next()) choice = toLower(*text);
+            else choice = io.askChoice("Paid from", {"Earned money", "Savings"},
+                                       before.fund == pesa::FundedFrom::Savings ? 1 : 0) == 1 ? "savings" : "earned";
+            if (choice != "earned" && choice != "savings") throw pesa::Error("Use 'earned' or 'savings'.");
+            entries.setFundedFrom(id, choice == "savings" ? pesa::FundedFrom::Savings : pesa::FundedFrom::Earned);
+            io.out() << "Updated.\n\n";
+        } else {
+            if (guided && !io.askYesNo("Delete '" + before.name + "' (" + formatMoney(before.amount) + ")?", false)) {
+                io.out() << "Kept it.\n";
+                return 0;
             }
-            app.entries().setFundedFrom(*id, rest[3] == "savings" ? pesa::FundedFrom::Savings
-                                                                  : pesa::FundedFrom::Earned);
-            std::cout << "Updated.\n";
-            return 0;
+            entries.remove(id);
+            io.out() << "Deleted.\n\n";
         }
-        if (sub == "delete" && rest.size() == 3) {
-            app.entries().remove(*id);
-            std::cout << "Deleted.\n";
-            return 0;
-        }
+        printDay(io, ctx.app.days().view(before.date));
+        return 0;
     }
-    printUsage();
+    printUsage(io);
     return 2;
 }
 

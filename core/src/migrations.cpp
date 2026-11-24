@@ -95,6 +95,75 @@ constexpr std::array kMigrations = {
         );
         CREATE INDEX idx_entries_date ON entries(date);
     )sql"},
+
+    // Three changes that belong together:
+    //  1. "Misc": a built-in category (is_system = 1) that can never be renamed, paused or
+    //     deleted, so every item and one-off always has somewhere to live.
+    //  2. A settings table (first-run done?, expected pay, auto-post on/off and time).
+    //  3. The days an item posts on MOVE to rules (migration 6), so the items table loses
+    //     its weekdays column. SQLite cannot reliably drop a column that has a CHECK on it
+    //     in older versions, so we rebuild the table the same way migration 3 did.
+    Migration{5, R"sql(
+        ALTER TABLE categories
+            ADD COLUMN is_system INTEGER NOT NULL DEFAULT 0 CHECK (is_system IN (0, 1));
+
+        -- If you already made a category called Misc, adopt it instead of making a clash.
+        UPDATE categories SET is_system = 1 WHERE name = 'Misc' AND is_deleted = 0;
+
+        INSERT INTO categories(name, sort_order, is_system)
+            SELECT 'Misc', COALESCE((SELECT MAX(sort_order) FROM categories), 0) + 1, 1
+            WHERE NOT EXISTS (SELECT 1 FROM categories WHERE is_system = 1);
+
+        CREATE TABLE settings (
+            key   TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
+
+        CREATE TABLE items_new (
+            id             INTEGER PRIMARY KEY,
+            category_id    INTEGER NOT NULL REFERENCES categories(id),
+            name           TEXT    NOT NULL COLLATE NOCASE,
+            default_amount INTEGER NOT NULL CHECK (default_amount > 0),
+            is_active      INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
+            is_deleted     INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1))
+        );
+        INSERT INTO items_new(id, category_id, name, default_amount, is_active, is_deleted)
+            SELECT id, category_id, name, default_amount, is_active, is_deleted FROM items;
+        DROP TABLE items;
+        ALTER TABLE items_new RENAME TO items;
+        CREATE UNIQUE INDEX ux_items_name ON items(category_id, name) WHERE is_deleted = 0;
+    )sql"},
+
+    // Rules (charge rules for now: "post these items on these days"). A rule says WHEN,
+    // an item says WHAT and HOW MUCH, and rule_items links the two (many to many).
+    // Skip and adjust rules come later as extra columns/tables, so nothing is wasted here.
+    Migration{6, R"sql(
+        CREATE TABLE rules (
+            id             INTEGER PRIMARY KEY,
+            name           TEXT    NOT NULL COLLATE NOCASE,
+            repeat_kind    INTEGER NOT NULL CHECK (repeat_kind IN (0, 1)),   -- 0 weekly, 1 monthly
+            weekdays       INTEGER NOT NULL DEFAULT 0 CHECK (weekdays BETWEEN 0 AND 127),
+            month_day      INTEGER NOT NULL DEFAULT 0 CHECK (month_day BETWEEN 0 AND 31),
+            effective_from TEXT    NOT NULL
+                           CHECK (effective_from GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            effective_to   TEXT    -- last day it applies; NULL = never ends
+                           CHECK (effective_to IS NULL OR
+                                  effective_to GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            is_active      INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
+            is_deleted     INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1)),
+            -- A weekly rule needs at least one weekday; a monthly rule needs a day number.
+            CHECK ((repeat_kind = 0 AND weekdays != 0 AND month_day = 0) OR
+                   (repeat_kind = 1 AND weekdays = 0 AND month_day BETWEEN 1 AND 31)),
+            CHECK (effective_to IS NULL OR effective_to >= effective_from)
+        );
+        CREATE UNIQUE INDEX ux_rules_name ON rules(name) WHERE is_deleted = 0;
+
+        CREATE TABLE rule_items (
+            rule_id INTEGER NOT NULL REFERENCES rules(id),
+            item_id INTEGER NOT NULL REFERENCES items(id),
+            PRIMARY KEY (rule_id, item_id)
+        );
+    )sql"},
 };
 
 // While tables are being rebuilt, foreign keys must be switched off (SQLite ignores

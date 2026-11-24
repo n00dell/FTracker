@@ -1,84 +1,112 @@
 // FTracker/cli/item_cmd.cpp
-#include "cli.h"
+#include <cli/commands.h>
 
-#include <algorithm>
-#include <cctype>
-#include <iomanip>
-#include <iostream>
+#include <cli/display.h>
+#include <cli/pickers.h>
 
 namespace cli {
 
 namespace {
 
-void printItems(const std::vector<pesa::Item>& items) {
-    if (items.empty()) { std::cout << "No items.\n"; return; }
-    std::cout << std::left << std::setw(5) << "ID" << std::setw(16) << "Category"
-              << std::setw(26) << "Item" << std::right << std::setw(8) << "Amount"
-              << "  " << std::left << "Days\n";
-    for (const auto& i : items) {
-        std::cout << std::left << std::setw(5) << i.id << std::setw(16) << i.categoryName
-                  << std::setw(26) << i.name << std::right << std::setw(8) << i.defaultAmount
-                  << "  " << std::left << i.days.toString()
-                  << (i.isDeleted ? "  (deleted)" : (i.isActive ? "" : "  (inactive)")) << "\n";
+pesa::CategoryId categoryRef(Context& ctx, const std::string& text) {
+    if (const auto id = parseInt(text)) return *id;                  // "2"
+    for (const auto& c : ctx.app.categories().list(pesa::Visibility::IncludeInactive)) {
+        if (toLower(c.name) == toLower(text)) return c.id;           // "Transport"
     }
+    throw pesa::Error("No category named '" + text + "'.");
+}
+
+pesa::ItemId itemIdArg(Context& ctx, ArgReader& reader, pesa::Visibility show, const std::string& label,
+                       const ItemFilter& filter = {}) {
+    if (const auto text = reader.next()) return parseId(*text, "item");
+    return pickItem(ctx, std::nullopt, show, label, filter);
 }
 
 } // namespace
 
-int runItem(pesa::Pesa& app, const Args& args) {
-    if (args.size() < 2) { printUsage(); return 2; }
-    const std::string& sub = args[1];
+int runItem(Context& ctx, const Args& args) {
+    auto& items = ctx.app.items();
+    auto& io = ctx.io;
+
+    Args rest = args;
+    const std::string sub = rest.size() >= 2
+        ? rest[1]
+        : chooseSubcommand(io, "Items", {{"Add an item", "add"}, {"List items", "list"},
+                                         {"Rename an item", "rename"}, {"Change an amount", "amount"},
+                                         {"Pause an item", "deactivate"},
+                                         {"Resume an item", "activate"}, {"Delete an item", "delete"},
+                                         {"Restore a deleted item", "restore"}});
+    ArgReader reader(rest, 2);
 
     if (sub == "add") {
-        Args rest = args;
-        const auto days = takeOption(rest, "--days");
-        if (rest.size() < 5) { printUsage(); return 2; }   // item add <category> <amount> <name...>
+        pesa::CategoryId category = 0;
+        if (const auto text = reader.next()) category = categoryRef(ctx, *text);
+        else category = pickCategory(ctx, pesa::Visibility::ActiveOnly, "Which category");
 
-        const pesa::NewItem item{
-            .categoryId    = resolveCategory(app, rest[2]),
-            .name          = joinFrom(rest, 4),
-            .defaultAmount = parseAmount(rest[3]),
-            .days          = days ? pesa::WeekdaySet::parse(*days) : pesa::WeekdaySet::everyDay(),
-        };
-        const auto id = app.items().add(item);   // add first: if it throws, nothing is printed
-        std::cout << "Added item #" << id << "\n";
+        const auto amountText = reader.next();
+        const auto nameText = reader.rest();
+
+        std::string name;
+        if (nameText) name = *nameText; else name = io.askText("Item name");
+
+        pesa::Money amount = 0;
+        if (amountText) amount = parseAmount(*amountText);
+        else amount = io.askAmount("Default amount");
+
+        const auto id = items.add({.categoryId = category, .name = name, .defaultAmount = amount});
+        const auto item = items.find(id);
+        io.out() << "Added '" << item->name << "' (#" << id << ") to " << item->categoryName << ": "
+                 << formatMoney(item->defaultAmount) << ". To post it automatically, put it in a rule ('rule add').\n";
         return 0;
     }
-
     if (sub == "list") {
-        Args rest = args;
-        const auto show = takeVisibility(rest);
+        Args flags = rest;
+        const auto show = takeVisibility(flags);
         std::optional<pesa::CategoryId> category;
-        if (rest.size() >= 3) category = resolveCategory(app, joinFrom(rest, 2));
-        printItems(app.items().list(category, show));
+        if (const auto text = reader.next(); text && !text->starts_with("--")) category = categoryRef(ctx, *text);
+        printItems(io, items.list(category, show));
         return 0;
     }
-
-    if (args.size() >= 3) {
-        const auto id = parseInt(args[2]);
-        if (!id) { std::cerr << "Not a valid id: " << args[2] << "\n"; return 2; }
-
-        if (sub == "rename" && args.size() >= 4) {
-            app.items().rename(*id, joinFrom(args, 3));
-            std::cout << "Renamed.\n";
-            return 0;
-        }
-        if (sub == "amount" && args.size() == 4) {
-            app.items().setDefaultAmount(*id, parseAmount(args[3]));
-            std::cout << "Amount updated.\n";
-            return 0;
-        }
-        if (sub == "days" && args.size() >= 4) {
-            app.items().setDays(*id, pesa::WeekdaySet::parse(joinFrom(args, 3)));
-            std::cout << "Days updated.\n";
-            return 0;
-        }
-        if (sub == "deactivate") { app.items().setActive(*id, false); std::cout << "Deactivated.\n"; return 0; }
-        if (sub == "activate")   { app.items().setActive(*id, true);  std::cout << "Activated.\n";   return 0; }
-        if (sub == "delete")     { app.items().remove(*id);           std::cout << "Deleted.\n";     return 0; }
-        if (sub == "restore")    { app.items().restore(*id);          std::cout << "Restored.\n";    return 0; }
+    if (sub == "rename") {
+        const auto id = itemIdArg(ctx, reader, pesa::Visibility::IncludeInactive, "Rename which item");
+        const auto typed = reader.rest();
+        items.rename(id, typed ? *typed : io.askText("New name"));
+        io.out() << "Renamed.\n";
+        return 0;
     }
-    printUsage();
+    if (sub == "amount") {
+        const auto id = itemIdArg(ctx, reader, pesa::Visibility::IncludeInactive, "Change which item");
+        const auto typed = reader.next();
+        const auto current = items.find(id);
+        items.setDefaultAmount(id, typed ? parseAmount(*typed)
+                                         : io.askAmount("New amount", current ? std::optional(current->defaultAmount)
+                                                                              : std::nullopt));
+        io.out() << "Amount updated. Days already posted keep their old amount.\n";
+        return 0;
+    }
+    if (sub == "deactivate") {
+        items.setActive(itemIdArg(ctx, reader, pesa::Visibility::IncludeInactive, "Pause which item",
+                                  [](const pesa::Item& i) { return i.isActive; }), false);
+        io.out() << "Paused. Its name stays reserved.\n";
+        return 0;
+    }
+    if (sub == "activate") {
+        items.setActive(itemIdArg(ctx, reader, pesa::Visibility::IncludeInactive, "Resume which item",
+                                  [](const pesa::Item& i) { return !i.isActive; }), true);
+        io.out() << "Resumed.\n";
+        return 0;
+    }
+    if (sub == "delete") {
+        items.remove(itemIdArg(ctx, reader, pesa::Visibility::IncludeInactive, "Delete which item"));
+        io.out() << "Deleted. Its name is free again; 'item restore' undoes this.\n";
+        return 0;
+    }
+    if (sub == "restore") {
+        items.restore(itemIdArg(ctx, reader, pesa::Visibility::DeletedOnly, "Restore which item"));
+        io.out() << "Restored.\n";
+        return 0;
+    }
+    printUsage(io);
     return 2;
 }
 
