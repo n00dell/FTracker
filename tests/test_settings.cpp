@@ -48,3 +48,11 @@ TEST_CASE("auto-post can be switched off and on") {
     app.settings().setAutoPostEnabled(true);
     CHECK(app.settings().autoPostEnabled());
 }
+TEST_CASE("the post-after time defaults to 20:00 and can be changed") {
+    Pesa app(":memory:");
+    CHECK(app.settings().postAfter() == pesa::TimeOfDay{20, 0});
+    app.settings().setPostAfter(pesa::TimeOfDay::parse("7:05"));
+    CHECK(app.settings().postAfter().toString() == "07:05");
+    CHECK_THROWS_AS((void)pesa::TimeOfDay::parse("25:00"), Error);
+    CHECK_THROWS_AS((void)pesa::TimeOfDay::parse("noon"), Error);
+}

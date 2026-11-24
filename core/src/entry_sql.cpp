@@ -12,18 +12,19 @@ std::optional<std::int64_t> optionalInteger(const Statement& st, int column) {
 
 } // namespace
 
-Entry readEntry(const Statement& st) {
+    Entry readEntry(const Statement& st) {
     return Entry{
         .id             = st.integer(0),
         .date           = Date::parse(st.text(1)),
         .itemId         = optionalInteger(st, 2),
-        .categoryId     = st.integer(3),
-        .categoryName   = st.text(4),
+        .categoryId     = optionalInteger(st, 3),
+        .categoryName   = st.text(4),            // NULL comes back as "" for a one-off
         .name           = st.text(5),
         .amount         = st.integer(6),
         .originalAmount = optionalInteger(st, 7),
         .kind           = static_cast<EntryKind>(st.integer(8)),
         .fund           = static_cast<FundedFrom>(st.integer(9)),
+        .ruleId         = optionalInteger(st, 10),
     };
 }
 

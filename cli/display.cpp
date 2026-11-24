@@ -111,6 +111,10 @@ std::string entryStateText(const pesa::Entry& e) {
     return "";
 }
 
+    std::string entryCategoryText(const pesa::Entry& e) {
+    return e.isOneOff() ? "One-off" : e.categoryName;
+}
+    
 // ---------------- screens ----------------
 
 void printDay(Console& io, const pesa::DayView& day) {
@@ -126,7 +130,7 @@ void printDay(Console& io, const pesa::DayView& day) {
             if (e.kind == pesa::EntryKind::Edited)  style = Style::Yellow;
             if (e.kind == pesa::EntryKind::Added)   style = Style::Blue;
             if (e.kind == pesa::EntryKind::Skipped) style = Style::Dim;
-            table.addRow({std::to_string(e.id), e.categoryName, e.name, formatMoney(e.amount),
+            table.addRow({std::to_string(e.id), entryCategoryText(e), e.name, formatMoney(e.amount),
                           e.fund == pesa::FundedFrom::Earned ? "earned" : "savings", entryStateText(e)},
                          style);
         }

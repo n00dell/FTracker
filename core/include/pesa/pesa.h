@@ -11,6 +11,7 @@
 #include <pesa/items.h>
 #include <pesa/rules.h>
 #include <pesa/settings.h>
+#include <pesa/daily_job.h>
 
 #include <filesystem>
 #include <memory>
@@ -40,7 +41,9 @@ namespace pesa {
         const Rules&      rules() const;
         Settings&         settings();
         const Settings&   settings() const;
-
+        DailyJob&         dailyJob();
+        const DailyJob&   dailyJob() const;
+        
         // Version of the database layout currently in the file.
         [[nodiscard]] int schemaVersion() const;
 

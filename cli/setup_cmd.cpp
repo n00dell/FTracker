@@ -18,8 +18,8 @@ void showSettings(Context& ctx) {
     } else {
         out << "  Expected pay:   not set (projections stay off until you set one)\n";
     }
-    out << "  Auto-post:      " << (settings.autoPostEnabled() ? "on" : "off")
-        << " (runs when Pesa opens)\n";
+    out << "  Post today after: " << settings.postAfter().toString()
+        << " (earlier days always post)\n";
 }
 
 } // namespace
@@ -73,6 +73,16 @@ int runSettings(Context& ctx, const Args& args) {
         io.out() << "Auto-post is " << (on ? "on" : "off") << ".\n";
         return 0;
     }
+
+    if (sub == "postafter") {
+        const auto text = reader.next();
+        const auto time = pesa::TimeOfDay::parse(
+            text ? *text : io.askText("Post today's routine after (HH:MM)", settings.postAfter().toString()));
+        settings.setPostAfter(time);
+        io.out() << "Today's routine entries post after " << time.toString() << ".\n";
+        return 0;
+    }
+    
     printUsage(io);
     return 2;
 }

@@ -69,24 +69,19 @@ EntryId Entries::addFromItem(const Date& date, ItemId itemId, std::optional<Mone
     return id;
 }
 
-EntryId Entries::addOneOff(const Date& date, CategoryId category, std::string_view rawName,
-                           Money amount, FundedFrom fund) {
+    EntryId Entries::addOneOff(const Date& date, std::string_view rawName, Money amount, FundedFrom fund) {
     const std::string name = detail::cleanName(rawName, kEmptyName);
     detail::requirePositive(amount);
 
     detail::Transaction tx(db_);
-    requireUsableCategory(db_, category);
-
     detail::ensureDay(db_, date);
-    // No item_id column here: it stays NULL, which is what marks a one-off.
-    db_.prepare("INSERT INTO entries(date, category_id, name, amount, kind, funded_from) "
-                "VALUES (?, ?, ?, ?, ?, ?)")
+    // No item_id and no category_id: both stay NULL, which is what marks a one-off.
+    db_.prepare("INSERT INTO entries(date, name, amount, kind, funded_from) VALUES (?, ?, ?, ?, ?)")
         .bind(1, date.toString())
-        .bind(2, category)
-        .bind(3, name)
-        .bind(4, amount)
-        .bind(5, static_cast<std::int64_t>(EntryKind::Added))
-        .bind(6, static_cast<std::int64_t>(fund))
+        .bind(2, name)
+        .bind(3, amount)
+        .bind(4, static_cast<std::int64_t>(EntryKind::Added))
+        .bind(5, static_cast<std::int64_t>(fund))
         .run();
     const EntryId id = db_.lastInsertId();
 

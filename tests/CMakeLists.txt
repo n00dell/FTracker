@@ -18,8 +18,8 @@ add_executable(pesa_tests
         test_cli_commands.cpp
         test_settings.cpp
         test_rules.cpp
+        test_daily_job.cpp
 )
 target_link_libraries(pesa_tests PRIVATE pesa_core pesa_cli_lib doctest::doctest)
-add_test(NAME pesa_tests COMMAND pesa_tests)
 include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 doctest_discover_tests(pesa_tests)

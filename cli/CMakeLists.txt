@@ -19,8 +19,8 @@ add_library(pesa_cli_lib STATIC
 target_include_directories(pesa_cli_lib PUBLIC include)
 target_link_libraries(pesa_cli_lib PUBLIC pesa_core)
 
-add_executable(pesa-cli main.cpp
-        startup.cpp)
+add_executable(pesa-cli main.cpp)
+
 target_link_libraries(pesa-cli PRIVATE pesa_cli_lib)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")

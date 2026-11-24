@@ -27,6 +27,8 @@ add_library(pesa_core STATIC
         include/pesa/entries.h
         include/pesa/rules.h
         include/pesa/settings.h
+        include/pesa/daily_job.h
+        src/daily_job.cpp
 )
 
 # PUBLIC: anything linking pesa_core can #include <pesa/pesa.h>

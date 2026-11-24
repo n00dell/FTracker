@@ -12,7 +12,7 @@ namespace pesa {
 
         {
             auto st = db_.prepare(std::string(detail::kSelectEntry) +
-                                  "WHERE e.date = ? ORDER BY c.is_system, c.sort_order, c.id, e.id");
+                                  "WHERE e.date = ? ORDER BY (e.category_id IS NULL), c.is_system, c.sort_order, c.id, e.id");
             st.bind(1, date.toString());
             while (st.step()) view.entries.push_back(detail::readEntry(st));
         }

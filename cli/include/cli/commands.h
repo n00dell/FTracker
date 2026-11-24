@@ -31,5 +31,6 @@ namespace cli {
     int runRule(Context& ctx, const Args& args);
     int runSetup(Context& ctx, const Args& args);
     int runSettings(Context& ctx, const Args& args);
+    int runJob(Context& ctx, const Args& args);
     void runStartup(Context& ctx, bool interactive);
 } // namespace cli

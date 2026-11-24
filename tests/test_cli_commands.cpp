@@ -50,10 +50,11 @@ TEST_CASE("one-liners still work, and a one-off lands in Misc") {
     CHECK(day.earnedTotal == 60);
     CHECK(day.savingsTotal == 500);
     REQUIRE(day.entries.size() == 2);
-    CHECK(day.entries[1].categoryName == "Misc");   // Food first, Misc last
     CHECK(s.app.items().list()[1].name == "Fresh bread");
     CHECK(contains(s.output(), "Uncle Bill's wedding"));   // the day is shown after each change
     CHECK(contains(s.output(), "Spent 560"));
+    CHECK(day.entries[1].isOneOff());
+    CHECK(day.entries[1].categoryName.empty());
 }
 
 TEST_CASE("errors go to the error stream and give a failing exit code") {
@@ -133,8 +134,8 @@ TEST_CASE("entry add picks the day, category and item, and Enter takes the defau
     CHECK(contains(s.output(), "Spent 60"));
 }
 
-TEST_CASE("entry oneoff asks for everything, and Enter on the category means Misc") {
-    Session s("2026-11-23\nUncle Bill's wedding\n1,500\n\n2\n");   // date, name, amount, category (Enter), savings
+TEST_CASE("entry oneoff asks for the day, name, amount and where the money comes from") {
+    Session s("2026-11-23\nUncle Bill's wedding\n1,500\n2\n");   // date, name, amount, savings
     s.app.categories().add("Food");
     CHECK(s.run("entry oneoff") == 0);
 
@@ -143,20 +144,18 @@ TEST_CASE("entry oneoff asks for everything, and Enter on the category means Mis
     CHECK(day.entries[0].isOneOff());
     CHECK(day.entries[0].amount == 1500);
     CHECK(day.entries[0].fund == pesa::FundedFrom::Savings);
-    CHECK(day.entries[0].categoryName == "Misc");
     CHECK(s.app.items().list().empty());                  // never touches the catalog
+    CHECK(contains(s.output(), "One-off"));
 }
 
 TEST_CASE("deleting an entry in guided mode asks first") {
     Session no("2026-11-23\n1\nn\n");
-    const auto food = no.app.categories().add("Food");
-    no.app.entries().addOneOff(kDay, food, "Gift", 100);
+    no.app.entries().addOneOff(kDay, "Gift", 100);
     CHECK(no.run("entry delete") == 0);
     CHECK(no.app.days().view(kDay).entries.size() == 1);   // said no
 
     Session yes("2026-11-23\n1\ny\n");
-    const auto f2 = yes.app.categories().add("Food");
-    yes.app.entries().addOneOff(kDay, f2, "Gift", 100);
+    yes.app.entries().addOneOff(kDay, "Gift", 100);
     CHECK(yes.run("entry delete") == 0);
     CHECK(yes.app.days().view(kDay).entries.empty());
 }
@@ -288,4 +287,21 @@ TEST_CASE("help lists the commands") {
     CHECK(s.run("help") == 0);
     CHECK(contains(s.output(), "catalog edit"));
     CHECK(contains(s.output(), "entry oneoff"));
+}
+TEST_CASE("job says what it did, and respects the auto-post switch") {
+    Session s;
+    CHECK(s.run("job") == 0);
+    CHECK(contains(s.output(), "Nothing new to post"));
+
+    s.out.str("");
+    CHECK(s.run("settings autopost off") == 0);
+    CHECK(s.run("job") == 0);
+    CHECK(contains(s.output(), "Auto-post is off"));
+}
+
+TEST_CASE("settings postafter changes when today's routine posts") {
+    Session s;
+    CHECK(s.run("settings postafter 18:30") == 0);
+    CHECK(s.app.settings().postAfter().toString() == "18:30");
+    CHECK(s.run("settings postafter noon") == 1);
 }

@@ -8,14 +8,6 @@ namespace cli {
 
 namespace {
 
-pesa::CategoryId categoryRef(Context& ctx, const std::string& text) {
-    if (const auto id = parseInt(text)) return *id;
-    for (const auto& c : ctx.app.categories().list(pesa::Visibility::IncludeInactive)) {
-        if (toLower(c.name) == toLower(text)) return c.id;
-    }
-    throw pesa::Error("No category named '" + text + "'.");
-}
-
 // The entry id typed, or: ask for a day, then pick from that day's entries.
 pesa::EntryId entryIdArg(Context& ctx, ArgReader& reader, bool& guided) {
     if (const auto text = reader.next()) return parseId(*text, "entry");
@@ -37,10 +29,9 @@ int runEntry(Context& ctx, const Args& args) {
 
     Args rest = args;
     const bool savingsFlag = takeFlag(rest, "--savings");
-    const auto categoryOption = takeOption(rest, "--category");
     const std::string sub = rest.size() >= 2
         ? rest[1]
-        : chooseSubcommand(io, "Entries", {{"Add an entry from the catalog", "add"}, {"Add a one-off (Misc unless you pick)", "oneoff"},
+        : chooseSubcommand(io, "Entries", {{"Add an entry from the catalog", "add"}, {"Add a one-off", "oneoff"},
                                            {"Change an amount", "amount"}, {"Change earned/savings", "fund"},
                                            {"Delete an entry", "delete"}});
     ArgReader reader(rest, 2);
@@ -98,14 +89,9 @@ int runEntry(Context& ctx, const Args& args) {
         pesa::Money amount = 0;
         if (amountText) amount = parseAmount(*amountText);
         else { guided = true; amount = io.askAmount("Amount"); }
-
-        // A one-off lands in Misc unless you say otherwise.
-        pesa::CategoryId category = ctx.app.categories().misc();
-        if (categoryOption) category = categoryRef(ctx, *categoryOption);
-        else if (guided) category = pickCategory(ctx, pesa::Visibility::ActiveOnly, "Which category", {}, category);
         askSource(guided);
 
-        const auto id = entries.addOneOff(date, category, name, amount, fund);
+        const auto id = entries.addOneOff(date, name, amount, fund);
         io.out() << "Added one-off #" << id << " (for this day only; the catalog is unchanged).\n\n";
         printDay(io, ctx.app.days().view(date));
         return 0;

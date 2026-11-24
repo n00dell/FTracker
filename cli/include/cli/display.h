@@ -43,7 +43,8 @@ namespace cli {
 
     std::string weekdayName(pesa::Weekday day);              // "Monday"
     std::string entryStateText(const pesa::Entry& entry);    // "auto", "edited (was 50)", ...
-
+    std::string entryCategoryText(const pesa::Entry& entry);  // the category, or "One-off"
+    
     void printDay(Console& io, const pesa::DayView& day);
     void printCategories(Console& io, const std::vector<pesa::Category>& categories);
     void printItems(Console& io, const std::vector<pesa::Item>& items);

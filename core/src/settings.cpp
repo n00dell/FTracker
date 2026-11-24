@@ -5,17 +5,58 @@
 #include "util.h"
 
 #include <charconv>
+#include <cstdio>
+#include <ctime>
 
 namespace pesa {
 
 namespace {
 
-constexpr const char* kSetupDone = "setup_done";
-constexpr const char* kPay       = "expected_pay";
-constexpr const char* kPayday    = "expected_payday";
-constexpr const char* kAutoPost  = "auto_post_enabled";
+constexpr const char* kSetupDone  = "setup_done";
+constexpr const char* kPay        = "expected_pay";
+constexpr const char* kPayday     = "expected_payday";
+constexpr const char* kAutoPost   = "auto_post_enabled";
+constexpr const char* kPostAfter  = "post_after";
+constexpr TimeOfDay   kDefaultPostAfter{20, 0};
 
 } // namespace
+
+// ---------------- TimeOfDay ----------------
+
+TimeOfDay TimeOfDay::parse(std::string_view text) {
+    auto bad = [&] { return Error("A time must look like 08:30, got '" + std::string(text) + "'."); };
+
+    const auto colon = text.find(':');
+    if (colon == std::string_view::npos) throw bad();
+
+    auto number = [&](std::string_view part) {
+        int value = 0;
+        const auto [end, ec] = std::from_chars(part.data(), part.data() + part.size(), value);
+        if (part.empty() || ec != std::errc{} || end != part.data() + part.size()) throw bad();
+        return value;
+    };
+    const int hour = number(text.substr(0, colon));
+    const int minute = number(text.substr(colon + 1));
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) throw bad();
+    return TimeOfDay{hour, minute};
+}
+
+TimeOfDay TimeOfDay::now() {
+    const std::time_t t = std::time(nullptr);
+    std::tm local{};
+#if defined(_WIN32)
+    localtime_s(&local, &t);
+#else
+    localtime_r(&t, &local);
+#endif
+    return TimeOfDay{local.tm_hour, local.tm_min};
+}
+
+std::string TimeOfDay::toString() const {
+    char out[16];
+    std::snprintf(out, sizeof out, "%02d:%02d", hour, minute);
+    return out;
+}
 
 // ---------------- the key/value store ----------------
 
@@ -77,5 +118,17 @@ std::optional<Date> Settings::expectedPayday() const {
 bool Settings::autoPostEnabled() const { return get(kAutoPost) != "0"; }   // missing = on
 
 void Settings::setAutoPostEnabled(bool enabled) { set(kAutoPost, enabled ? "1" : "0"); }
+
+TimeOfDay Settings::postAfter() const {
+    const auto text = get(kPostAfter);
+    if (!text) return kDefaultPostAfter;
+    try {
+        return TimeOfDay::parse(*text);
+    } catch (const Error&) {
+        return kDefaultPostAfter;
+    }
+}
+
+void Settings::setPostAfter(TimeOfDay time) { set(kPostAfter, time.toString()); }
 
 } // namespace pesa

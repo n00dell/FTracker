@@ -164,6 +164,48 @@ constexpr std::array kMigrations = {
             PRIMARY KEY (rule_id, item_id)
         );
     )sql"},
+        // Three changes that belong together:
+    //  1. A one-off has NO category any more (it was stored under Misc by mistake), so
+    //     entries.category_id may now be NULL. SQLite cannot drop a NOT NULL, so we rebuild
+    //     the table the same way as migration 3.
+    //  2. entries.rule_id: which rule posted an auto entry. With the unique index below it is
+    //     the hard guard "a rule posts once per item per day", even if the job ran twice.
+    //  3. An issues table where the daily job records a problem instead of hiding it.
+    Migration{7, R"sql(
+        CREATE TABLE entries_new (
+            id              INTEGER PRIMARY KEY,
+            date            TEXT    NOT NULL REFERENCES days(date),
+            item_id         INTEGER REFERENCES items(id),        -- NULL = a one-off
+            category_id     INTEGER REFERENCES categories(id),   -- NULL = a one-off
+            name            TEXT    NOT NULL,
+            amount          INTEGER NOT NULL CHECK (amount > 0),
+            original_amount INTEGER CHECK (original_amount > 0),
+            kind            INTEGER NOT NULL CHECK (kind BETWEEN 0 AND 3),
+            funded_from     INTEGER NOT NULL DEFAULT 0 CHECK (funded_from IN (0, 1)),
+            rule_id         INTEGER REFERENCES rules(id),        -- NULL = not posted by a rule
+            -- Catalog entries have both an item and a category; one-offs have neither.
+            CHECK ((item_id IS NULL AND category_id IS NULL) OR
+                   (item_id IS NOT NULL AND category_id IS NOT NULL))
+        );
+        INSERT INTO entries_new(id, date, item_id, category_id, name, amount,
+                                original_amount, kind, funded_from)
+            SELECT id, date, item_id,
+                   CASE WHEN item_id IS NULL THEN NULL ELSE category_id END,
+                   name, amount, original_amount, kind, funded_from
+            FROM entries;
+        DROP TABLE entries;
+        ALTER TABLE entries_new RENAME TO entries;
+        CREATE INDEX idx_entries_date ON entries(date);
+        CREATE UNIQUE INDEX ux_entries_rule_post ON entries(date, rule_id, item_id)
+            WHERE rule_id IS NOT NULL;
+
+        CREATE TABLE issues (
+            id         INTEGER PRIMARY KEY,
+            day        TEXT NOT NULL,
+            message    TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+    )sql"},
 };
 
 // While tables are being rebuilt, foreign keys must be switched off (SQLite ignores

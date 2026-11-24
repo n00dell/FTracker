@@ -84,33 +84,33 @@ TEST_CASE("a failed add leaves no trace, not even an empty day") {
     CHECK(f.app.days().view(kDay).entries.empty());
 }
 
-TEST_CASE("a one-off belongs to a category but not to the catalog") {
-    Fixture f;
-    const auto id = f.app.entries().addOneOff(kDay, f.food, "  Uncle Bill's wedding ", 500);
-    const auto e = f.app.entries().find(id);
-    REQUIRE(e.has_value());
-    CHECK(e->isOneOff());
-    CHECK_FALSE(e->itemId.has_value());
-    CHECK(e->name == "Uncle Bill's wedding");
-    CHECK(e->categoryName == "Food");
-    CHECK(e->kind == EntryKind::Added);
-    CHECK(f.app.items().list().size() == 2);                      // the catalog did not grow
-}
+// TEST_CASE("a one-off belongs to a category but not to the catalog") {
+//     Fixture f;
+//     const auto id = f.app.entries().addOneOff(kDay, f.food, "  Uncle Bill's wedding ", 500);
+//     const auto e = f.app.entries().find(id);
+//     REQUIRE(e.has_value());
+//     CHECK(e->isOneOff());
+//     CHECK_FALSE(e->itemId.has_value());
+//     CHECK(e->name == "Uncle Bill's wedding");
+//     CHECK(e->categoryName == "Food");
+//     CHECK(e->kind == EntryKind::Added);
+//     CHECK(f.app.items().list().size() == 2);                      // the catalog did not grow
+// }
 
-TEST_CASE("one-off input is checked") {
-    Fixture f;
-    CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, f.food, "  ", 100), Error);
-    CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, f.food, "Gift", 0), Error);
-    CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, 9999, "Gift", 100), Error);
-    f.app.categories().remove(f.food);
-    CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, f.food, "Gift", 100), Error);
-}
-
+// TEST_CASE("one-off input is checked") {
+//     Fixture f;
+//     CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, f.food, "  ", 100), Error);
+//     CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, f.food, "Gift", 0), Error);
+//     CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, 9999, "Gift", 100), Error);
+//     f.app.categories().remove(f.food);
+//     CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, f.food, "Gift", 100), Error);
+// }
+//
 TEST_CASE("a day sums its entries and splits them by funding source") {
     Fixture f;
     f.app.entries().addFromItem(kDay, f.matatu);                          // 50 earned
     f.app.entries().addFromItem(kDay, f.milk, std::nullopt, FundedFrom::Savings);   // 60 savings
-    f.app.entries().addOneOff(kDay, f.food, "Gift", 500);                 // 500 earned
+    f.app.entries().addOneOff(kDay, "Gift", 500, FundedFrom::Earned);                // 500 earned
 
     const auto v = f.app.days().view(kDay);
     CHECK(v.entries.size() == 3);
@@ -267,11 +267,43 @@ TEST_CASE("entries survive closing and reopening the file") {
     {
         Fixture f(file.path);
         f.app.entries().addFromItem(kDay, f.matatu);
-        f.app.entries().addOneOff(kDay, f.food, "Gift", 500, FundedFrom::Savings);
+        f.app.entries().addOneOff(kDay, "Gift", 500, FundedFrom::Savings);   // <- the 4th argument matters
     }
     Pesa app(file.path);
     const auto v = app.days().view(kDay);
     CHECK(v.entries.size() == 2);
     CHECK(v.earnedTotal == 50);
     CHECK(v.savingsTotal == 500);
+}
+TEST_CASE("a one-off has no category and is not in the catalog") {
+    Fixture f;
+    const auto id = f.app.entries().addOneOff(kDay, "  Uncle Bill's wedding ", 500);
+    const auto e = f.app.entries().find(id);
+    REQUIRE(e.has_value());
+    CHECK(e->isOneOff());
+    CHECK_FALSE(e->itemId.has_value());
+    CHECK_FALSE(e->categoryId.has_value());
+    CHECK(e->categoryName.empty());
+    CHECK(e->name == "Uncle Bill's wedding");
+    CHECK(e->kind == EntryKind::Added);
+    CHECK(f.app.items().list().size() == 2);                      // the catalog did not grow
+    CHECK(f.app.days().view(kDay).total() == 500);                // and the day still counts it
+}
+
+TEST_CASE("one-off input is checked") {
+    Fixture f;
+    CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, "  ", 100), Error);
+    CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, "Gift", 0), Error);
+}
+
+TEST_CASE("one-offs are listed after every category") {
+    Fixture f;
+    f.app.entries().addOneOff(kDay, "Gift", 500);
+    f.app.entries().addFromItem(kDay, f.matatu);
+    f.app.entries().addFromItem(kDay, f.milk);
+    const auto v = f.app.days().view(kDay);
+    REQUIRE(v.entries.size() == 3);
+    CHECK(v.entries[0].categoryName == "Food");
+    CHECK(v.entries[1].categoryName == "Transport");
+    CHECK(v.entries[2].isOneOff());
 }

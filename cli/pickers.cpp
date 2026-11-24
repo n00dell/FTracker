@@ -102,7 +102,7 @@ pesa::EntryId pickEntry(Context& ctx, const pesa::Date& date) {
 
     std::vector<std::string> options;
     for (const auto& e : entries) {
-        options.push_back(e.categoryName + " / " + e.name + "  " + formatMoney(e.amount) + "  " +
+        options.push_back(entryCategoryText(e) + " / " + e.name + "  " + formatMoney(e.amount) + "  " +
                           (e.fund == pesa::FundedFrom::Earned ? "earned" : "savings") + "  " +
                           entryStateText(e));
     }

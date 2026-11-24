@@ -35,14 +35,16 @@ void printUsage(Console& io) {
         "  rule additem <id> <item-id> | rule removeitem <id> <item-id>\n"
         "  rule end <id> <last-day>               a change = end the old rule, add a new one\n"
         "  rule deactivate <id> | activate <id> | delete <id> | restore <id>\n\n"
-                "Setup and settings\n"
-        "  setup                                  expected pay and payday (asked on the first run)\n"
-        "  settings                               show them\n"
-        "  settings autopost on|off               let Pesa post your routine entries when it opens\n\n"
+    "Setup and settings\n"
+"  setup                                  expected pay and payday (asked on the first run)\n"
+"  settings                               show them\n"
+"  settings autopost on|off               let Pesa post your routine entries when it opens\n"
+"  settings postafter <HH:MM>             today's routine posts only after this time (default 20:00)\n"
+"  job                                    run the daily posting now (it also runs whenever Pesa opens)\n\n"
         "Days and entries  (<date> is today, tomorrow, yesterday or 2026-11-23)\n"
         "  day [<date>]                           show a day\n"
         "  entry add <date> <item-id> [<amount>] [--savings]\n"
-        "  entry oneoff <date> <amount> <name> [--category <name|id>] [--savings]   (Misc by default)\n"
+        "  entry oneoff <date> <amount> <name> [--savings]   (not in the catalog, no category)\n"
         "  entry amount <id> <amount>\n"
         "  entry fund <id> earned|savings\n"
         "  entry delete <id>\n\n"
@@ -60,6 +62,7 @@ int dispatch(Context& ctx, const Args& args) {
     if (command == "setup")    return runSetup(ctx, args);
     if (command == "settings") return runSettings(ctx, args);
     if (command == "help" || command == "?" || command == "--help") { printUsage(ctx.io); return 0; }
+    if (command == "job")      return runJob(ctx, args);
 
     ctx.io.err() << "Unknown command '" << command << "'. Type 'help' to see the commands.\n";
     return 2;
