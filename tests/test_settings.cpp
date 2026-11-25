@@ -1,6 +1,3 @@
-//
-// Created by lee on 11/24/26.
-//
 // FTracker/tests/test_settings.cpp
 #include <doctest/doctest.h>
 
@@ -8,49 +5,49 @@
 
 using pesa::Date;
 using pesa::Error;
-using pesa::Money;
+using pesa::IncomeMode;
 using pesa::Pesa;
 
-TEST_CASE("a new database has not been set up and auto-post is on") {
+TEST_CASE("a new database has not been set up and the switches default to on") {
     Pesa app(":memory:");
     CHECK_FALSE(app.settings().setupDone());
     CHECK_FALSE(app.settings().expectedPay().has_value());
-    CHECK_FALSE(app.settings().expectedPayday().has_value());
     CHECK(app.settings().autoPostEnabled());
+    CHECK(app.settings().autoPayEnabled());
+    CHECK(app.settings().postAfter() == pesa::TimeOfDay{20, 0});
 }
 
-TEST_CASE("setup saves the pay and the payday") {
+TEST_CASE("regular setup saves the mode and the pay") {
     Pesa app(":memory:");
-    app.settings().completeSetup(70000, Date::parse("2026-12-24"));
+    app.settings().completeSetup({.mode = IncomeMode::Regular, .pay = 70000, .payday = Date::parse("2026-12-24")});
     CHECK(app.settings().setupDone());
+    CHECK(app.settings().incomeMode() == IncomeMode::Regular);
     CHECK(app.settings().expectedPay() == 70000);
-    CHECK(app.settings().expectedPayday() == Date::parse("2026-12-24"));
 }
 
-TEST_CASE("setup with no pay is allowed, and a payday without a pay is dropped") {
+TEST_CASE("a regular income needs a pay and a payday, and a bad pay saves nothing") {
     Pesa app(":memory:");
-    app.settings().completeSetup(std::nullopt, Date::parse("2026-12-24"));
-    CHECK(app.settings().setupDone());
-    CHECK_FALSE(app.settings().expectedPay().has_value());
-    CHECK_FALSE(app.settings().expectedPayday().has_value());
-}
-
-TEST_CASE("a bad pay is refused and nothing is saved") {
-    Pesa app(":memory:");
-    CHECK_THROWS_AS(app.settings().completeSetup(Money{0}, std::nullopt), Error);
+    CHECK_THROWS_AS(app.settings().completeSetup({.mode = IncomeMode::Regular}), Error);
+    CHECK_THROWS_AS(app.settings().completeSetup({.mode = IncomeMode::Regular, .pay = 70000}), Error);
+    CHECK_THROWS_AS(app.settings().completeSetup({.mode = IncomeMode::Regular, .pay = 0,
+                                                  .payday = Date::parse("2026-12-24")}), Error);
     CHECK_FALSE(app.settings().setupDone());
 }
 
-TEST_CASE("auto-post can be switched off and on") {
+TEST_CASE("an irregular income has no pay") {
+    Pesa app(":memory:");
+    app.settings().completeSetup({.mode = IncomeMode::Irregular, .pay = 5000});
+    CHECK(app.settings().incomeMode() == IncomeMode::Irregular);
+    CHECK_FALSE(app.settings().expectedPay().has_value());
+}
+
+TEST_CASE("the switches and the post-after time can be changed") {
     Pesa app(":memory:");
     app.settings().setAutoPostEnabled(false);
+    app.settings().setAutoPayEnabled(false);
     CHECK_FALSE(app.settings().autoPostEnabled());
-    app.settings().setAutoPostEnabled(true);
-    CHECK(app.settings().autoPostEnabled());
-}
-TEST_CASE("the post-after time defaults to 20:00 and can be changed") {
-    Pesa app(":memory:");
-    CHECK(app.settings().postAfter() == pesa::TimeOfDay{20, 0});
+    CHECK_FALSE(app.settings().autoPayEnabled());
+
     app.settings().setPostAfter(pesa::TimeOfDay::parse("7:05"));
     CHECK(app.settings().postAfter().toString() == "07:05");
     CHECK_THROWS_AS((void)pesa::TimeOfDay::parse("25:00"), Error);

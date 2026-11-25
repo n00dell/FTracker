@@ -32,5 +32,10 @@ namespace cli {
     int runSetup(Context& ctx, const Args& args);
     int runSettings(Context& ctx, const Args& args);
     int runJob(Context& ctx, const Args& args);
+    int runStatus(Context& ctx, const Args& args);
+    int runPaid(Context& ctx, const Args& args);
+    int runDelay(Context& ctx, const Args& args);
+    int runIncome(Context& ctx, const Args& args);
+    int runSavings(Context& ctx, const Args& args);
     void runStartup(Context& ctx, bool interactive);
 } // namespace cli

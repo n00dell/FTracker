@@ -12,7 +12,8 @@
 #include <pesa/rules.h>
 #include <pesa/settings.h>
 #include <pesa/daily_job.h>
-
+#include <pesa/periods.h>
+#include <pesa/savings.h>
 #include <filesystem>
 #include <memory>
 
@@ -43,6 +44,15 @@ namespace pesa {
         const Settings&   settings() const;
         DailyJob&         dailyJob();
         const DailyJob&   dailyJob() const;
+        Savings&          savings();
+        const Savings&    savings() const;
+        Periods&          periods();
+        const Periods&    periods() const;
+
+        // The front door for first-run setup: saves the settings AND opens the first period
+        // (with the starting balance) in one step. Safe to run again: it never opens a second
+        // period, it only updates the mode, pay and payday.
+        void completeSetup(const SetupAnswers& answers, const Date& today);
         
         // Version of the database layout currently in the file.
         [[nodiscard]] int schemaVersion() const;

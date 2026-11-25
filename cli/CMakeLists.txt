@@ -15,6 +15,7 @@ add_library(pesa_cli_lib STATIC
         startup.cpp
         dispatch.cpp
         shell.cpp
+        money_cmd.cpp
 )
 target_include_directories(pesa_cli_lib PUBLIC include)
 target_link_libraries(pesa_cli_lib PUBLIC pesa_core)

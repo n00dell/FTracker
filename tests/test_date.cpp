@@ -62,3 +62,10 @@ TEST_CASE("dates compare and count days between them") {
     CHECK(Date::parse("2026-12-31").daysUntil(Date::parse("2027-01-01")) == 1);
     CHECK(Date{}.toString() == "1970-01-01");
 }
+TEST_CASE("adding months keeps the day, or clamps to the end of a shorter month") {
+    CHECK(Date::parse("2026-11-24").addMonths(1).toString() == "2026-12-24");
+    CHECK(Date::parse("2026-12-24").addMonths(1).toString() == "2027-01-24");   // crosses the year
+    CHECK(Date::parse("2027-01-31").addMonths(1).toString() == "2027-02-28");
+    CHECK(Date::parse("2028-01-31").addMonths(1).toString() == "2028-02-29");   // leap year
+    CHECK(Date::parse("2026-03-15").addMonths(-1).toString() == "2026-02-15");
+}

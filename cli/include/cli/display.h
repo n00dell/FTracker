@@ -51,5 +51,11 @@ namespace cli {
     void printRules(Console& io, const std::vector<pesa::Rule>& rules);
     void printCatalog(Console& io, const std::vector<pesa::Category>& categories,
                       const std::vector<pesa::Item>& items);
+    void printStatus(std::ostream& out, const pesa::PeriodSummary& summary, pesa::Money savingsTotal,
+                 pesa::IncomeMode mode);
+    void printPaid(std::ostream& out, const pesa::PaidResult& result);
+    void printPots(Console& io, const std::vector<pesa::Pot>& pots);
+    void printLedger(Console& io, const std::vector<pesa::LedgerLine>& lines);
+    void printIncome(Console& io, const std::vector<pesa::IncomeLine>& lines);
 
 } // namespace cli

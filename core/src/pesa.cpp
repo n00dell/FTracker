@@ -15,10 +15,12 @@ namespace pesa {
         Days             days;
         Rules            rules;
         Settings         settings;
+        Savings          savings;
+        Periods          periods;
         DailyJob         dailyJob;
         explicit Impl(const std::filesystem::path& file)
             : db(file), categories(db), items(db), entries(db), days(db), rules(db),
-              settings(db), dailyJob(db, settings) {}
+              settings(db), dailyJob(db, settings), savings(db), periods(db, settings) {}
     };
 
     Pesa::Pesa(const std::filesystem::path& dbFile) : impl_(std::make_unique<Impl>(dbFile)) {
@@ -39,9 +41,24 @@ namespace pesa {
     const Rules&      Pesa::rules() const      { return impl_->rules; }
     Settings&         Pesa::settings()         { return impl_->settings; }
     const Settings&   Pesa::settings() const   { return impl_->settings; }
+    Savings&          Pesa::savings()          { return impl_->savings; }
+    const Savings&    Pesa::savings() const    { return impl_->savings; }
+    Periods&          Pesa::periods()          { return impl_->periods; }
+    const Periods&    Pesa::periods() const    { return impl_->periods; }
     DailyJob&         Pesa::dailyJob()         { return impl_->dailyJob; }
     const DailyJob&   Pesa::dailyJob() const   { return impl_->dailyJob; }
-    
+
+    void Pesa::completeSetup(const SetupAnswers& answers, const Date& today) {
+        const bool regular = answers.mode == IncomeMode::Regular;
+        if (regular && answers.payday && *answers.payday <= today) {
+            throw Error("The payday must be after today.");
+        }
+        detail::Transaction tx(impl_->db);
+        impl_->settings.completeSetup(answers);
+        impl_->periods.ensureOpen(today, answers.startingBalance);
+        impl_->periods.setExpectedPayday(regular ? answers.payday : std::nullopt);
+        tx.commit();
+    }
     int Pesa::schemaVersion() const { return detail::currentSchemaVersion(impl_->db); }
 
 } // namespace pesa

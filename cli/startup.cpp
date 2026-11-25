@@ -1,6 +1,8 @@
 // FTracker/cli/startup.cpp
-// What happens every time Pesa opens, and the 'job' command that does the same on demand.
+// What happens every time Pesa opens, and the 'job' command that posts on demand.
 #include <cli/commands.h>
+
+#include <cli/display.h>
 
 #include <ostream>
 
@@ -29,10 +31,6 @@ void report(Context& ctx, const pesa::DailyJobResult& r, bool verbose, std::ostr
     }
 }
 
-pesa::DailyJobResult runDailyJob(Context& ctx) {
-    return ctx.app.dailyJob().run(pesa::Date::today(), pesa::TimeOfDay::now());
-}
-
 } // namespace
 
 void runStartup(Context& ctx, bool interactive) {
@@ -46,10 +44,19 @@ void runStartup(Context& ctx, bool interactive) {
         io.out() << "\n";
     }
 
-    // The daily job runs on every launch. In a script its messages go to the error
-    // stream so they never mix into the output the script is reading.
+    // In a script the messages go to the error stream, so they never mix into its output.
+    std::ostream& out = interactive ? io.out() : io.err();
     try {
-        report(ctx, runDailyJob(ctx), false, interactive ? io.out() : io.err());
+        const auto today = pesa::Date::today();
+        if (ctx.app.settings().setupDone()) ctx.app.periods().ensureOpen(today);   // older files have no period yet
+
+        // 1. Post the days that are due. 2. Only then close periods whose payday passed,
+        //    so the old period's entries exist before its leftover is counted.
+        report(ctx, ctx.app.dailyJob().run(today, pesa::TimeOfDay::now()), false, out);
+        for (const auto& paid : ctx.app.periods().autoPayIfDue(today)) {
+            out << "Payday arrived.\n";
+            printPaid(out, paid);
+        }
     } catch (const pesa::Error& e) {
         io.err() << "Error: " << e.what() << "\n";
     }
@@ -57,7 +64,7 @@ void runStartup(Context& ctx, bool interactive) {
 
 int runJob(Context& ctx, const Args& args) {
     if (args.size() > 1) { printUsage(ctx.io); return 2; }
-    report(ctx, runDailyJob(ctx), true, ctx.io.out());
+    report(ctx, ctx.app.dailyJob().run(pesa::Date::today(), pesa::TimeOfDay::now()), true, ctx.io.out());
     ctx.io.out() << "Today's routine posts after " << ctx.app.settings().postAfter().toString()
                  << " ('settings postafter' changes it).\n";
     return 0;

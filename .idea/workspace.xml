@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="BackendCodeEditorMiscSettings">
-    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="6" type="long" />
+    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="10" type="long" />
     <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
   </component>
   <component name="CMakePresetLoader">{
@@ -42,34 +42,38 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ced2d428-5f87-47df-88bd-3eee4bb3ced2" name="Changes" comment="feat: Add interactive CLI workflows and built-in Misc category&#10;&#10;- Refactored the CLI into a reusable library with interactive console, catalog, category, setup, rules, and settings commands.&#10;- Added the protected system Misc category and exposed its ID through the core categories API.&#10;- Expanded test coverage and updated CMake targets for the CLI and new core features.&#10;- Updated dashboard UI and controller files, and added source-file markers across GUI components.">
-      <change afterPath="$PROJECT_DIR$/core/include/pesa/daily_job.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/daily_job.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_daily_job.cpp" afterDir="false" />
+    <list default="true" id="ced2d428-5f87-47df-88bd-3eee4bb3ced2" name="Changes" comment="feat: Add daily automatic posting and category-free one-off entries&#10;&#10;- Implement a catch-up daily job with a configurable post-after time, rule-linked entries, and a CLI command to run it manually.&#10;- Allow one-off entries without a category and update day views and CLI displays to label them accordingly.&#10;- Add database migration support for nullable one-off categories, rule-post tracking, and job issue records.&#10;- Integrate daily posting at startup, update CLI and CMake configuration, and expand tests for daily jobs, entries, settings, and commands.&#10;- Update IDE workspace metadata.">
+      <change afterPath="$PROJECT_DIR$/cli/money_cmd.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/include/pesa/periods.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/include/pesa/savings.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/money_sql.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/money_sql.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/periods.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/savings.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_periods.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_savings.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cli/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/dispatch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/dispatch.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/display.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/display.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cli/entry_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/entry_cmd.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/include/cli/commands.h" beforeDir="false" afterPath="$PROJECT_DIR$/cli/include/cli/commands.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/include/cli/display.h" beforeDir="false" afterPath="$PROJECT_DIR$/cli/include/cli/display.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cli/pickers.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/pickers.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/setup_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/setup_cmd.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/startup.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/startup.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/core/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/common.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/common.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/date.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/date.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/include/pesa/entries.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/entries.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/include/pesa/pesa.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/pesa.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/include/pesa/settings.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/settings.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/days.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/days.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/date.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/date.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/src/entries.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/entries.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/entry_sql.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/entry_sql.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/entry_sql.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/entry_sql.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/src/migrations.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/migrations.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/src/pesa.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/pesa.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/src/settings.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/settings.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tests/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_cli_commands.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_cli_commands.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_entries.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_entries.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_date.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_date.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_migrations.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_migrations.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_settings.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_settings.cpp" afterDir="false" />
     </list>
@@ -124,61 +128,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="0.0" />
-      <entry key="S5" value="0.0" />
-      <entry key="S10" value="5.999173538006859E-244" />
-      <entry key="S30" value="1.3243970913681386E-81" />
-      <entry key="S60" value="5.139544469895514E-41" />
-      <entry key="M2" value="1.0135077624707474E-20" />
-      <entry key="M5" value="1.523746603862034E-8" />
-      <entry key="M10" value="1.7456831389239247E-4" />
-      <entry key="M15" value="0.003935674296326832" />
-      <entry key="M30" value="0.09292357327919697" />
-      <entry key="H1" value="0.9524750847707332" />
-      <entry key="H2" value="7.233903727781747" />
-      <entry key="H4" value="26.67262105678702" />
-      <entry key="D1" value="504.17650885453645" />
-      <entry key="W1" value="1404.1079738361768" />
+      <entry key="MS100" value="1.248195058147202" />
+      <entry key="MS500" value="3.201418850716271" />
+      <entry key="S2" value="5.531633074927105" />
+      <entry key="S5" value="6.349795471254956" />
+      <entry key="S10" value="6.663295317099463" />
+      <entry key="S30" value="6.885072187312209" />
+      <entry key="S60" value="6.942192041171426" />
+      <entry key="M2" value="6.971009439077184" />
+      <entry key="M5" value="6.988484470182623" />
+      <entry key="M10" value="7.009104319637902" />
+      <entry key="M15" value="7.092499451549216" />
+      <entry key="M30" value="7.7217846914785" />
+      <entry key="H1" value="9.325660030546826" />
+      <entry key="H2" value="14.423237486733445" />
+      <entry key="H4" value="31.236175843331484" />
+      <entry key="D1" value="491.92496887835756" />
+      <entry key="W1" value="1406.9108024217214" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0" />
-      <entry key="S5" value="1.0" />
-      <entry key="S10" value="1.0" />
-      <entry key="S30" value="1.0" />
-      <entry key="S60" value="1.0" />
-      <entry key="M2" value="1.0" />
-      <entry key="M5" value="1.0000000228858301" />
-      <entry key="M10" value="1.0002620175398558" />
-      <entry key="M15" value="1.0059055131273622" />
-      <entry key="M30" value="1.1331030281245522" />
-      <entry key="H1" value="1.631908530845875" />
-      <entry key="H2" value="2.3770412923476805" />
-      <entry key="H4" value="3.1775319923002483" />
-      <entry key="D1" value="109.07836632865445" />
-      <entry key="W1" value="374.7148400568018" />
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="8.893209830968696E-171" />
+      <entry key="S5" value="9.541648543951098E-69" />
+      <entry key="S10" value="9.768136231621207E-35" />
+      <entry key="S30" value="4.605434068276571E-12" />
+      <entry key="S60" value="2.146027508741808E-6" />
+      <entry key="M2" value="0.0014649325952918056" />
+      <entry key="M5" value="0.07350892233590718" />
+      <entry key="M10" value="0.2735985371583765" />
+      <entry key="M15" value="0.44513951162996596" />
+      <entry key="M30" value="0.9380829097490684" />
+      <entry key="H1" value="1.9055175521184655" />
+      <entry key="H2" value="3.301111817824999" />
+      <entry key="H4" value="4.780941164804997" />
+      <entry key="D1" value="106.56823773814111" />
+      <entry key="W1" value="374.98863351955214" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="2.391162835905581E-4" />
-      <entry key="MS500" value="0.18867824606506997" />
-      <entry key="S2" value="0.6590683519752042" />
-      <entry key="S5" value="0.8463932341046676" />
-      <entry key="S10" value="0.919996322875623" />
-      <entry key="S30" value="0.9725875304453608" />
-      <entry key="S60" value="0.9861985248647257" />
-      <entry key="M2" value="0.9930752866045583" />
-      <entry key="M5" value="0.9972243770568836" />
-      <entry key="M10" value="0.9990468618550838" />
-      <entry key="M15" value="1.0089011431819144" />
-      <entry key="M30" value="1.2254059258616843" />
-      <entry key="H1" value="2.583766833338598" />
-      <entry key="H2" value="9.610318707471075" />
-      <entry key="H4" value="29.849520946836503" />
-      <entry key="D1" value="613.2516558030541" />
-      <entry key="W1" value="1778.8213374234429" />
+      <entry key="MS100" value="1.1829389363229497" />
+      <entry key="MS500" value="3.1571115081102867" />
+      <entry key="S2" value="5.5095241281139" />
+      <entry key="S5" value="6.339324345669107" />
+      <entry key="S10" value="6.65774431731064" />
+      <entry key="S30" value="6.88314711304183" />
+      <entry key="S60" value="6.94122196520716" />
+      <entry key="M2" value="6.971973180671585" />
+      <entry key="M5" value="7.061542095872805" />
+      <entry key="M10" value="7.2820929926577405" />
+      <entry key="M15" value="7.536891262613037" />
+      <entry key="M30" value="8.65863668289787" />
+      <entry key="H1" value="11.22960697662981" />
+      <entry key="H2" value="17.72288286141941" />
+      <entry key="H4" value="36.01592658873734" />
+      <entry key="D1" value="598.4899971703655" />
+      <entry key="W1" value="1781.8979479728218" />
     </decayedShown>
   </component>
   <component name="ProjectApplicationVersion">
@@ -247,11 +251,6 @@
     </key>
   </component>
   <component name="RunManager" selected="Node.js Test Runner.All Tests">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="pesa_tests" type="CMakeDoctestTestRunConfigurationType" factoryName="doctest Test" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="pesa" TARGET_NAME="pesa_tests" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="pesa" RUN_TARGET_NAME="pesa_tests" TEST_MODE="SUITE_TEST">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -264,6 +263,11 @@
       </method>
     </configuration>
     <configuration name="_cargo-build_slint_cpp" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="pesa" TARGET_NAME="_cargo-build_slint_cpp" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -429,7 +433,8 @@
     <MESSAGE value="Started on the logic and the db creation" />
     <MESSAGE value="Allowed addition of entries" />
     <MESSAGE value="feat: Add interactive CLI workflows and built-in Misc category&#10;&#10;- Refactored the CLI into a reusable library with interactive console, catalog, category, setup, rules, and settings commands.&#10;- Added the protected system Misc category and exposed its ID through the core categories API.&#10;- Expanded test coverage and updated CMake targets for the CLI and new core features.&#10;- Updated dashboard UI and controller files, and added source-file markers across GUI components." />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: Add interactive CLI workflows and built-in Misc category&#10;&#10;- Refactored the CLI into a reusable library with interactive console, catalog, category, setup, rules, and settings commands.&#10;- Added the protected system Misc category and exposed its ID through the core categories API.&#10;- Expanded test coverage and updated CMake targets for the CLI and new core features.&#10;- Updated dashboard UI and controller files, and added source-file markers across GUI components." />
+    <MESSAGE value="feat: Add daily automatic posting and category-free one-off entries&#10;&#10;- Implement a catch-up daily job with a configurable post-after time, rule-linked entries, and a CLI command to run it manually.&#10;- Allow one-off entries without a category and update day views and CLI displays to label them accordingly.&#10;- Add database migration support for nullable one-off categories, rule-post tracking, and job issue records.&#10;- Integrate daily posting at startup, update CLI and CMake configuration, and expand tests for daily jobs, entries, settings, and commands.&#10;- Update IDE workspace metadata." />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: Add daily automatic posting and category-free one-off entries&#10;&#10;- Implement a catch-up daily job with a configurable post-after time, rule-linked entries, and a CLI command to run it manually.&#10;- Allow one-off entries without a category and update day views and CLI displays to label them accordingly.&#10;- Add database migration support for nullable one-off categories, rule-post tracking, and job issue records.&#10;- Integrate daily posting at startup, update CLI and CMake configuration, and expand tests for daily jobs, entries, settings, and commands.&#10;- Update IDE workspace metadata." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

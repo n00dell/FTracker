@@ -226,30 +226,81 @@ TEST_CASE("catalog edit on Misc only offers adding an item") {
     CHECK(s.app.items().list()[0].categoryName == "Misc");
 }
 
-TEST_CASE("first launch asks for the pay, and the payday only if there is a pay") {
-    Session s("70,000\n2026-12-24\n");
+TEST_CASE("first launch asks how you are paid, then the pay, the payday and what you have") {
+    const auto payday = pesa::Date::today().addDays(20).toString();
+    Session s("1\n70,000\n" + payday + "\n12,000\n");   // regular; pay; payday; starting balance
     cli::runStartup(s.ctx, true);
     CHECK(s.app.settings().setupDone());
+    CHECK(s.app.settings().incomeMode() == pesa::IncomeMode::Regular);
     CHECK(s.app.settings().expectedPay() == 70000);
-    CHECK(s.app.settings().expectedPayday() == pesa::Date::parse("2026-12-24"));
+    REQUIRE(s.app.periods().current().has_value());
+    CHECK(s.app.periods().current()->expectedPayday == pesa::Date::parse(payday));
+    CHECK(s.app.periods().summary(pesa::Date::today()).income == 12000);
 
-    Session varies("\n");                  // blank = my income varies
-    cli::runStartup(varies.ctx, true);
-    CHECK(varies.app.settings().setupDone());
-    CHECK_FALSE(varies.app.settings().expectedPay().has_value());
-    CHECK(contains(varies.output(), "Projections stay off"));
+    Session freelance("2\n\n");                         // irregular; nothing in hand
+    cli::runStartup(freelance.ctx, true);
+    CHECK(freelance.app.settings().incomeMode() == pesa::IncomeMode::Irregular);
+    CHECK_FALSE(freelance.app.periods().current()->expectedPayday.has_value());
+    CHECK(contains(freelance.output(), "income add"));
 }
 
 TEST_CASE("setup is not repeated, and one-liners never ask") {
     Session done("");
-    done.app.settings().completeSetup(std::nullopt, std::nullopt);
+    done.app.completeSetup({.mode = pesa::IncomeMode::Irregular}, pesa::Date::today());
     cli::runStartup(done.ctx, true);
     CHECK(done.output().empty());
 
     Session script("");
     cli::runStartup(script.ctx, false);    // a script run: no questions, nothing saved
     CHECK_FALSE(script.app.settings().setupDone());
+    CHECK_FALSE(script.app.periods().current().has_value());
     CHECK(script.output().empty());
+}
+
+TEST_CASE("status, delay and paid work from the command line") {
+    Session s;
+    const auto today = pesa::Date::today();
+    s.app.completeSetup({.mode = pesa::IncomeMode::Regular, .pay = 70000, .payday = today.addDays(10),
+                         .startingBalance = 12000}, today.addDays(-20));
+
+    CHECK(s.run("status") == 0);
+    CHECK(contains(s.output(), "Earned remaining"));
+    CHECK(contains(s.output(), "12,000"));
+
+    CHECK(s.run("delay 3") == 0);
+    CHECK(s.app.periods().current()->expectedPayday == today.addDays(13));
+    CHECK(s.run("delay 0") == 1);
+
+    s.out.str("");
+    CHECK(s.run("paid --amount 70,000") == 0);
+    CHECK(contains(s.output(), "closed the period"));
+    CHECK(s.app.savings().total() == 12000);
+    CHECK(s.run("paid --amount 70,000") == 1);   // same day again
+}
+
+TEST_CASE("income and savings commands") {
+    Session s;
+    s.app.completeSetup({.mode = pesa::IncomeMode::Irregular}, pesa::Date::today());
+
+    CHECK(s.run("income add 15,000 Dad") == 0);
+    CHECK(s.app.periods().summary(pesa::Date::today()).income == 15000);
+
+    CHECK(s.run("savings newpot Sacco --tied") == 0);
+    CHECK(s.run("savings add 5000 --pot Sacco Contribution") == 0);
+    CHECK(s.app.savings().total() == 5000);
+    CHECK(s.run("savings add 100 --pot Nowhere") == 1);
+
+    CHECK(s.run("savings move 2000 --pot sacco") == 0);
+    CHECK(s.app.periods().summary(pesa::Date::today()).income == 17000);
+    CHECK(contains(s.output(), "only has") == false);
+
+    const auto entry = s.app.entries().addOneOff(pesa::Date::today(), "Barber", 500);
+    CHECK(s.run("savings cover " + std::to_string(entry)) == 0);
+    CHECK(s.app.entries().find(entry)->fund == pesa::FundedFrom::Savings);
+    CHECK(s.run("savings cover") == 1);
+    CHECK(s.run("savings") == 0);
+    CHECK(s.run("savings ledger") == 0);
+    CHECK(contains(s.output(), "Expense cover"));
 }
 
 TEST_CASE("the shell keeps going after errors and leaves on exit") {

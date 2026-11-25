@@ -3,7 +3,7 @@
 
 #include <pesa/common.h>
 #include <pesa/date.h>
-
+#include <span>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -57,6 +57,10 @@ public:
     void setAmount(EntryId id, Money amount);
     void setFundedFrom(EntryId id, FundedFrom fund);
     void remove(EntryId id);
+    // "Cover from savings" for several entries at once: they switch to funded from savings,
+    // and each gets its ledger line. Already-covered entries are skipped. Returns the total
+    // newly covered. A pot with too little is allowed to go below 0; the caller warns first.
+    Money coverFromSavings(std::span<const EntryId> ids);
 
     [[nodiscard]] std::optional<Entry> find(EntryId id) const;
 

@@ -206,6 +206,67 @@ constexpr std::array kMigrations = {
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
     )sql"},
+        // Money: pots and the ledger (savings), periods and income (earned).
+    //  - Savings is STORED as ledger lines; a pot's balance is the sum of its lines.
+    //  - A period runs from one "I got paid" to the next: [start_date, end_date).
+    //    The unique index allows only ONE open period (end_date empty) at a time.
+    //  - A ledger line may point at the entry it pays for (entry_id), so changing or
+    //    deleting that entry can fix the pot ("Expense cover").
+    Migration{8, R"sql(
+        CREATE TABLE pots (
+            id         INTEGER PRIMARY KEY,
+            name       TEXT    NOT NULL COLLATE NOCASE,
+            kind       INTEGER NOT NULL DEFAULT 0 CHECK (kind BETWEEN 0 AND 2),   -- 0 open, 1 locked, 2 tied
+            is_main    INTEGER NOT NULL DEFAULT 0 CHECK (is_main IN (0, 1)),
+            sort_order INTEGER NOT NULL
+        );
+        CREATE UNIQUE INDEX ux_pots_name ON pots(name);
+        CREATE UNIQUE INDEX ux_pots_one_main ON pots(is_main) WHERE is_main = 1;
+        INSERT INTO pots(name, kind, is_main, sort_order) VALUES ('Main savings', 0, 1, 1);
+
+        CREATE TABLE periods (
+            id              INTEGER PRIMARY KEY,
+            start_date      TEXT NOT NULL
+                            CHECK (start_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            end_date        TEXT   -- the day pay arrived; NULL = this is the open period
+                            CHECK (end_date IS NULL OR
+                                   end_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            expected_payday TEXT
+                            CHECK (expected_payday IS NULL OR
+                                   expected_payday GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            remainder       INTEGER,   -- income minus earned spending, set when the period closes
+            CHECK (end_date IS NULL OR end_date > start_date)
+        );
+        CREATE UNIQUE INDEX ux_periods_one_open ON periods((end_date IS NULL)) WHERE end_date IS NULL;
+
+        CREATE TABLE income (
+            id        INTEGER PRIMARY KEY,
+            period_id INTEGER NOT NULL REFERENCES periods(id),
+            date      TEXT    NOT NULL
+                      CHECK (date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            label     TEXT    NOT NULL,
+            amount    INTEGER NOT NULL CHECK (amount > 0)
+        );
+        CREATE INDEX idx_income_period ON income(period_id);
+
+        CREATE TABLE ledger (
+            id        INTEGER PRIMARY KEY,
+            date      TEXT    NOT NULL
+                      CHECK (date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            pot_id    INTEGER NOT NULL REFERENCES pots(id),
+            amount    INTEGER NOT NULL CHECK (amount != 0),   -- + into the pot, - out of it
+            kind      INTEGER NOT NULL,                       -- see LedgerKind
+            note      TEXT    NOT NULL DEFAULT '',
+            entry_id  INTEGER UNIQUE REFERENCES entries(id),  -- the entry this line pays for
+            period_id INTEGER REFERENCES periods(id)
+        );
+        CREATE INDEX idx_ledger_pot ON ledger(pot_id);
+
+        -- Entries already paid from savings before this migration get their ledger line now.
+        INSERT INTO ledger(date, pot_id, amount, kind, note, entry_id)
+            SELECT e.date, (SELECT id FROM pots WHERE is_main = 1), -e.amount, 4, e.name, e.id
+            FROM entries e WHERE e.funded_from = 1 AND e.kind != 3;
+    )sql"},
 };
 
 // While tables are being rebuilt, foreign keys must be switched off (SQLite ignores

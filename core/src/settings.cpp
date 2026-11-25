@@ -14,9 +14,10 @@ namespace {
 
 constexpr const char* kSetupDone  = "setup_done";
 constexpr const char* kPay        = "expected_pay";
-constexpr const char* kPayday     = "expected_payday";
+constexpr const char* kMode       = "income_mode";
 constexpr const char* kAutoPost   = "auto_post_enabled";
 constexpr const char* kPostAfter  = "post_after";
+constexpr const char* kAutoPay    = "auto_pay_enabled";
 constexpr TimeOfDay   kDefaultPostAfter{20, 0};
 
 } // namespace
@@ -78,20 +79,29 @@ void Settings::erase(std::string_view key) {
     db_.prepare("DELETE FROM settings WHERE key = ?").bind(1, key).run();
 }
 
-// ---------------- first run and pay ----------------
+// ---------------- first run, mode and pay ----------------
 
 bool Settings::setupDone() const { return get(kSetupDone) == "1"; }
 
-void Settings::completeSetup(std::optional<Money> expectedPay, std::optional<Date> expectedPayday) {
-    if (expectedPay) detail::requirePositive(*expectedPay);
-    // A payday without a pay would be meaningless: projections need both.
-    if (!expectedPay) expectedPayday.reset();
+void Settings::completeSetup(const SetupAnswers& answers) {
+    const bool regular = answers.mode == IncomeMode::Regular;
+    if (regular) {
+        if (!answers.pay || !answers.payday) throw Error("A regular income needs a pay and a payday.");
+        detail::requirePositive(*answers.pay);
+    }
 
     detail::Transaction tx(db_);
-    if (expectedPay) set(kPay, std::to_string(*expectedPay)); else erase(kPay);
-    if (expectedPayday) set(kPayday, expectedPayday->toString()); else erase(kPayday);
+    set(kMode, regular ? "regular" : "irregular");
+    if (regular) set(kPay, std::to_string(*answers.pay)); else erase(kPay);
     set(kSetupDone, "1");
     tx.commit();
+}
+
+IncomeMode Settings::incomeMode() const {
+    const auto stored = get(kMode);
+    if (stored == "regular")   return IncomeMode::Regular;
+    if (stored == "irregular") return IncomeMode::Irregular;
+    return expectedPay() ? IncomeMode::Regular : IncomeMode::Irregular;   // a file from before this setting
 }
 
 std::optional<Money> Settings::expectedPay() const {
@@ -103,20 +113,9 @@ std::optional<Money> Settings::expectedPay() const {
     return value;
 }
 
-std::optional<Date> Settings::expectedPayday() const {
-    const auto text = get(kPayday);
-    if (!text) return std::nullopt;
-    try {
-        return Date::parse(*text);
-    } catch (const Error&) {
-        return std::nullopt;   // a damaged value counts as "not set" instead of crashing the app
-    }
-}
-
-// ---------------- the daily job ----------------
+// ---------------- the daily job and getting paid ----------------
 
 bool Settings::autoPostEnabled() const { return get(kAutoPost) != "0"; }   // missing = on
-
 void Settings::setAutoPostEnabled(bool enabled) { set(kAutoPost, enabled ? "1" : "0"); }
 
 TimeOfDay Settings::postAfter() const {
@@ -130,5 +129,8 @@ TimeOfDay Settings::postAfter() const {
 }
 
 void Settings::setPostAfter(TimeOfDay time) { set(kPostAfter, time.toString()); }
+
+bool Settings::autoPayEnabled() const { return get(kAutoPay) != "0"; }   // missing = on
+void Settings::setAutoPayEnabled(bool enabled) { set(kAutoPay, enabled ? "1" : "0"); }
 
 } // namespace pesa

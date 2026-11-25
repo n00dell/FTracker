@@ -29,6 +29,7 @@ namespace pesa {
         [[nodiscard]] int daysInMonth() const;   // 28-31, knows leap years
 
         [[nodiscard]] Date addDays(int n) const;          // n may be negative
+        [[nodiscard]] Date addMonths(int n) const;        // keeps the day of the month; Jan 31 + 1 = Feb 28
         [[nodiscard]] Date nextDay() const     { return addDays(1); }
         [[nodiscard]] Date previousDay() const { return addDays(-1); }
         [[nodiscard]] int  daysUntil(const Date& later) const;   // positive if `later` is after this

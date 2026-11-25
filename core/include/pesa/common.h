@@ -21,8 +21,12 @@ using CategoryId = std::int64_t;
 using ItemId     = std::int64_t;
 using EntryId    = std::int64_t;
 using RuleId     = std::int64_t;
-
-// Declared here (not defined) so feature classes can hold a reference to the
+using PeriodId   = std::int64_t;
+using IncomeId   = std::int64_t;
+using PotId      = std::int64_t;
+using LedgerId   = std::int64_t;
+    using LogId = std::int64_t;
+    // Declared here (not defined) so feature classes can hold a reference to the
 // database without this public header ever including SQLite.
 namespace detail { class Database; }
 

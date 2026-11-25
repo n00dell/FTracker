@@ -1,6 +1,6 @@
 // FTracker/core/src/entries.cpp
 #include <pesa/entries.h>
-
+#include "money_sql.h"
 #include "db.h"
 #include "entry_sql.h"
 #include "util.h"
@@ -63,6 +63,7 @@ EntryId Entries::addFromItem(const Date& date, ItemId itemId, std::optional<Mone
         .bind(7, static_cast<std::int64_t>(fund))
         .run();
     const EntryId id = db_.lastInsertId();   // read it straight after the INSERT
+    detail::syncExpenseCover(db_, id);
 
     detail::recalculateDay(db_, date);
     tx.commit();
@@ -85,6 +86,7 @@ EntryId Entries::addFromItem(const Date& date, ItemId itemId, std::optional<Mone
         .run();
     const EntryId id = db_.lastInsertId();
 
+    detail::syncExpenseCover(db_, id);
     detail::recalculateDay(db_, date);
     tx.commit();
     return id;
@@ -111,6 +113,7 @@ void Entries::setAmount(EntryId id, Money amount) {
         // Added stays Added. Edited stays Edited and keeps its first original amount.
         db_.prepare("UPDATE entries SET amount = ? WHERE id = ?").bind(1, amount).bind(2, id).run();
     }
+    detail::syncExpenseCover(db_, id);
     detail::recalculateDay(db_, entry->date);
     tx.commit();
 }
@@ -126,6 +129,7 @@ void Entries::setFundedFrom(EntryId id, FundedFrom fund) {
         .bind(1, static_cast<std::int64_t>(fund))
         .bind(2, id)
         .run();
+    detail::syncExpenseCover(db_, id);
     tx.commit();   // the day's saved total does not depend on funding, so no recalculation
 }
 
@@ -134,9 +138,26 @@ void Entries::remove(EntryId id) {
     const auto entry = find(id);
     if (!entry) throw Error(noEntry(id));
 
+    detail::dropExpenseCover(db_, id);
+
     db_.prepare("DELETE FROM entries WHERE id = ?").bind(1, id).run();
     detail::recalculateDay(db_, entry->date);
+
     tx.commit();
+}
+
+    Money Entries::coverFromSavings(std::span<const EntryId> ids) {
+    detail::Transaction tx(db_);
+    Money total = 0;
+    for (const EntryId id : ids) {
+        const auto entry = find(id);
+        if (!entry) throw Error(noEntry(id));
+        if (entry->fund == FundedFrom::Savings) continue;   // already covered
+        setFundedFrom(id, FundedFrom::Savings);             // joins this transaction
+        total += entry->amount;
+    }
+    tx.commit();
+    return total;
 }
 
 std::optional<Entry> Entries::find(EntryId id) const {

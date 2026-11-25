@@ -1,6 +1,6 @@
 // FTracker/cli/display.cpp
 #include <cli/display.h>
-
+#include <iomanip>
 #include <cli/text.h>
 
 #include <array>
@@ -197,6 +197,79 @@ void printCatalog(Console& io, const std::vector<pesa::Category>& categories,
     }
     table.print(io);
     if (items.empty()) io.out() << "\n  No items yet. Try: catalog add\n";
+}
+void printStatus(std::ostream& out, const pesa::PeriodSummary& s, pesa::Money savingsTotal, pesa::IncomeMode mode) {
+    auto line = [&](const char* label, pesa::Money value) {
+        out << "  " << std::left << std::setw(20) << label << std::right << std::setw(12) << formatMoney(value) << "\n";
+    };
+
+    out << "Period since " << s.period.start.toString();
+    if (s.period.expectedPayday) out << ", payday expected about " << s.period.expectedPayday->toString();
+    else if (mode == pesa::IncomeMode::Irregular) out << " (irregular income: no payday to track)";
+    out << "\n";
+    line("Earned remaining", s.earnedRemaining());
+    line("Income", s.income);
+    line("Spent from earned", s.spentFromEarned);
+    line("Paid from savings", s.spentFromSavings);
+    line("Savings", savingsTotal);
+
+    if (s.daysLate) {
+        out << "  Payday is " << *s.daysLate << (*s.daysLate == 1 ? " day" : " days")
+            << " late. 'paid' records it; 'delay' moves the date.\n";
+    }
+    if (s.earnedRemaining() < 0) {
+        out << "  Earned is below zero. That is allowed: add income ('income add') or cover entries ('savings cover').\n";
+    }
+}
+
+void printPaid(std::ostream& out, const pesa::PaidResult& r) {
+    out << "Paid on " << r.paidOn.toString() << ": closed the period that started "
+        << r.periodStart.toString() << ".\n";
+    out << "  Pay added to the new period: " << formatMoney(r.pay) << "\n";
+    if (r.movedToSavings > 0) {
+        out << "  Leftover " << formatMoney(r.movedToSavings) << " moved to " << r.leftoverPot << ".\n";
+    } else if (r.shortfall > 0) {
+        out << "  Earned ran " << formatMoney(r.shortfall)
+            << " over. Nothing was taken from savings; use 'savings cover' if you want that.\n";
+    } else {
+        out << "  Nothing was left over.\n";
+    }
+    if (r.nextPayday) out << "  Next payday about " << r.nextPayday->toString() << ".\n";
+}
+
+void printPots(Console& io, const std::vector<pesa::Pot>& pots) {
+    Table table({{"ID", Table::Align::Right}, {"Pot"}, {"Kind"}, {"Balance", Table::Align::Right}});
+    pesa::Money total = 0;
+    for (const pesa::Pot& p : pots) {
+        const char* kind = p.kind == pesa::PotKind::Locked ? "locked"
+                         : p.kind == pesa::PotKind::Tied   ? "contributions only" : "spendable";
+        table.addRow({std::to_string(p.id), p.name, kind, formatMoney(p.balance)});
+        total += p.balance;
+    }
+    table.print(io);
+    io.out() << "  Total savings " << formatMoney(total) << "\n";
+}
+
+void printLedger(Console& io, const std::vector<pesa::LedgerLine>& lines) {
+    if (lines.empty()) { io.out() << "  No movements yet.\n"; return; }
+    Table table({{"Date"}, {"Movement"}, {"Pot"}, {"Amount", Table::Align::Right}});
+    for (const pesa::LedgerLine& l : lines) {
+        table.addRow({l.date.toString(), pesa::ledgerKindName(l.kind) + (l.note.empty() ? "" : " - " + l.note),
+              l.potName, formatMoney(l.amount)});
+    }
+    table.print(io);
+}
+
+void printIncome(Console& io, const std::vector<pesa::IncomeLine>& lines) {
+    if (lines.empty()) { io.out() << "  No income recorded this period.\n"; return; }
+    Table table({{"Date"}, {"From"}, {"Amount", Table::Align::Right}});
+    pesa::Money total = 0;
+    for (const pesa::IncomeLine& l : lines) {
+        table.addRow({l.date.toString(), l.label, formatMoney(l.amount)});
+        total += l.amount;
+    }
+    table.print(io);
+    io.out() << "  Total " << formatMoney(total) << "\n";
 }
 
 } // namespace cli

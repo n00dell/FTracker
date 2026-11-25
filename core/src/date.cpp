@@ -63,7 +63,15 @@ int Date::daysInMonth() const {
 }
 
 Date Date::addDays(int n) const { return Date(days_ + chr::days{n}); }
-
+    Date Date::addMonths(int n) const {
+    const chr::year_month_day ymd{days_};
+    chr::year_month ym{ymd.year(), ymd.month()};
+    ym += chr::months{n};
+    const chr::day last = chr::year_month_day_last{ym.year() / ym.month() / chr::last}.day();
+    const chr::day day = ymd.day() < last ? ymd.day() : last;   // clamp to the month's length
+    return Date(chr::sys_days{chr::year_month_day{ym.year(), ym.month(), day}});
+}
+    
 int Date::daysUntil(const Date& later) const {
     return static_cast<int>((later.days_ - days_).count());
 }
