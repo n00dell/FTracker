@@ -13,7 +13,7 @@ using pesa::Visibility;
 namespace {
 
 // Bump this when you add a migration. It is the only place the number lives in the tests.
-constexpr int kLatest = 8;
+constexpr int kLatest = 9;
 
 // Frozen copies of what older Pesa versions created. NEVER change these:
 // they are the "old files" the upgrade code has to cope with.
@@ -127,4 +127,10 @@ TEST_CASE("a file from a newer Pesa is refused") {
         INSERT INTO meta VALUES ('schema_version', '999');
     )sql");
     CHECK_THROWS_AS(Pesa{file.path}, Error);
+}
+TEST_CASE("the old issues table is folded into the log") {
+    TempDb file("pesa_test_log_table.db");
+    { Pesa app(file.path); }
+    CHECK(firstValue(file.path, "SELECT COUNT(*) FROM sqlite_master WHERE name = 'issues'") == "0");
+    CHECK(firstValue(file.path, "SELECT COUNT(*) FROM sqlite_master WHERE name = 'log'") == "1");
 }

@@ -271,5 +271,22 @@ void printIncome(Console& io, const std::vector<pesa::IncomeLine>& lines) {
     table.print(io);
     io.out() << "  Total " << formatMoney(total) << "\n";
 }
+    void printLog(Console& io, const std::vector<pesa::LogEvent>& events, const pesa::Date& today) {
+    if (events.empty()) { io.out() << "  No events match.\n"; return; }
 
+    Table table({{"Time"}, {"Type"}, {"What happened", Table::Align::Left, 100}});
+    pesa::Date shown;            // the day whose heading was printed last
+    bool any = false;
+    for (const pesa::LogEvent& e : events) {
+        if (!any || e.date != shown) {
+            shown = e.date;
+            any = true;
+            const std::string label = e.date == today ? "Today, " : e.date == today.previousDay() ? "Yesterday, " : "";
+            table.addSection(label + weekdayName(e.date.weekday()) + " " + e.date.toString());
+        }
+        table.addRow({e.time, pesa::logKindName(e.kind), e.message},
+                     e.kind == pesa::LogKind::Issue ? Style::Yellow : Style::Normal);
+    }
+    table.print(io);
+}
 } // namespace cli

@@ -49,6 +49,7 @@ namespace pesa {
         std::optional<Money>   amount;                 // what arrived; empty = the expected pay
         std::optional<Date>    nextPayday;             // empty = same day next month (regular only)
         std::optional<PotId>   leftoverPot;            // empty = Main savings
+        bool automatic = false;
     };
 
     struct PaidResult {

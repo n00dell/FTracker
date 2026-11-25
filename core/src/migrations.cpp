@@ -267,6 +267,22 @@ constexpr std::array kMigrations = {
             SELECT e.date, (SELECT id FROM pots WHERE is_main = 1), -e.amount, 4, e.name, e.id
             FROM entries e WHERE e.funded_from = 1 AND e.kind != 3;
     )sql"},
+    // The log: every event, in order. Problems are log lines of kind 5 (Issue), so the
+// old issues table is folded into it. The timestamp comes from SQLite's local clock.
+Migration{9, R"sql(
+        CREATE TABLE log (
+            id         INTEGER PRIMARY KEY,
+            created_at TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
+            kind       INTEGER NOT NULL CHECK (kind BETWEEN 0 AND 6),
+            message    TEXT    NOT NULL
+        );
+        CREATE INDEX idx_log_kind ON log(kind, id);
+
+        INSERT INTO log(created_at, kind, message)
+            SELECT created_at, 5, 'Could not post ' || day || ': ' || message
+            FROM issues ORDER BY id;
+        DROP TABLE issues;
+    )sql"},
 };
 
 // While tables are being rebuilt, foreign keys must be switched off (SQLite ignores

@@ -37,5 +37,6 @@ namespace cli {
     int runDelay(Context& ctx, const Args& args);
     int runIncome(Context& ctx, const Args& args);
     int runSavings(Context& ctx, const Args& args);
+    int runLog(Context& ctx, const Args& args);
     void runStartup(Context& ctx, bool interactive);
 } // namespace cli

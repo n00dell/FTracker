@@ -34,6 +34,9 @@ int runStatus(Context& ctx, const Args& args) {
     if (args.size() > 1) { printUsage(ctx.io); return 2; }
     printStatus(ctx.io.out(), ctx.app.periods().summary(pesa::Date::today()), ctx.app.savings().total(),
                 ctx.app.settings().incomeMode());
+    if (const int issues = ctx.app.log().issueCount(); issues > 0) {
+        ctx.io.out() << "  " << issues << (issues == 1 ? " issue" : " issues") << " in the log. See 'log issues'.\n";
+    }
     return 0;
 }
 

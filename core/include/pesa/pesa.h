@@ -4,6 +4,7 @@
 #pragma once
 
 #include <pesa/categories.h>
+#include <pesa/log.h>
 #include <pesa/common.h>
 #include <pesa/date.h>
 #include <pesa/days.h>
@@ -48,7 +49,8 @@ namespace pesa {
         const Savings&    savings() const;
         Periods&          periods();
         const Periods&    periods() const;
-
+        Log&              log();
+        const Log&        log() const;
         // The front door for first-run setup: saves the settings AND opens the first period
         // (with the starting balance) in one step. Safe to run again: it never opens a second
         // period, it only updates the mode, pay and payday.

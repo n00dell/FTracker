@@ -35,6 +35,11 @@ add_library(pesa_core STATIC
         src/savings.cpp
         include/pesa/periods.h
         src/periods.cpp
+        src/format.cpp
+        include/pesa/log.h
+        src/log.cpp
+        src/log_sql.h
+        src/log_sql.cpp
 )
 
 # PUBLIC: anything linking pesa_core can #include <pesa/pesa.h>

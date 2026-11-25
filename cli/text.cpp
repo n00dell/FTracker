@@ -83,17 +83,17 @@ std::string daysInputText(pesa::WeekdaySet days) {
     return toLower(days.toString());          // "mon,wed"
 }
 
-std::string formatMoney(pesa::Money amount) {
-    const bool negative = amount < 0;
-    const std::string digits = std::to_string(negative ? -amount : amount);
-    std::string out;
-    for (std::size_t i = 0; i < digits.size(); ++i) {
-        if (i != 0 && (digits.size() - i) % 3 == 0) out += ',';
-        out += digits[i];
-    }
-    return negative ? "-" + out : out;
-}
-
+// std::string formatMoney(pesa::Money amount) {
+//     const bool negative = amount < 0;
+//     const std::string digits = std::to_string(negative ? -amount : amount);
+//     std::string out;
+//     for (std::size_t i = 0; i < digits.size(); ++i) {
+//         if (i != 0 && (digits.size() - i) % 3 == 0) out += ',';
+//         out += digits[i];
+//     }
+//     return negative ? "-" + out : out;
+// }
+    std::string formatMoney(pesa::Money amount) { return pesa::formatMoney(amount); }
 std::size_t displayWidth(std::string_view text) {
     std::size_t width = 0;
     for (const char c : text) {

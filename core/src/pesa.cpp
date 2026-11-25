@@ -17,10 +17,11 @@ namespace pesa {
         Settings         settings;
         Savings          savings;
         Periods          periods;
+        Log              log;
         DailyJob         dailyJob;
         explicit Impl(const std::filesystem::path& file)
             : db(file), categories(db), items(db), entries(db), days(db), rules(db),
-              settings(db), dailyJob(db, settings), savings(db), periods(db, settings) {}
+              settings(db), dailyJob(db, settings), savings(db), periods(db, settings),log(db) {}
     };
 
     Pesa::Pesa(const std::filesystem::path& dbFile) : impl_(std::make_unique<Impl>(dbFile)) {
@@ -45,6 +46,8 @@ namespace pesa {
     const Savings&    Pesa::savings() const    { return impl_->savings; }
     Periods&          Pesa::periods()          { return impl_->periods; }
     const Periods&    Pesa::periods() const    { return impl_->periods; }
+    Log&              Pesa::log()              { return impl_->log; }
+    const Log&        Pesa::log() const        { return impl_->log; }
     DailyJob&         Pesa::dailyJob()         { return impl_->dailyJob; }
     const DailyJob&   Pesa::dailyJob() const   { return impl_->dailyJob; }
 

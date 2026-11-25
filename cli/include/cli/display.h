@@ -57,5 +57,5 @@ namespace cli {
     void printPots(Console& io, const std::vector<pesa::Pot>& pots);
     void printLedger(Console& io, const std::vector<pesa::LedgerLine>& lines);
     void printIncome(Console& io, const std::vector<pesa::IncomeLine>& lines);
-
+    void printLog(Console& io, const std::vector<pesa::LogEvent>& events, const pesa::Date& today);
 } // namespace cli

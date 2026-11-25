@@ -5,7 +5,7 @@
 #include <pesa/periods.h>
 
 #include <pesa/entries.h>
-
+#include "log_sql.h"
 #include "db.h"
 #include "money_sql.h"
 #include "util.h"
@@ -88,6 +88,8 @@ bool Periods::ensureOpen(const Date& today, Money startingBalance) {
     db_.prepare("INSERT INTO periods(start_date) VALUES (?)").bind(1, today.toString()).run();
     const PeriodId id = db_.lastInsertId();
     if (startingBalance > 0) detail::insertIncome(db_, id, today, "Starting balance", startingBalance);
+    detail::writeLog(db_, LogKind::Pay, "First period opened on " + today.toString() +
+                                            (startingBalance > 0 ? " with KES " + formatMoney(startingBalance) : ""));
     tx.commit();
     return true;
 }
@@ -114,12 +116,18 @@ PeriodSummary Periods::summary(const Date& today) const {
     return s;
 }
 
-IncomeId Periods::addIncome(const Date& date, std::string_view rawLabel, Money amount) {
+    IncomeId Periods::addIncome(const Date& date, std::string_view rawLabel, Money amount) {
     const std::string label = detail::cleanName(rawLabel, "Say who the income is from.");
     detail::requirePositive(amount);
     const Period period = requireCurrent();
+
+    detail::Transaction tx(db_);
     detail::insertIncome(db_, period.id, date, label, amount);
-    return db_.lastInsertId();
+    const IncomeId id = db_.lastInsertId();   // moved up directly after insertIncome
+    detail::writeLog(db_, LogKind::Pay, "Income: " + label + ", KES " + formatMoney(amount));
+    tx.commit();
+
+    return id;
 }
 
 std::vector<IncomeLine> Periods::income() const {
@@ -192,6 +200,16 @@ PaidResult Periods::markPaid(const PaidOptions& options) {
     bindOptionalDate(open, 2, nextPayday);
     open.run();
     detail::insertIncome(db_, db_.lastInsertId(), options.paidOn, "Pay", *pay);
+    detail::writeLog(db_, LogKind::Pay,
+                     std::string(options.automatic ? "Payday arrived (auto-pay) on " : "Got paid on ") +
+                         options.paidOn.toString() + ": KES " + formatMoney(*pay) + " added, new period started");
+    if (result.movedToSavings > 0) {
+        detail::writeLog(db_, LogKind::Savings, "Leftover KES " + formatMoney(result.movedToSavings) +
+                                                    " moved to " + result.leftoverPot);
+    } else if (result.shortfall > 0) {
+        detail::writeLog(db_, LogKind::Pay, "Earned ran KES " + formatMoney(result.shortfall) +
+                                                " over; nothing was taken from savings");
+    }
 
     tx.commit();
     return result;
@@ -210,7 +228,7 @@ std::vector<PaidResult> Periods::autoPayIfDue(const Date& today) {
         if (!period || !period->expectedPayday) break;
         const Date due = *period->expectedPayday;
         if (due > today || due <= period->start) break;
-        done.push_back(markPaid({.paidOn = due}));
+        done.push_back(markPaid({.paidOn = due, .automatic = true}));
     }
     tx.commit();
     return done;
@@ -223,7 +241,12 @@ void Periods::delayPayday(const Date& newPayday, const Date& today) {
     const Period period = requireCurrent();
     if (newPayday <= today) throw Error("Pick a payday after today. If the pay arrived, use 'paid'.");
     if (newPayday <= period.start) throw Error("The payday must be after " + period.start.toString() + ".");
+    detail::Transaction tx(db_);
     setExpectedPayday(newPayday);
+    detail::writeLog(db_, LogKind::Pay, "Salary delayed: expected payday moved from " +
+                                            period.expectedPayday.value_or(newPayday).toString() + " to " +
+                                            newPayday.toString());
+    tx.commit();
 }
 
 } // namespace pesa

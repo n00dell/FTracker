@@ -3,7 +3,7 @@
 //
 // FTracker/core/src/savings.cpp
 #include <pesa/savings.h>
-
+#include  "log_sql.h"
 #include "db.h"
 #include "money_sql.h"
 #include "util.h"
@@ -39,8 +39,9 @@ Pot readPot(const detail::Statement& st) {
     return "";
 }
 
-PotId Savings::addPot(std::string_view rawName, PotKind kind) {
+    PotId Savings::addPot(std::string_view rawName, PotKind kind) {
     const std::string name = detail::cleanName(rawName, "A pot name cannot be empty.");
+    detail::Transaction tx(db_);
     {
         auto st = db_.prepare("SELECT 1 FROM pots WHERE name = ?");   // the column ignores upper/lower case
         st.bind(1, name);
@@ -51,7 +52,10 @@ PotId Savings::addPot(std::string_view rawName, PotKind kind) {
         .bind(1, name)
         .bind(2, static_cast<std::int64_t>(kind))
         .run();
-    return db_.lastInsertId();
+    const PotId id = db_.lastInsertId();
+    detail::writeLog(db_, LogKind::Savings, "New pot: " + name);
+    tx.commit();
+    return id;
 }
 
 PotId Savings::mainPot() const { return detail::mainPotId(db_); }
@@ -95,11 +99,13 @@ std::vector<LedgerLine> Savings::ledger() const {
     return out;
 }
 
-void Savings::add(const Date& date, PotId pot, Money amount, std::string_view note, LedgerKind kind) {
+    void Savings::add(const Date& date, PotId pot, Money amount, std::string_view note, LedgerKind kind) {
     detail::requirePositive(amount);
     detail::Transaction tx(db_);
-    detail::requirePot(db_, pot);
+    const std::string potName = detail::requirePot(db_, pot);
     detail::insertLedger(db_, date, pot, amount, kind, note);
+    detail::writeLog(db_, LogKind::Savings,
+                     "Added KES " + formatMoney(amount) + " to " + potName + (note.empty() ? "" : ": " + std::string(note)));
     tx.commit();
 }
 
@@ -116,6 +122,7 @@ void Savings::moveToEarned(const Date& date, PotId pot, Money amount) {
     }
     detail::insertLedger(db_, date, pot, -amount, LedgerKind::MovedToEarned, "Into this period", period);
     detail::insertIncome(db_, period, date, "From " + potName, amount);
+    detail::writeLog(db_, LogKind::Savings, "Moved KES " + formatMoney(amount) + " from " + potName + " to earned");
     tx.commit();
 }
 

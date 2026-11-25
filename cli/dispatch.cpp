@@ -61,6 +61,8 @@ namespace cli {
                 "  entry amount <id> <amount>\n"
                 "  entry fund <id> earned|savings\n"
                 "  entry delete <id>\n\n"
+        "Log\n"
+"  log [all|auto|edits|savings|skipped|issues] [--limit <n>]   what happened, newest first\n\n"
                 "In the shell: help, exit. Names with spaces can be typed with or without \"quotes\".\n";
     }
 
@@ -79,6 +81,7 @@ namespace cli {
         if (command == "delay") return runDelay(ctx, args);
         if (command == "income") return runIncome(ctx, args);
         if (command == "savings") return runSavings(ctx, args);
+        if (command == "log") return runLog(ctx, args);
         if (command == "help" || command == "?" || command == "--help") {
             printUsage(ctx.io);
             return 0;

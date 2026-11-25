@@ -1,6 +1,3 @@
-//
-// Created by lee on 11/24/26.
-//
 // FTracker/core/src/daily_job.cpp
 #include <pesa/daily_job.h>
 
@@ -8,6 +5,9 @@
 
 #include "db.h"
 #include "entry_sql.h"
+#include "log_sql.h"
+
+#include <vector>
 
 namespace pesa {
 
@@ -55,11 +55,17 @@ Money postedTotal(detail::Database& db, const Date& date) {
     return st.integer(0);
 }
 
-// Best effort: a problem while writing the problem must not hide the original one.
-void recordIssue(detail::Database& db, const Date& date, std::string_view message) {
+std::string joinNames(const std::vector<std::string>& names) {
+    std::string out;
+    for (const std::string& name : names) out += (out.empty() ? "" : ", ") + name;
+    return out;
+}
+
+// For lines written OUTSIDE a day's transaction: a failed log line must never stop the job.
+void tryLog(detail::Database& db, LogKind kind, std::string_view message, bool once = false) {
     try {
-        db.prepare("INSERT INTO issues(day, message) VALUES (?, ?)")
-            .bind(1, date.toString()).bind(2, message).run();
+        if (once) detail::writeLogOnce(db, kind, message);
+        else      detail::writeLog(db, kind, message);
     } catch (...) {}
 }
 
@@ -73,9 +79,9 @@ std::optional<Date> DailyJob::lastPosted() const {
 
 void DailyJob::postDay(const Date& date, DailyJobResult& result) {
     // One transaction per day: a crash leaves the day fully posted or not at all, and
-    // "last posted" moves in the same step, so the two can never disagree.
+    // "last posted" and the log line move in the same step, so they can never disagree.
     detail::Transaction tx(db_);
-    int posted = 0;
+    std::vector<std::string> names;
     Money amount = 0;
 
     if (!alreadyCalculated(db_, date)) {
@@ -84,17 +90,21 @@ void DailyJob::postDay(const Date& date, DailyJobResult& result) {
         for (const Rule& rule : rules.list(Visibility::ActiveOnly)) {
             if (!rule.appliesOn(date)) continue;
             for (const RuleItem& item : rule.items) {
-                if (postItem(db_, date, rule.id, item.id)) ++posted;
+                if (postItem(db_, date, rule.id, item.id)) names.push_back(item.name);
             }
         }
         db_.prepare("UPDATE days SET calculated = 1 WHERE date = ?").bind(1, date.toString()).run();
         detail::recalculateDay(db_, date);
         amount = postedTotal(db_, date);
+        if (!names.empty()) {
+            detail::writeLog(db_, LogKind::Rule, "Auto-posted " + joinNames(names) + ": KES " +
+                                                     formatMoney(amount) + " for " + date.toString());
+        }
     }
     saveLastPosted(db_, date);
     tx.commit();
 
-    result.entries += posted;
+    result.entries += static_cast<int>(names.size());
     result.total += amount;
 }
 
@@ -103,10 +113,14 @@ DailyJobResult DailyJob::run(const Date& today, TimeOfDay now) {
     if (!settings_.autoPostEnabled()) return result;
 
     // Clock guard: a computer date earlier than the last posted day would put entries on
-    // the wrong days, so we stop and say so.
+    // the wrong days, so we stop and say so (once, not on every launch).
     const auto last = lastPosted();
     if (last && today < *last) {
         result.clockBehind = true;
+        tryLog(db_, LogKind::Issue,
+               "Posting paused: this computer's date (" + today.toString() +
+                   ") is earlier than the last day Pesa posted (" + last->toString() + ")",
+               true);
         return result;
     }
     result.ran = true;
@@ -123,12 +137,18 @@ DailyJobResult DailyJob::run(const Date& today, TimeOfDay now) {
             // The day's transaction was rolled back and "last posted" did not move,
             // so the next launch tries this same day again.
             result.problem = e.what();
-            recordIssue(db_, day, e.what());
+            tryLog(db_, LogKind::Issue, "Could not post " + day.toString() + ": " + e.what(), true);
             break;
         }
         ++result.days;
         if (!result.from) result.from = day;
         result.to = day;
+    }
+
+    if (result.problem.empty() && result.days > 1) {
+        tryLog(db_, LogKind::Rule, "Catch-up: posted " + std::to_string(result.days) + " days (" +
+                                       result.from->toString() + " to " + result.to->toString() + "), " +
+                                       std::to_string(result.entries) + " entries, KES " + formatMoney(result.total));
     }
     return result;
 }

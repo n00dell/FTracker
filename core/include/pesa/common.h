@@ -76,5 +76,6 @@ private:
     static constexpr unsigned bit(Weekday d) { return 1u << static_cast<unsigned>(d); }
     unsigned bits_ = 0;
 };
-
+    // 1250 -> "1,250", -1500 -> "-1,500". The core's log messages and the CLI both use it.
+    std::string formatMoney(Money amount);
 } // namespace pesa
