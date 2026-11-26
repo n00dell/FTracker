@@ -5,6 +5,9 @@
 
 #include <pesa/categories.h>
 #include <pesa/log.h>
+#include <pesa/corrections.h>
+#include <pesa/skips.h>
+#include <pesa/restore_points.h>
 #include <pesa/common.h>
 #include <pesa/date.h>
 #include <pesa/days.h>
@@ -19,49 +22,78 @@
 #include <memory>
 
 namespace pesa {
-
     // Where the database lives by default on this operating system.
     std::filesystem::path defaultDatabasePath();
 
     class Pesa {
     public:
         // Opens the file (creating it and its folder if needed) and upgrades its layout.
-        explicit Pesa(const std::filesystem::path& dbFile);
-        ~Pesa();
-        Pesa(const Pesa&) = delete;
-        Pesa& operator=(const Pesa&) = delete;
+        explicit Pesa(const std::filesystem::path &dbFile);
 
-        Categories&       categories();
-        const Categories& categories() const;
-        Items&            items();
-        const Items&      items() const;
-        Entries&          entries();
-        const Entries&    entries() const;
-        Days&             days();
-        const Days&       days() const;
-        Rules&            rules();
-        const Rules&      rules() const;
-        Settings&         settings();
-        const Settings&   settings() const;
-        DailyJob&         dailyJob();
-        const DailyJob&   dailyJob() const;
-        Savings&          savings();
-        const Savings&    savings() const;
-        Periods&          periods();
-        const Periods&    periods() const;
-        Log&              log();
-        const Log&        log() const;
+        ~Pesa();
+
+        Pesa(const Pesa &) = delete;
+
+        Pesa &operator=(const Pesa &) = delete;
+
+        Categories &categories();
+
+        const Categories &categories() const;
+
+        Items &items();
+
+        const Items &items() const;
+
+        Entries &entries();
+
+        const Entries &entries() const;
+
+        Days &days();
+
+        const Days &days() const;
+
+        Rules &rules();
+
+        const Rules &rules() const;
+
+        Settings &settings();
+
+        const Settings &settings() const;
+
+        DailyJob &dailyJob();
+
+        const DailyJob &dailyJob() const;
+
+        Savings &savings();
+
+        const Savings &savings() const;
+
+        Periods &periods();
+
+        const Periods &periods() const;
+
+        Log &log();
+
+        const Log &log() const;
+
+        Skips &skips();
+
+        const Skips &skips() const;
+
+        RestorePoints &restorePoints();
+
+        const RestorePoints &restorePoints() const;
+
         // The front door for first-run setup: saves the settings AND opens the first period
         // (with the starting balance) in one step. Safe to run again: it never opens a second
         // period, it only updates the mode, pay and payday.
-        void completeSetup(const SetupAnswers& answers, const Date& today);
-        
+        void completeSetup(const SetupAnswers &answers, const Date &today);
+
         // Version of the database layout currently in the file.
         [[nodiscard]] int schemaVersion() const;
 
     private:
-        struct Impl;                    // hidden: holds the sqlite connection and the features
+        struct Impl; // hidden: holds the sqlite connection and the features
         std::unique_ptr<Impl> impl_;
     };
-
 } // namespace pesa

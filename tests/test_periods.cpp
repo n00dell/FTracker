@@ -13,22 +13,27 @@ using pesa::IncomeMode;
 using pesa::Pesa;
 
 namespace {
+    const Date kStart = Date::parse("2026-10-25");
+    const Date kPayday = Date::parse("2026-11-24");
 
-const Date kStart = Date::parse("2026-10-25");
-const Date kPayday = Date::parse("2026-11-24");
+    // A salary of 70,000 due on 24 Nov, with 12,000 in hand on 25 Oct.
+    struct Fixture {
+        Pesa app{":memory:"};
 
-// A salary of 70,000 due on 24 Nov, with 12,000 in hand on 25 Oct.
-struct Fixture {
-    Pesa app{":memory:"};
-    Fixture() {
-        app.completeSetup({.mode = IncomeMode::Regular, .pay = 70000, .payday = kPayday,
-                           .startingBalance = 12000}, kStart);
-    }
-};
-
+        Fixture() {
+            app.completeSetup({
+                                  .mode = IncomeMode::Regular, .pay = 70000, .payday = kPayday,
+                                  .startingBalance = 12000
+                              }, kStart);
+        }
+    };
 } // namespace
 
-TEST_CASE("setup opens the first period with the starting balance as earned money") {
+TEST_CASE (
+
+"setup opens the first period with the starting balance as earned money"
+)
+ {
     Fixture f;
     const auto s = f.app.periods().summary(kStart);
     CHECK(s.period.start == kStart);
@@ -39,7 +44,11 @@ TEST_CASE("setup opens the first period with the starting balance as earned mone
     CHECK(f.app.periods().income().size() == 1);
 }
 
-TEST_CASE("running setup again never opens a second period") {
+TEST_CASE (
+
+"running setup again never opens a second period"
+)
+ {
     Fixture f;
     f.app.completeSetup({.mode = IncomeMode::Regular, .pay = 80000, .payday = Date::parse("2026-11-30"),
                          .startingBalance = 999}, kStart.addDays(1));
@@ -52,7 +61,11 @@ TEST_CASE("running setup again never opens a second period") {
     CHECK_THROWS_AS(f.app.completeSetup({.mode = IncomeMode::Regular, .pay = 1, .payday = kStart}, kStart), Error);
 }
 
-TEST_CASE("earned remaining is income minus earned spending, up to today") {
+TEST_CASE (
+
+"earned remaining is income minus earned spending, up to today"
+)
+ {
     Fixture f;
     f.app.entries().addOneOff(kStart.addDays(1), "Lunch", 500);
     f.app.entries().addOneOff(kStart.addDays(5), "Later", 900);                      // not happened yet
@@ -67,7 +80,11 @@ TEST_CASE("earned remaining is income minus earned spending, up to today") {
     CHECK(f.app.periods().summary(kStart.addDays(2)).earnedRemaining() == 26500);
 }
 
-TEST_CASE("I got paid: the leftover moves to savings at once and a new period starts") {
+TEST_CASE (
+
+"I got paid: the leftover moves to savings at once and a new period starts"
+)
+ {
     Fixture f;
     f.app.entries().addOneOff(kStart.addDays(1), "Lunch", 500);
     f.app.entries().addOneOff(kPayday, "Pay day lunch", 200);   // dated on the pay day: the NEW period
@@ -93,7 +110,11 @@ TEST_CASE("I got paid: the leftover moves to savings at once and a new period st
     CHECK(s.earnedRemaining() == 69800);
 }
 
-TEST_CASE("the pay can be a different amount, and the leftover can go to another pot") {
+TEST_CASE (
+
+"the pay can be a different amount, and the leftover can go to another pot"
+)
+ {
     Fixture f;
     const auto sacco = f.app.savings().addPot("Sacco", pesa::PotKind::Tied);
     const auto r = f.app.periods().markPaid({.paidOn = kPayday, .amount = 65000, .leftoverPot = sacco});
@@ -102,7 +123,11 @@ TEST_CASE("the pay can be a different amount, and the leftover can go to another
     CHECK(f.app.savings().findPot(f.app.savings().mainPot())->balance == 0);
 }
 
-TEST_CASE("overspending is recorded as a shortfall and nothing is taken from savings") {
+TEST_CASE (
+
+"overspending is recorded as a shortfall and nothing is taken from savings"
+)
+ {
     Fixture f;
     f.app.entries().addOneOff(kStart.addDays(1), "Big spend", 15000);
     const auto r = f.app.periods().markPaid({.paidOn = kPayday});
@@ -113,20 +138,32 @@ TEST_CASE("overspending is recorded as a shortfall and nothing is taken from sav
     CHECK(f.app.periods().history()[0].remainder == -3000);
 }
 
-TEST_CASE("pressing I got paid twice for the same day is refused") {
+TEST_CASE (
+
+"pressing I got paid twice for the same day is refused"
+)
+ {
     Fixture f;
     f.app.periods().markPaid({.paidOn = kPayday});
     CHECK_THROWS_AS(f.app.periods().markPaid({.paidOn = kPayday}), Error);
     CHECK_THROWS_AS(f.app.periods().markPaid({.paidOn = kPayday.addDays(-1)}), Error);
 }
 
-TEST_CASE("getting paid early works, and the usual payday day is kept") {
+TEST_CASE (
+
+"getting paid early works, and the usual payday day is kept"
+)
+ {
     Fixture f;
     const auto r = f.app.periods().markPaid({.paidOn = Date::parse("2026-11-20")});
     CHECK(r.nextPayday == Date::parse("2026-12-24"));   // not 20 Dec
 }
 
-TEST_CASE("auto-pay closes the period once the payday has come, and only once") {
+TEST_CASE (
+
+"auto-pay closes the period once the payday has come, and only once"
+)
+ {
     Fixture f;
     CHECK(f.app.periods().autoPayIfDue(kPayday.addDays(-1)).empty());
 
@@ -137,7 +174,11 @@ TEST_CASE("auto-pay closes the period once the payday has come, and only once") 
     CHECK(f.app.periods().autoPayIfDue(kPayday).empty());
 }
 
-TEST_CASE("auto-pay catches up every missed payday, each on its own day") {
+TEST_CASE (
+
+"auto-pay catches up every missed payday, each on its own day"
+)
+ {
     Fixture f;
     const auto done = f.app.periods().autoPayIfDue(Date::parse("2027-01-30"));
     REQUIRE(done.size() == 3);                                   // 24 Nov, 24 Dec, 24 Jan
@@ -147,7 +188,11 @@ TEST_CASE("auto-pay catches up every missed payday, each on its own day") {
     CHECK(f.app.periods().current()->expectedPayday == Date::parse("2027-02-24"));
 }
 
-TEST_CASE("auto-pay does nothing when it is switched off or income is irregular") {
+TEST_CASE (
+
+"auto-pay does nothing when it is switched off or income is irregular"
+)
+ {
     Fixture f;
     f.app.settings().setAutoPayEnabled(false);
     CHECK(f.app.periods().autoPayIfDue(kPayday.addDays(10)).empty());
@@ -158,7 +203,11 @@ TEST_CASE("auto-pay does nothing when it is switched off or income is irregular"
     CHECK(irregular.periods().autoPayIfDue(kPayday).empty());
 }
 
-TEST_CASE("salary delayed moves the payday, so auto-pay waits") {
+TEST_CASE (
+
+"salary delayed moves the payday, so auto-pay waits"
+)
+ {
     Fixture f;
     const Date today = Date::parse("2026-11-23");
     CHECK_THROWS_AS(f.app.periods().delayPayday(today, today), Error);            // not after today
@@ -168,7 +217,11 @@ TEST_CASE("salary delayed moves the payday, so auto-pay waits") {
     CHECK(f.app.periods().autoPayIfDue(Date::parse("2026-11-27")).size() == 1);
 }
 
-TEST_CASE("irregular income: no payday, no delay, and the pay amount must be given") {
+TEST_CASE (
+
+"irregular income: no payday, no delay, and the pay amount must be given"
+)
+ {
     Pesa app(":memory:");
     app.completeSetup({.mode = IncomeMode::Irregular, .startingBalance = 5000}, kStart);
     CHECK_FALSE(app.periods().current()->expectedPayday.has_value());
@@ -182,7 +235,11 @@ TEST_CASE("irregular income: no payday, no delay, and the pay amount must be giv
     CHECK_FALSE(app.periods().current()->expectedPayday.has_value());
 }
 
-TEST_CASE("there is nothing to do without an open period") {
+TEST_CASE (
+
+"there is nothing to do without an open period"
+)
+ {
     Pesa app(":memory:");
     CHECK_FALSE(app.periods().current().has_value());
     CHECK_THROWS_AS((void)app.periods().summary(kStart), Error);

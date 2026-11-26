@@ -8,7 +8,11 @@ using pesa::Error;
 using pesa::IncomeMode;
 using pesa::Pesa;
 
-TEST_CASE("a new database has not been set up and the switches default to on") {
+TEST_CASE (
+
+"a new database has not been set up and the switches default to on"
+)
+ {
     Pesa app(":memory:");
     CHECK_FALSE(app.settings().setupDone());
     CHECK_FALSE(app.settings().expectedPay().has_value());
@@ -17,7 +21,11 @@ TEST_CASE("a new database has not been set up and the switches default to on") {
     CHECK(app.settings().postAfter() == pesa::TimeOfDay{20, 0});
 }
 
-TEST_CASE("regular setup saves the mode and the pay") {
+TEST_CASE (
+
+"regular setup saves the mode and the pay"
+)
+ {
     Pesa app(":memory:");
     app.settings().completeSetup({.mode = IncomeMode::Regular, .pay = 70000, .payday = Date::parse("2026-12-24")});
     CHECK(app.settings().setupDone());
@@ -25,7 +33,11 @@ TEST_CASE("regular setup saves the mode and the pay") {
     CHECK(app.settings().expectedPay() == 70000);
 }
 
-TEST_CASE("a regular income needs a pay and a payday, and a bad pay saves nothing") {
+TEST_CASE (
+
+"a regular income needs a pay and a payday, and a bad pay saves nothing"
+)
+ {
     Pesa app(":memory:");
     CHECK_THROWS_AS(app.settings().completeSetup({.mode = IncomeMode::Regular}), Error);
     CHECK_THROWS_AS(app.settings().completeSetup({.mode = IncomeMode::Regular, .pay = 70000}), Error);
@@ -34,14 +46,22 @@ TEST_CASE("a regular income needs a pay and a payday, and a bad pay saves nothin
     CHECK_FALSE(app.settings().setupDone());
 }
 
-TEST_CASE("an irregular income has no pay") {
+TEST_CASE (
+
+"an irregular income has no pay"
+)
+ {
     Pesa app(":memory:");
     app.settings().completeSetup({.mode = IncomeMode::Irregular, .pay = 5000});
     CHECK(app.settings().incomeMode() == IncomeMode::Irregular);
     CHECK_FALSE(app.settings().expectedPay().has_value());
 }
 
-TEST_CASE("the switches and the post-after time can be changed") {
+TEST_CASE (
+
+"the switches and the post-after time can be changed"
+)
+ {
     Pesa app(":memory:");
     app.settings().setAutoPostEnabled(false);
     app.settings().setAutoPayEnabled(false);

@@ -34,6 +34,14 @@ namespace cli {
                 "  rule additem <id> <item-id> | rule removeitem <id> <item-id>\n"
                 "  rule end <id> <last-day>               a change = end the old rule, add a new one\n"
                 "  rule deactivate <id> | activate <id> | delete <id> | restore <id>\n\n"
+                "Skips, wipe and restore  (these can reach back into days already posted; each shows a preview first)\n"
+                "  rule adjust <change> <name> --item <id>... --from <date> [--to <date>]   a price change (10 or -10)\n"
+                "  skip add <name> --from <date> [--to <date>] [--category <name|id>]... [--item <id>]...\n"
+                "  skip list | skip remove [<id>]\n"
+                "  wipe <first-day> <last-day>            delete rule-posted entries you never touched (past days only)\n"
+                "  restore                                list restore points\n"
+                "  restore <id>                           go back to one\n"
+                "  (add --yes to any of these to skip the question)\n\n"
                 "Money  (periods, income, savings)\n"
                 "  status                                 where you stand this period\n"
                 "  paid [--date <d>] [--amount <n>] [--next <d>] [--pot <pot>]\n"
@@ -61,8 +69,8 @@ namespace cli {
                 "  entry amount <id> <amount>\n"
                 "  entry fund <id> earned|savings\n"
                 "  entry delete <id>\n\n"
-        "Log\n"
-"  log [all|auto|edits|savings|skipped|issues] [--limit <n>]   what happened, newest first\n\n"
+                "Log\n"
+                "  log [all|auto|edits|savings|skipped|issues] [--limit <n>]   what happened, newest first\n\n"
                 "In the shell: help, exit. Names with spaces can be typed with or without \"quotes\".\n";
     }
 
@@ -82,6 +90,9 @@ namespace cli {
         if (command == "income") return runIncome(ctx, args);
         if (command == "savings") return runSavings(ctx, args);
         if (command == "log") return runLog(ctx, args);
+        if (command == "skip") return runSkip(ctx, args);
+        if (command == "wipe") return runWipe(ctx, args);
+        if (command == "restore") return runRestore(ctx, args);
         if (command == "help" || command == "?" || command == "--help") {
             printUsage(ctx.io);
             return 0;

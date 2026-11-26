@@ -40,6 +40,13 @@ add_library(pesa_core STATIC
         src/log.cpp
         src/log_sql.h
         src/log_sql.cpp
+        include/pesa/corrections.h
+        src/corrections_sql.cpp
+        src/corrections_sql.h
+        include/pesa/skips.h
+        src/skips.cpp
+        include/pesa/restore_points.h
+        src/restore_points.cpp
 )
 
 # PUBLIC: anything linking pesa_core can #include <pesa/pesa.h>
@@ -47,6 +54,6 @@ target_include_directories(pesa_core PUBLIC include)
 target_link_libraries(pesa_core PUBLIC SQLite3::SQLite3)
 target_compile_features(pesa_core PUBLIC cxx_std_20)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(pesa_core PRIVATE -Wall -Wextra -Wpedantic)
-endif()
+endif ()

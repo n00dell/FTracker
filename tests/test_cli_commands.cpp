@@ -6,39 +6,41 @@
 #include <sstream>
 
 namespace {
+    // A pretend terminal: `input` is what the person types, output is collected.
+    struct Session {
+        pesa::Pesa app{":memory:"};
+        std::istringstream in;
+        std::ostringstream out;
+        std::ostringstream err;
+        cli::Console io;
+        cli::Context ctx;
 
-// A pretend terminal: `input` is what the person types, output is collected.
-struct Session {
-    pesa::Pesa         app{":memory:"};
-    std::istringstream in;
-    std::ostringstream out;
-    std::ostringstream err;
-    cli::Console       io;
-    cli::Context       ctx;
+        explicit Session(const std::string &input = "") : in(input), io(in, out, err, false), ctx{app, io} {
+        }
 
-    explicit Session(const std::string& input = "") : in(input), io(in, out, err, false), ctx{app, io} {}
+        int run(const std::string &line) { return cli::runGuarded(ctx, cli::splitLine(line)); }
+        [[nodiscard]] std::string output() const { return out.str(); }
+        [[nodiscard]] std::string errors() const { return err.str(); }
+    };
 
-    int run(const std::string& line) { return cli::runGuarded(ctx, cli::splitLine(line)); }
-    [[nodiscard]] std::string output() const { return out.str(); }
-    [[nodiscard]] std::string errors() const { return err.str(); }
-};
+    bool contains(const std::string &text, const std::string &part) { return text.find(part) != std::string::npos; }
 
-bool contains(const std::string& text, const std::string& part) { return text.find(part) != std::string::npos; }
-
-// Misc is always there, so tests about "my categories" skip it.
-std::vector<pesa::Category> userCategories(const pesa::Pesa& app) {
-    std::vector<pesa::Category> out;
-    for (auto& c : app.categories().list()) {
-        if (!c.isSystem) out.push_back(std::move(c));
+    // Misc is always there, so tests about "my categories" skip it.
+    std::vector<pesa::Category> userCategories(const pesa::Pesa &app) {
+        std::vector<pesa::Category> out;
+        for (auto &c: app.categories().list()) {
+            if (!c.isSystem) out.push_back(std::move(c));
+        }
+        return out;
     }
-    return out;
-}
 
-const pesa::Date kDay = pesa::Date::parse("2026-11-23");
-
+    const pesa::Date kDay = pesa::Date::parse("2026-11-23");
 } // namespace
 
-TEST_CASE("one-liners still work, and a one-off lands in Misc") {
+TEST_CASE (
+"one-liners still work, and a one-off lands in Misc"
+)
+ {
     Session s;
     CHECK(s.run("category add Food") == 0);
     CHECK(s.run("item add Food 60 Milk") == 0);
@@ -51,13 +53,16 @@ TEST_CASE("one-liners still work, and a one-off lands in Misc") {
     CHECK(day.savingsTotal == 500);
     REQUIRE(day.entries.size() == 2);
     CHECK(s.app.items().list()[1].name == "Fresh bread");
-    CHECK(contains(s.output(), "Uncle Bill's wedding"));   // the day is shown after each change
+    CHECK(contains(s.output(), "Uncle Bill's wedding")); // the day is shown after each change
     CHECK(contains(s.output(), "Spent 560"));
     CHECK(day.entries[1].isOneOff());
     CHECK(day.entries[1].categoryName.empty());
 }
 
-TEST_CASE("errors go to the error stream and give a failing exit code") {
+TEST_CASE (
+"errors go to the error stream and give a failing exit code"
+)
+ {
     Session s;
     s.run("category add Food");
     CHECK(s.run("item add Food 0 Bread") == 1);
@@ -69,7 +74,10 @@ TEST_CASE("errors go to the error stream and give a failing exit code") {
     CHECK(s.run("day 2026-02-30") == 1);
 }
 
-TEST_CASE("Misc cannot be renamed or deleted from the command line") {
+TEST_CASE (
+"Misc cannot be renamed or deleted from the command line"
+)
+ {
     Session s;
     const auto misc = std::to_string(s.app.categories().misc());
     CHECK(s.run("category rename " + misc + " Other") == 1);
@@ -77,7 +85,10 @@ TEST_CASE("Misc cannot be renamed or deleted from the command line") {
     CHECK(s.run("category delete " + misc) == 1);
 }
 
-TEST_CASE("category add asks for the name") {
+TEST_CASE (
+"category add asks for the name"
+)
+ {
     Session s("Food\n");
     CHECK(s.run("category add") == 0);
     REQUIRE(userCategories(s.app).size() == 1);
@@ -85,7 +96,10 @@ TEST_CASE("category add asks for the name") {
     CHECK(contains(s.output(), "Category name: "));
 }
 
-TEST_CASE("a blank answer or the end of input cancels") {
+TEST_CASE (
+"a blank answer or the end of input cancels"
+)
+ {
     Session blank("\n");
     CHECK(blank.run("category add") == 1);
     CHECK(contains(blank.output(), "Cancelled."));
@@ -97,10 +111,13 @@ TEST_CASE("a blank answer or the end of input cancels") {
 
     Session quit("q\n");
     quit.app.categories().add("Food");
-    CHECK(quit.run("category rename") == 1);   // "q" at a numbered list backs out
+    CHECK(quit.run("category rename") == 1); // "q" at a numbered list backs out
 }
 
-TEST_CASE("item add walks through category, name and amount") {
+TEST_CASE (
+"item add walks through category, name and amount"
+)
+ {
     Session s("1\nMilk\n60\n");
     s.app.categories().add("Food");
     CHECK(s.run("item add") == 0);
@@ -112,8 +129,11 @@ TEST_CASE("item add walks through category, name and amount") {
     CHECK(contains(s.output(), "1) Food"));
 }
 
-TEST_CASE("wrong answers are explained and asked again") {
-    Session s("1\nMilk\nabc\n0\n60\n");   // bad amount, zero, then 60
+TEST_CASE (
+"wrong answers are explained and asked again"
+)
+ {
+    Session s("1\nMilk\nabc\n0\n60\n"); // bad amount, zero, then 60
     s.app.categories().add("Food");
     CHECK(s.run("item add") == 0);
     CHECK(contains(s.output(), "whole number"));
@@ -121,8 +141,11 @@ TEST_CASE("wrong answers are explained and asked again") {
     CHECK(s.app.items().list()[0].defaultAmount == 60);
 }
 
-TEST_CASE("entry add picks the day, category and item, and Enter takes the defaults") {
-    Session s("2026-11-23\n1\n1\n\n\n");   // date, category 1, item 1, default amount, default 'earned'
+TEST_CASE (
+"entry add picks the day, category and item, and Enter takes the defaults"
+)
+ {
+    Session s("2026-11-23\n1\n1\n\n\n"); // date, category 1, item 1, default amount, default 'earned'
     const auto food = s.app.categories().add("Food");
     s.app.items().add({.categoryId = food, .name = "Milk", .defaultAmount = 60});
     CHECK(s.run("entry add") == 0);
@@ -134,8 +157,11 @@ TEST_CASE("entry add picks the day, category and item, and Enter takes the defau
     CHECK(contains(s.output(), "Spent 60"));
 }
 
-TEST_CASE("entry oneoff asks for the day, name, amount and where the money comes from") {
-    Session s("2026-11-23\nUncle Bill's wedding\n1,500\n2\n");   // date, name, amount, savings
+TEST_CASE (
+"entry oneoff asks for the day, name, amount and where the money comes from"
+)
+ {
+    Session s("2026-11-23\nUncle Bill's wedding\n1,500\n2\n"); // date, name, amount, savings
     s.app.categories().add("Food");
     CHECK(s.run("entry oneoff") == 0);
 
@@ -144,15 +170,18 @@ TEST_CASE("entry oneoff asks for the day, name, amount and where the money comes
     CHECK(day.entries[0].isOneOff());
     CHECK(day.entries[0].amount == 1500);
     CHECK(day.entries[0].fund == pesa::FundedFrom::Savings);
-    CHECK(s.app.items().list().empty());                  // never touches the catalog
+    CHECK(s.app.items().list().empty()); // never touches the catalog
     CHECK(contains(s.output(), "One-off"));
 }
 
-TEST_CASE("deleting an entry in guided mode asks first") {
+TEST_CASE (
+"deleting an entry in guided mode asks first"
+)
+ {
     Session no("2026-11-23\n1\nn\n");
     no.app.entries().addOneOff(kDay, "Gift", 100);
     CHECK(no.run("entry delete") == 0);
-    CHECK(no.app.days().view(kDay).entries.size() == 1);   // said no
+    CHECK(no.app.days().view(kDay).entries.size() == 1); // said no
 
     Session yes("2026-11-23\n1\ny\n");
     yes.app.entries().addOneOff(kDay, "Gift", 100);
@@ -160,8 +189,11 @@ TEST_CASE("deleting an entry in guided mode asks first") {
     CHECK(yes.app.days().view(kDay).entries.empty());
 }
 
-TEST_CASE("pausing offers only categories that can be paused") {
-    Session s("1\n");                       // Food is the only one: Home is paused, Misc is built in
+TEST_CASE (
+"pausing offers only categories that can be paused"
+)
+ {
+    Session s("1\n"); // Food is the only one: Home is paused, Misc is built in
     s.app.categories().add("Food");
     const auto home = s.app.categories().add("Home");
     s.app.categories().setActive(home, false);
@@ -171,7 +203,10 @@ TEST_CASE("pausing offers only categories that can be paused") {
     CHECK_FALSE(contains(s.output(), "Misc"));
 }
 
-TEST_CASE("catalog shows categories with their items underneath, Misc last") {
+TEST_CASE (
+"catalog shows categories with their items underneath, Misc last"
+)
+ {
     Session s;
     CHECK(s.run("catalog") == 0);
     CHECK(contains(s.output(), "Misc"));
@@ -185,50 +220,62 @@ TEST_CASE("catalog shows categories with their items underneath, Misc last") {
     s.out.str("");
     CHECK(s.run("catalog") == 0);
     const auto text = s.output();
-    CHECK(contains(text, "Food   (category 2)"));       // Misc took id 1 when the file was made
+    CHECK(contains(text, "Food   (category 2)")); // Misc took id 1 when the file was made
     CHECK(contains(text, "Transport   (category 3)"));
-    CHECK(text.find("Food") < text.find("Milk"));        // the item sits under its category
+    CHECK(text.find("Food") < text.find("Milk")); // the item sits under its category
     CHECK(text.find("Milk") < text.find("Transport"));
     CHECK(text.find("Matatu") < text.find("Misc"));
     CHECK_FALSE(contains(text, "No items yet"));
 }
 
-TEST_CASE("catalog add asks whether it is a category or an item") {
-    Session s("2\n1\nBread\n55\n");        // an item; category 1; name; amount
+TEST_CASE (
+"catalog add asks whether it is a category or an item"
+)
+ {
+    Session s("2\n1\nBread\n55\n"); // an item; category 1; name; amount
     s.app.categories().add("Food");
     CHECK(s.run("catalog add") == 0);
     REQUIRE(s.app.items().list().size() == 1);
     CHECK(s.app.items().list()[0].name == "Bread");
 
-    Session c("1\nHome\n");                // a category
+    Session c("1\nHome\n"); // a category
     CHECK(c.run("catalog add") == 0);
     CHECK(userCategories(c.app)[0].name == "Home");
 }
 
-TEST_CASE("catalog edit: pick something, then change it") {
-    Session s("2\n2\n75\n");               // line 2 is Milk; action 2 is 'Change the amount'; 75
+TEST_CASE (
+"catalog edit: pick something, then change it"
+)
+ {
+    Session s("2\n2\n75\n"); // line 2 is Milk; action 2 is 'Change the amount'; 75
     const auto food = s.app.categories().add("Food");
     const auto milk = s.app.items().add({.categoryId = food, .name = "Milk", .defaultAmount = 60});
     CHECK(s.run("catalog edit") == 0);
     CHECK(s.app.items().find(milk)->defaultAmount == 75);
-    CHECK(contains(s.output(), "Milk"));   // the catalog is shown again afterwards
+    CHECK(contains(s.output(), "Milk")); // the catalog is shown again afterwards
 
-    Session add("1\n2\nBread\n55\n");      // pick the category; 'Add an item to it'; name; amount
+    Session add("1\n2\nBread\n55\n"); // pick the category; 'Add an item to it'; name; amount
     add.app.categories().add("Food");
     CHECK(add.run("catalog edit") == 0);
     CHECK(add.app.items().list()[0].name == "Bread");
 }
 
-TEST_CASE("catalog edit on Misc only offers adding an item") {
-    Session s("1\n1\nBank fee\n30\n");     // Misc is the only line; its only action; name; amount
+TEST_CASE (
+"catalog edit on Misc only offers adding an item"
+)
+ {
+    Session s("1\n1\nBank fee\n30\n"); // Misc is the only line; its only action; name; amount
     CHECK(s.run("catalog edit") == 0);
     REQUIRE(s.app.items().list().size() == 1);
     CHECK(s.app.items().list()[0].categoryName == "Misc");
 }
 
-TEST_CASE("first launch asks how you are paid, then the pay, the payday and what you have") {
+TEST_CASE (
+"first launch asks how you are paid, then the pay, the payday and what you have"
+)
+ {
     const auto payday = pesa::Date::today().addDays(20).toString();
-    Session s("1\n70,000\n" + payday + "\n12,000\n");   // regular; pay; payday; starting balance
+    Session s("1\n70,000\n" + payday + "\n12,000\n"); // regular; pay; payday; starting balance
     cli::runStartup(s.ctx, true);
     CHECK(s.app.settings().setupDone());
     CHECK(s.app.settings().incomeMode() == pesa::IncomeMode::Regular);
@@ -237,31 +284,39 @@ TEST_CASE("first launch asks how you are paid, then the pay, the payday and what
     CHECK(s.app.periods().current()->expectedPayday == pesa::Date::parse(payday));
     CHECK(s.app.periods().summary(pesa::Date::today()).income == 12000);
 
-    Session freelance("2\n\n");                         // irregular; nothing in hand
+    Session freelance("2\n\n"); // irregular; nothing in hand
     cli::runStartup(freelance.ctx, true);
     CHECK(freelance.app.settings().incomeMode() == pesa::IncomeMode::Irregular);
     CHECK_FALSE(freelance.app.periods().current()->expectedPayday.has_value());
     CHECK(contains(freelance.output(), "income add"));
 }
 
-TEST_CASE("setup is not repeated, and one-liners never ask") {
+TEST_CASE (
+"setup is not repeated, and one-liners never ask"
+)
+ {
     Session done("");
     done.app.completeSetup({.mode = pesa::IncomeMode::Irregular}, pesa::Date::today());
     cli::runStartup(done.ctx, true);
     CHECK(done.output().empty());
 
     Session script("");
-    cli::runStartup(script.ctx, false);    // a script run: no questions, nothing saved
+    cli::runStartup(script.ctx, false); // a script run: no questions, nothing saved
     CHECK_FALSE(script.app.settings().setupDone());
     CHECK_FALSE(script.app.periods().current().has_value());
     CHECK(script.output().empty());
 }
 
-TEST_CASE("status, delay and paid work from the command line") {
+TEST_CASE (
+"status, delay and paid work from the command line"
+)
+ {
     Session s;
     const auto today = pesa::Date::today();
-    s.app.completeSetup({.mode = pesa::IncomeMode::Regular, .pay = 70000, .payday = today.addDays(10),
-                         .startingBalance = 12000}, today.addDays(-20));
+    s.app.completeSetup({
+                            .mode = pesa::IncomeMode::Regular, .pay = 70000, .payday = today.addDays(10),
+                            .startingBalance = 12000
+                        }, today.addDays(-20));
 
     CHECK(s.run("status") == 0);
     CHECK(contains(s.output(), "Earned remaining"));
@@ -275,10 +330,13 @@ TEST_CASE("status, delay and paid work from the command line") {
     CHECK(s.run("paid --amount 70,000") == 0);
     CHECK(contains(s.output(), "closed the period"));
     CHECK(s.app.savings().total() == 12000);
-    CHECK(s.run("paid --amount 70,000") == 1);   // same day again
+    CHECK(s.run("paid --amount 70,000") == 1); // same day again
 }
 
-TEST_CASE("income and savings commands") {
+TEST_CASE (
+"income and savings commands"
+)
+ {
     Session s;
     s.app.completeSetup({.mode = pesa::IncomeMode::Irregular}, pesa::Date::today());
 
@@ -303,43 +361,63 @@ TEST_CASE("income and savings commands") {
     CHECK(contains(s.output(), "Expense cover"));
 }
 
-TEST_CASE("the shell keeps going after errors and leaves on exit") {
-    Session s("category add Food\nitem add Food 60 Milk\nbogus\nitem add Food 0 X\n\ncatalog\nexit\ncategory add Never\n");
+TEST_CASE (
+"the shell keeps going after errors and leaves on exit"
+)
+ {
+    Session s(
+        "category add Food\nitem add Food 60 Milk\nbogus\nitem add Food 0 X\n\ncatalog\nexit\ncategory add Never\n");
     CHECK(cli::runShell(s.ctx) == 0);
     CHECK(contains(s.output(), "pesa> "));
     CHECK(contains(s.output(), "Milk"));
     CHECK(contains(s.errors(), "Unknown command"));
     CHECK(contains(s.errors(), "more than 0"));
-    CHECK(userCategories(s.app).size() == 1);              // nothing after 'exit' ran
+    CHECK(userCategories(s.app).size() == 1); // nothing after 'exit' ran
 }
 
-TEST_CASE("the shell ends cleanly when the input ends") {
+TEST_CASE (
+"the shell ends cleanly when the input ends"
+)
+ {
     Session s("category add Food\n");
     CHECK(cli::runShell(s.ctx) == 0);
     CHECK(userCategories(s.app).size() == 1);
 }
 
-TEST_CASE("day shows today when no date is given") {
+TEST_CASE (
+"day shows today when no date is given"
+)
+ {
     Session s;
     CHECK(s.run("day") == 0);
     CHECK(contains(s.output(), pesa::Date::today().toString()));
     CHECK(contains(s.output(), "No entries."));
 }
 
-TEST_CASE("settings can switch auto-post off") {
+TEST_CASE (
+"settings can switch auto-post off"
+)
+ {
     Session s;
     CHECK(s.run("settings autopost off") == 0);
     CHECK_FALSE(s.app.settings().autoPostEnabled());
     CHECK(s.run("settings autopost maybe") == 1);
 }
 
-TEST_CASE("help lists the commands") {
+TEST_CASE (
+"help lists the commands"
+)
+ {
     Session s;
     CHECK(s.run("help") == 0);
     CHECK(contains(s.output(), "catalog edit"));
     CHECK(contains(s.output(), "entry oneoff"));
 }
-TEST_CASE("job says what it did, and respects the auto-post switch") {
+
+TEST_CASE (
+"job says what it did, and respects the auto-post switch"
+)
+ {
     Session s;
     CHECK(s.run("job") == 0);
     CHECK(contains(s.output(), "Nothing new to post"));
@@ -350,7 +428,10 @@ TEST_CASE("job says what it did, and respects the auto-post switch") {
     CHECK(contains(s.output(), "Auto-post is off"));
 }
 
-TEST_CASE("settings postafter changes when today's routine posts") {
+TEST_CASE (
+"settings postafter changes when today's routine posts"
+)
+ {
     Session s;
     CHECK(s.run("settings postafter 18:30") == 0);
     CHECK(s.app.settings().postAfter().toString() == "18:30");

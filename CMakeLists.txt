@@ -13,11 +13,11 @@ option(PESA_BUILD_GUI "Build the Slint desktop app (needs the gui folder)" OFF)
 add_subdirectory(core)
 add_subdirectory(cli)   # the tests link the CLI library, so it is always built
 
-if(PESA_BUILD_TESTS)
+if (PESA_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
-endif()
+endif ()
 
-if(PESA_BUILD_GUI)
+if (PESA_BUILD_GUI)
     add_subdirectory(gui)
-endif()
+endif ()

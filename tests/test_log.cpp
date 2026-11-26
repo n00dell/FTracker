@@ -18,27 +18,31 @@ using pesa::TimeOfDay;
 using pesa::WeekdaySet;
 
 namespace {
+    const Date kDay = Date::parse("2026-11-23"); // a Monday
 
-const Date kDay = Date::parse("2026-11-23");   // a Monday
-
-// Is there a line of this kind whose text contains `part`?
-bool has(const std::vector<pesa::LogEvent>& events, LogKind kind, const std::string& part) {
-    for (const auto& e : events) {
-        if (e.kind == kind && e.message.find(part) != std::string::npos) return true;
+    // Is there a line of this kind whose text contains `part`?
+    bool has(const std::vector<pesa::LogEvent> &events, LogKind kind, const std::string &part) {
+        for (const auto &e: events) {
+            if (e.kind == kind && e.message.find(part) != std::string::npos) return true;
+        }
+        return false;
     }
-    return false;
-}
-
 } // namespace
 
-TEST_CASE("a new database has an empty log") {
+TEST_CASE (
+"a new database has an empty log"
+)
+ {
     Pesa app(":memory:");
     CHECK(app.log().list().empty());
     CHECK(app.log().issueCount() == 0);
     CHECK_THROWS_AS((void)app.log().list(LogFilter::All, 0), Error);
 }
 
-TEST_CASE("adding, editing and deleting entries are logged, newest first") {
+TEST_CASE (
+"adding, editing and deleting entries are logged, newest first"
+)
+ {
     Pesa app(":memory:");
     const auto id = app.entries().addOneOff(kDay, "Gift", 500);
     app.entries().setAmount(id, 700);
@@ -51,18 +55,24 @@ TEST_CASE("adding, editing and deleting entries are logged, newest first") {
     CHECK(events[1].kind == LogKind::Edit);
     CHECK(events[1].message.find("500 -> 700") != std::string::npos);
     CHECK(events[2].message.find("Added one-off Gift") != std::string::npos);
-    CHECK(events[2].time.size() == 5);                // "HH:MM"
+    CHECK(events[2].time.size() == 5); // "HH:MM"
 }
 
-TEST_CASE("an edit that changes nothing is not logged") {
+TEST_CASE (
+"an edit that changes nothing is not logged"
+)
+ {
     Pesa app(":memory:");
     const auto id = app.entries().addOneOff(kDay, "Gift", 500);
     app.entries().setAmount(id, 500);
     app.entries().setFundedFrom(id, FundedFrom::Earned);
-    CHECK(app.log().list().size() == 1);              // only the "Added" line
+    CHECK(app.log().list().size() == 1); // only the "Added" line
 }
 
-TEST_CASE("paying from savings, refunds and covering are logged as savings moves") {
+TEST_CASE (
+"paying from savings, refunds and covering are logged as savings moves"
+)
+ {
     Pesa app(":memory:");
     const auto id = app.entries().addOneOff(kDay, "Barber", 250, FundedFrom::Savings);
     CHECK(has(app.log().list(LogFilter::Savings), LogKind::Savings, "paid from Main savings"));
@@ -72,7 +82,10 @@ TEST_CASE("paying from savings, refunds and covering are logged as savings moves
     CHECK(has(app.log().list(LogFilter::Savings), LogKind::Savings, "returned to Main savings"));
 }
 
-TEST_CASE("covering several entries writes one line, not one per entry") {
+TEST_CASE (
+"covering several entries writes one line, not one per entry"
+)
+ {
     Pesa app(":memory:");
     const auto a = app.entries().addOneOff(kDay, "A", 100);
     const auto b = app.entries().addOneOff(kDay, "B", 200);
@@ -84,15 +97,21 @@ TEST_CASE("covering several entries writes one line, not one per entry") {
     CHECK(savings[0].message.find("Covered 2 entries (KES 300)") != std::string::npos);
 }
 
-TEST_CASE("a change that fails leaves no log line behind") {
+TEST_CASE (
+"a change that fails leaves no log line behind"
+)
+ {
     Pesa app(":memory:");
     const auto a = app.entries().addOneOff(kDay, "A", 100);
     const std::vector<pesa::EntryId> ids{a, 9999};
     CHECK_THROWS_AS(app.entries().coverFromSavings(ids), Error);
-    CHECK(app.log().list().size() == 1);              // still only "Added"
+    CHECK(app.log().list().size() == 1); // still only "Added"
 }
 
-TEST_CASE("filters show one kind, and the limit keeps the newest") {
+TEST_CASE (
+"filters show one kind, and the limit keeps the newest"
+)
+ {
     Pesa app(":memory:");
     const auto a = app.entries().addOneOff(kDay, "One", 100);
     app.entries().addOneOff(kDay, "Two", 100);
@@ -107,7 +126,10 @@ TEST_CASE("filters show one kind, and the limit keeps the newest") {
     CHECK(newest[1].message.find("Three") != std::string::npos);
 }
 
-TEST_CASE("savings moves and income are logged") {
+TEST_CASE (
+"savings moves and income are logged"
+)
+ {
     Pesa app(":memory:");
     app.completeSetup({.mode = IncomeMode::Irregular, .startingBalance = 1000}, kDay);
     app.savings().addPot("Sacco");
@@ -123,10 +145,15 @@ TEST_CASE("savings moves and income are logged") {
     CHECK(has(events, LogKind::Pay, "Income: Dad, KES 15,000"));
 }
 
-TEST_CASE("getting paid, auto-pay and a delayed salary are logged") {
+TEST_CASE (
+"getting paid, auto-pay and a delayed salary are logged"
+)
+ {
     Pesa app(":memory:");
-    app.completeSetup({.mode = IncomeMode::Regular, .pay = 70000, .payday = Date::parse("2026-11-24"),
-                       .startingBalance = 12000}, Date::parse("2026-10-25"));
+    app.completeSetup({
+                          .mode = IncomeMode::Regular, .pay = 70000, .payday = Date::parse("2026-11-24"),
+                          .startingBalance = 12000
+                      }, Date::parse("2026-10-25"));
 
     app.periods().delayPayday(Date::parse("2026-11-26"), Date::parse("2026-11-23"));
     CHECK(has(app.log().list(), LogKind::Pay, "Salary delayed: expected payday moved from 2026-11-24 to 2026-11-26"));
@@ -139,25 +166,30 @@ TEST_CASE("getting paid, auto-pay and a delayed salary are logged") {
     CHECK(has(app.log().list(), LogKind::Pay, "Got paid on 2026-12-20"));
 }
 
-TEST_CASE("the daily job logs what it posted, catch-ups, and a stuck clock once") {
+TEST_CASE (
+"the daily job logs what it posted, catch-ups, and a stuck clock once"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Transport");
     const auto matatu = app.items().add({.categoryId = cat, .name = "Matatu", .defaultAmount = 50});
-    app.rules().add({.name = "Commute", .schedule = Schedule::weekly(WeekdaySet::workDays()),
-                     .effectiveFrom = Date::parse("2026-11-01"), .effectiveTo = std::nullopt, .itemIds = {matatu}});
+    app.rules().add({
+        .name = "Commute", .schedule = Schedule::weekly(WeekdaySet::workDays()),
+        .effectiveFrom = Date::parse("2026-11-01"), .effectiveTo = std::nullopt, .itemIds = {matatu}
+    });
     const TimeOfDay evening{21, 0};
 
     app.dailyJob().run(kDay, evening);
     CHECK(has(app.log().list(LogFilter::Auto), LogKind::Rule, "Auto-posted Matatu: KES 50 for 2026-11-23"));
     const auto before = app.log().list().size();
-    app.dailyJob().run(kDay, evening);                                    // nothing new to post
+    app.dailyJob().run(kDay, evening); // nothing new to post
     CHECK(app.log().list().size() == before);
 
     app.dailyJob().run(Date::parse("2026-11-30"), evening);
     CHECK(has(app.log().list(), LogKind::Rule, "Catch-up: posted 7 days (2026-11-24 to 2026-11-30)"));
 
-    app.dailyJob().run(Date::parse("2026-11-20"), evening);               // the computer's date went backwards
-    app.dailyJob().run(Date::parse("2026-11-20"), evening);               // ...and again on the next launch
+    app.dailyJob().run(Date::parse("2026-11-20"), evening); // the computer's date went backwards
+    app.dailyJob().run(Date::parse("2026-11-20"), evening); // ...and again on the next launch
     CHECK(app.log().issueCount() == 1);
     CHECK(has(app.log().list(LogFilter::Issues), LogKind::Issue, "Posting paused"));
 }

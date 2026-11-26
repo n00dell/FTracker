@@ -9,18 +9,16 @@
 #include <string_view>
 
 namespace pesa::detail {
+    // Trim spaces at both ends; throw `emptyMessage` if nothing is left.
+    inline std::string cleanName(std::string_view raw, const char *emptyMessage) {
+        auto isSpace = [](unsigned char c) { return std::isspace(c) != 0; };
+        while (!raw.empty() && isSpace(static_cast<unsigned char>(raw.front()))) raw.remove_prefix(1);
+        while (!raw.empty() && isSpace(static_cast<unsigned char>(raw.back()))) raw.remove_suffix(1);
+        if (raw.empty()) throw Error(emptyMessage);
+        return std::string(raw);
+    }
 
-// Trim spaces at both ends; throw `emptyMessage` if nothing is left.
-inline std::string cleanName(std::string_view raw, const char* emptyMessage) {
-    auto isSpace = [](unsigned char c) { return std::isspace(c) != 0; };
-    while (!raw.empty() && isSpace(static_cast<unsigned char>(raw.front()))) raw.remove_prefix(1);
-    while (!raw.empty() && isSpace(static_cast<unsigned char>(raw.back())))  raw.remove_suffix(1);
-    if (raw.empty()) throw Error(emptyMessage);
-    return std::string(raw);
-}
-
-inline void requirePositive(Money amount) {
-    if (amount <= 0) throw Error("The amount must be more than 0.");
-}
-
+    inline void requirePositive(Money amount) {
+        if (amount <= 0) throw Error("The amount must be more than 0.");
+    }
 } // namespace pesa::detail

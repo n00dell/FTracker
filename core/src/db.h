@@ -12,62 +12,74 @@
 #include <string_view>
 
 namespace pesa::detail {
+    // Custom "deleters": what unique_ptr calls to clean up automatically.
+    struct DbCloser {
+        void operator()(sqlite3 *p) const noexcept { sqlite3_close(p); }
+    };
 
-// Custom "deleters": what unique_ptr calls to clean up automatically.
-struct DbCloser      { void operator()(sqlite3* p)      const noexcept { sqlite3_close(p); } };
-struct StmtFinalizer { void operator()(sqlite3_stmt* p) const noexcept { sqlite3_finalize(p); } };
+    struct StmtFinalizer {
+        void operator()(sqlite3_stmt *p) const noexcept { sqlite3_finalize(p); }
+    };
 
-// One prepared SQL statement. Cleaned up automatically, even if an exception flies.
-class Statement {
-public:
-    Statement(sqlite3* db, std::string_view sql);
+    // One prepared SQL statement. Cleaned up automatically, even if an exception flies.
+    class Statement {
+    public:
+        Statement(sqlite3 *db, std::string_view sql);
 
-    // Fill in a "?" placeholder. Indexes start at 1 (SQLite's rule).
-    Statement& bind(int index, std::string_view value);
-    Statement& bind(int index, std::int64_t value);
-    Statement& bindNull(int index);   // for optional columns (an empty std::optional)
+        // Fill in a "?" placeholder. Indexes start at 1 (SQLite's rule).
+        Statement &bind(int index, std::string_view value);
 
-    bool step();   // advance one row. true = a row is ready, false = finished
-    void run();    // for INSERT/UPDATE/DELETE: execute once
+        Statement &bind(int index, std::int64_t value);
 
-    [[nodiscard]] std::string  text(int column) const;     // columns start at 0
-    [[nodiscard]] std::int64_t integer(int column) const;
-    [[nodiscard]] bool         isNull(int column) const;     // for optional columns
+        Statement &bindNull(int index); // for optional columns (an empty std::optional)
 
-private:
-    sqlite3* db_;   // not owned, only used to read error messages
-    std::unique_ptr<sqlite3_stmt, StmtFinalizer> stmt_;
-};
+        bool step(); // advance one row. true = a row is ready, false = finished
+        void run(); // for INSERT/UPDATE/DELETE: execute once
 
-class Database {
-public:
-    explicit Database(const std::filesystem::path& file);
+        [[nodiscard]] std::string text(int column) const; // columns start at 0
+        [[nodiscard]] std::int64_t integer(int column) const;
 
-    void exec(const std::string& sql);            // one or more statements, no results
-    [[nodiscard]] Statement prepare(std::string_view sql);
-    [[nodiscard]] std::int64_t lastInsertId() const;
-    [[nodiscard]] int changes() const;            // rows touched by the last write
-    [[nodiscard]] bool inTransaction() const;
+        [[nodiscard]] bool isNull(int column) const; // for optional columns
 
-private:
-    std::unique_ptr<sqlite3, DbCloser> db_;
-};
+    private:
+        sqlite3 *db_; // not owned, only used to read error messages
+        std::unique_ptr<sqlite3_stmt, StmtFinalizer> stmt_;
+    };
 
-// All-or-nothing block. If commit() is never reached (an exception), it rolls back.
-// Nestable: inside another Transaction it simply joins it, so a bigger job (like the
-// daily job) can wrap many smaller operations that each use their own Transaction.
-class Transaction {
-public:
-    explicit Transaction(Database& db);
-    ~Transaction();
-    Transaction(const Transaction&) = delete;
-    Transaction& operator=(const Transaction&) = delete;
-    void commit();
+    class Database {
+    public:
+        explicit Database(const std::filesystem::path &file);
 
-private:
-    Database& db_;
-    bool owner_;          // true only for the outermost Transaction
-    bool done_ = false;
-};
+        void exec(const std::string &sql); // one or more statements, no results
+        [[nodiscard]] Statement prepare(std::string_view sql);
 
+        [[nodiscard]] std::int64_t lastInsertId() const;
+
+        [[nodiscard]] int changes() const; // rows touched by the last write
+        [[nodiscard]] bool inTransaction() const;
+
+    private:
+        std::unique_ptr<sqlite3, DbCloser> db_;
+    };
+
+    // All-or-nothing block. If commit() is never reached (an exception), it rolls back.
+    // Nestable: inside another Transaction it simply joins it, so a bigger job (like the
+    // daily job) can wrap many smaller operations that each use their own Transaction.
+    class Transaction {
+    public:
+        explicit Transaction(Database &db);
+
+        ~Transaction();
+
+        Transaction(const Transaction &) = delete;
+
+        Transaction &operator=(const Transaction &) = delete;
+
+        void commit();
+
+    private:
+        Database &db_;
+        bool owner_; // true only for the outermost Transaction
+        bool done_ = false;
+    };
 } // namespace pesa::detail

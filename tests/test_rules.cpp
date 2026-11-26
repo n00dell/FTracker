@@ -12,20 +12,32 @@ using pesa::Pesa;
 using pesa::Schedule;
 using pesa::WeekdaySet;
 
-TEST_CASE("schedules are validated when built") {
+TEST_CASE (
+
+"schedules are validated when built"
+)
+ {
     CHECK_THROWS_AS((void)Schedule::weekly(WeekdaySet{}), Error);
     CHECK_THROWS_AS((void)Schedule::monthly(0), Error);
     CHECK_THROWS_AS((void)Schedule::monthly(32), Error);
 }
 
-TEST_CASE("a monthly rule on the 31st fires on the last day of shorter months") {
+TEST_CASE (
+
+"a monthly rule on the 31st fires on the last day of shorter months"
+)
+ {
     const auto schedule = Schedule::monthly(31);
     CHECK(schedule.occursOn(Date::parse("2027-02-28")));
     CHECK_FALSE(schedule.occursOn(Date::parse("2027-02-27")));
     CHECK(schedule.occursOn(Date::parse("2026-12-31")));
 }
 
-TEST_CASE("a rule applies only inside its dates, and only while active") {
+TEST_CASE (
+
+"a rule applies only inside its dates, and only while active"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Transport");
     const auto item = app.items().add({.categoryId = cat, .name = "Matatu", .defaultAmount = 50});
@@ -47,7 +59,11 @@ TEST_CASE("a rule applies only inside its dates, and only while active") {
     CHECK_FALSE(app.rules().find(id)->appliesOn(Date::parse("2026-11-23")));
 }
 
-TEST_CASE("rule names are unique, and a rule cannot end before it starts") {
+TEST_CASE (
+
+"rule names are unique, and a rule cannot end before it starts"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Transport");
     const auto item = app.items().add({.categoryId = cat, .name = "Matatu", .defaultAmount = 50});
@@ -60,7 +76,11 @@ TEST_CASE("rule names are unique, and a rule cannot end before it starts") {
     CHECK_NOTHROW(app.rules().endOn(id, Date::parse("2026-12-31")));
 }
 
-TEST_CASE("deleting an item removes it from its rules") {
+TEST_CASE (
+
+"deleting an item removes it from its rules"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Transport");
     const auto item = app.items().add({.categoryId = cat, .name = "Matatu", .defaultAmount = 50});

@@ -9,7 +9,11 @@ using pesa::Visibility;
 using pesa::Weekday;
 using pesa::WeekdaySet;
 
-TEST_CASE("adding an item stores everything") {
+TEST_CASE (
+
+"adding an item stores everything"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Transport");
     const auto id = app.items().add({.categoryId = cat, .name = "  Matatu to town ", .defaultAmount = 50});
@@ -24,7 +28,11 @@ TEST_CASE("adding an item stores everything") {
     CHECK_FALSE(item->isDeleted);
 }
 
-TEST_CASE("bad input is refused") {
+TEST_CASE (
+
+"bad input is refused"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Food");
     CHECK_THROWS_AS(app.items().add({.categoryId = cat, .name = "  ", .defaultAmount = 10}), Error);
@@ -34,7 +42,11 @@ TEST_CASE("bad input is refused") {
     CHECK(app.items().list().empty());   // nothing half-saved
 }
 
-TEST_CASE("names are unique inside a category, not across categories") {
+TEST_CASE (
+
+"names are unique inside a category, not across categories"
+)
+ {
     Pesa app(":memory:");
     const auto food = app.categories().add("Food");
     const auto home = app.categories().add("Home");
@@ -44,7 +56,11 @@ TEST_CASE("names are unique inside a category, not across categories") {
     CHECK_NOTHROW(app.items().add({.categoryId = home, .name = "Other", .defaultAmount = 20}));
 }
 
-TEST_CASE("an item cannot be added to an inactive or deleted category") {
+TEST_CASE (
+
+"an item cannot be added to an inactive or deleted category"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Food");
     app.categories().setActive(cat, false);
@@ -55,7 +71,11 @@ TEST_CASE("an item cannot be added to an inactive or deleted category") {
     CHECK_THROWS_AS(app.items().add({.categoryId = cat, .name = "Milk", .defaultAmount = 10}), Error);
 }
 
-TEST_CASE("rename and change amount") {
+TEST_CASE (
+
+"rename and change amount"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Food");
     const auto milk = app.items().add({.categoryId = cat, .name = "Milk", .defaultAmount = 60});
@@ -71,7 +91,11 @@ TEST_CASE("rename and change amount") {
     CHECK_NOTHROW(app.items().rename(milk, "FRESH MILK"));   // only the case changes
 }
 
-TEST_CASE("unknown ids are reported") {
+TEST_CASE (
+
+"unknown ids are reported"
+)
+ {
     Pesa app(":memory:");
     CHECK_FALSE(app.items().find(42).has_value());
     CHECK_THROWS_AS(app.items().rename(42, "X"), Error);
@@ -81,7 +105,11 @@ TEST_CASE("unknown ids are reported") {
     CHECK_THROWS_AS(app.items().restore(42), Error);
 }
 
-TEST_CASE("listing: order, category filter, and inactive items") {
+TEST_CASE (
+
+"listing: order, category filter, and inactive items"
+)
+ {
     Pesa app(":memory:");
     const auto food = app.categories().add("Food");
     const auto transport = app.categories().add("Transport");
@@ -101,7 +129,11 @@ TEST_CASE("listing: order, category filter, and inactive items") {
     CHECK(app.items().list(std::nullopt, Visibility::IncludeInactive).size() == 3);
 }
 
-TEST_CASE("an inactive item keeps its name reserved") {
+TEST_CASE (
+
+"an inactive item keeps its name reserved"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Food");
     const auto milk = app.items().add({.categoryId = cat, .name = "Milk", .defaultAmount = 60});
@@ -109,7 +141,11 @@ TEST_CASE("an inactive item keeps its name reserved") {
     CHECK_THROWS_AS(app.items().add({.categoryId = cat, .name = "Milk", .defaultAmount = 60}), Error);
 }
 
-TEST_CASE("deleting an item frees its name so the same item can be created again") {
+TEST_CASE (
+
+"deleting an item frees its name so the same item can be created again"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Food");
     const auto old = app.items().add({.categoryId = cat, .name = "Milk", .defaultAmount = 60});
@@ -124,7 +160,11 @@ TEST_CASE("deleting an item frees its name so the same item can be created again
     CHECK(app.items().list().size() == 1);
 }
 
-TEST_CASE("a deleted item cannot be edited") {
+TEST_CASE (
+
+"a deleted item cannot be edited"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Food");
     const auto milk = app.items().add({.categoryId = cat, .name = "Milk", .defaultAmount = 60});
@@ -135,7 +175,11 @@ TEST_CASE("a deleted item cannot be edited") {
     CHECK_THROWS_AS(app.items().remove(milk), Error);
 }
 
-TEST_CASE("restoring an item") {
+TEST_CASE (
+
+"restoring an item"
+)
+ {
     Pesa app(":memory:");
     const auto cat = app.categories().add("Food");
     const auto milk = app.items().add({.categoryId = cat, .name = "Milk", .defaultAmount = 60});
@@ -151,7 +195,11 @@ TEST_CASE("restoring an item") {
     CHECK_THROWS_AS(app.items().restore(milk), Error);        // would clash
 }
 
-TEST_CASE("deactivating a category hides its items without changing them") {
+TEST_CASE (
+
+"deactivating a category hides its items without changing them"
+)
+ {
     Pesa app(":memory:");
     const auto food = app.categories().add("Food");
     const auto milk = app.items().add({.categoryId = food, .name = "Milk", .defaultAmount = 60});
@@ -165,7 +213,11 @@ TEST_CASE("deactivating a category hides its items without changing them") {
     CHECK(app.items().list().size() == 1);
 }
 
-TEST_CASE("deleting a category hides its items, and restoring it brings them back") {
+TEST_CASE (
+
+"deleting a category hides its items, and restoring it brings them back"
+)
+ {
     Pesa app(":memory:");
     const auto food = app.categories().add("Food");
     const auto milk = app.items().add({.categoryId = food, .name = "Milk", .defaultAmount = 60});
@@ -179,7 +231,11 @@ TEST_CASE("deleting a category hides its items, and restoring it brings them bac
     CHECK(app.items().list().size() == 1);                                    // back with its category
 }
 
-TEST_CASE("an item cannot be restored while its category is deleted") {
+TEST_CASE (
+
+"an item cannot be restored while its category is deleted"
+)
+ {
     Pesa app(":memory:");
     const auto food = app.categories().add("Food");
     const auto milk = app.items().add({.categoryId = food, .name = "Milk", .defaultAmount = 60});
@@ -191,7 +247,11 @@ TEST_CASE("an item cannot be restored while its category is deleted") {
     CHECK_NOTHROW(app.items().restore(milk));
     CHECK(app.items().list().size() == 1);
 }
-TEST_CASE("an item can live in the built-in Misc category") {
+TEST_CASE (
+
+"an item can live in the built-in Misc category"
+)
+ {
     Pesa app(":memory:");
     const auto id = app.items().add({.categoryId = app.categories().misc(), .name = "Bank fee", .defaultAmount = 30});
     CHECK(app.items().find(id)->categoryName == "Misc");

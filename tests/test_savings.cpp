@@ -11,10 +11,13 @@ using pesa::LedgerKind;
 using pesa::Pesa;
 
 namespace {
-const Date kDay = Date::parse("2026-11-23");
+    const Date kDay = Date::parse("2026-11-23");
 }
 
-TEST_CASE("a new database has the built-in Main savings pot at 0") {
+TEST_CASE (
+"a new database has the built-in Main savings pot at 0"
+)
+ {
     Pesa app(":memory:");
     const auto pots = app.savings().pots();
     REQUIRE(pots.size() == 1);
@@ -25,7 +28,10 @@ TEST_CASE("a new database has the built-in Main savings pot at 0") {
     CHECK(app.savings().total() == 0);
 }
 
-TEST_CASE("pots have unique names, and balances are the sum of their ledger lines") {
+TEST_CASE (
+"pots have unique names, and balances are the sum of their ledger lines"
+)
+ {
     Pesa app(":memory:");
     const auto sacco = app.savings().addPot("  Sacco ", pesa::PotKind::Tied);
     CHECK_THROWS_AS(app.savings().addPot("sacco"), Error);
@@ -45,9 +51,12 @@ TEST_CASE("pots have unique names, and balances are the sum of their ledger line
     CHECK_THROWS_AS(app.savings().add(kDay, 9999, 10, "x"), Error);
 }
 
-TEST_CASE("moving savings to earned takes it from the pot and adds this period's income") {
+TEST_CASE (
+"moving savings to earned takes it from the pot and adds this period's income"
+)
+ {
     Pesa app(":memory:");
-    CHECK_THROWS_AS(app.savings().moveToEarned(kDay, app.savings().mainPot(), 100), Error);   // no period yet
+    CHECK_THROWS_AS(app.savings().moveToEarned(kDay, app.savings().mainPot(), 100), Error); // no period yet
 
     app.completeSetup({.mode = IncomeMode::Irregular, .startingBalance = 1000}, kDay);
     app.savings().add(kDay, app.savings().mainPot(), 5000, "Gift");
@@ -60,47 +69,56 @@ TEST_CASE("moving savings to earned takes it from the pot and adds this period's
     CHECK(income[1].label == "From Main savings");
 }
 
-TEST_CASE("an entry paid from savings keeps its ledger line in step with the entry") {
+TEST_CASE (
+"an entry paid from savings keeps its ledger line in step with the entry"
+)
+ {
     Pesa app(":memory:");
     app.savings().add(kDay, app.savings().mainPot(), 1000, "Gift");
 
     const auto id = app.entries().addOneOff(kDay, "Barber", 250, FundedFrom::Savings);
-    CHECK(app.savings().total() == 750);                       // created paid from savings
+    CHECK(app.savings().total() == 750); // created paid from savings
 
     app.entries().setFundedFrom(id, FundedFrom::Earned);
-    CHECK(app.savings().total() == 1000);                      // back to earned: refunded
+    CHECK(app.savings().total() == 1000); // back to earned: refunded
     app.entries().setFundedFrom(id, FundedFrom::Savings);
     CHECK(app.savings().total() == 750);
 
     app.entries().setAmount(id, 300);
-    CHECK(app.savings().total() == 700);                       // a new amount changes the line
+    CHECK(app.savings().total() == 700); // a new amount changes the line
 
     app.entries().remove(id);
-    CHECK(app.savings().total() == 1000);                      // deleting refunds the pot
+    CHECK(app.savings().total() == 1000); // deleting refunds the pot
     CHECK(app.savings().ledger().size() == 1);
 }
 
-TEST_CASE("cover from savings switches several entries at once, and skips covered ones") {
+TEST_CASE (
+"cover from savings switches several entries at once, and skips covered ones"
+)
+ {
     Pesa app(":memory:");
     const auto a = app.entries().addOneOff(kDay, "A", 100);
     const auto b = app.entries().addOneOff(kDay, "B", 200);
     const std::vector<pesa::EntryId> ids{a, b};
 
     CHECK(app.entries().coverFromSavings(ids) == 300);
-    CHECK(app.savings().total() == -300);                      // allowed to go below 0; the UI warns
+    CHECK(app.savings().total() == -300); // allowed to go below 0; the UI warns
     CHECK(app.entries().find(a)->fund == FundedFrom::Savings);
-    CHECK(app.entries().coverFromSavings(ids) == 0);           // nothing new to cover
+    CHECK(app.entries().coverFromSavings(ids) == 0); // nothing new to cover
     CHECK(app.savings().total() == -300);
 
     const std::vector<pesa::EntryId> missing{9999};
     CHECK_THROWS_AS(app.entries().coverFromSavings(missing), Error);
 }
 
-TEST_CASE("a failed cover leaves everything as it was") {
+TEST_CASE (
+"a failed cover leaves everything as it was"
+)
+ {
     Pesa app(":memory:");
     const auto a = app.entries().addOneOff(kDay, "A", 100);
     const std::vector<pesa::EntryId> ids{a, 9999};
     CHECK_THROWS_AS(app.entries().coverFromSavings(ids), Error);
-    CHECK(app.entries().find(a)->fund == FundedFrom::Earned);  // rolled back, not half covered
+    CHECK(app.entries().find(a)->fund == FundedFrom::Earned); // rolled back, not half covered
     CHECK(app.savings().total() == 0);
 }

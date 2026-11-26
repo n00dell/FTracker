@@ -7,26 +7,27 @@
 #include <string>
 
 namespace pesa::detail {
+    namespace {
+        struct Migration {
+            int version;
+            const char *sql;
+        };
 
-namespace {
-
-struct Migration {
-    int         version;
-    const char* sql;
-};
-
-// RULE: never edit a migration once released. To change the layout, add a new one.
-constexpr std::array kMigrations = {
-    Migration{1, R"sql(
+        // RULE: never edit a migration once released. To change the layout, add a new one.
+        constexpr std::array kMigrations = {
+            Migration{
+                1, R"sql(
         CREATE TABLE categories (
             id         INTEGER PRIMARY KEY,
             name       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
             sort_order INTEGER NOT NULL,
             is_active  INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1))
         );
-    )sql"},
+    )sql"
+            },
 
-    Migration{2, R"sql(
+            Migration{
+                2, R"sql(
         CREATE TABLE items (
             id             INTEGER PRIMARY KEY,
             category_id    INTEGER NOT NULL REFERENCES categories(id),
@@ -36,13 +37,15 @@ constexpr std::array kMigrations = {
             is_active      INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
             UNIQUE (category_id, name)
         );
-    )sql"},
+    )sql"
+            },
 
-    // Soft delete. The old tables said "name must be unique" for ALL rows, and SQLite
-    // cannot remove a constraint in place. So we rebuild: new table, copy rows, drop the
-    // old table, rename the new one. The unique rule becomes a "partial unique index"
-    // that only applies to rows that are not deleted, which frees a deleted row's name.
-    Migration{3, R"sql(
+            // Soft delete. The old tables said "name must be unique" for ALL rows, and SQLite
+            // cannot remove a constraint in place. So we rebuild: new table, copy rows, drop the
+            // old table, rename the new one. The unique rule becomes a "partial unique index"
+            // that only applies to rows that are not deleted, which frees a deleted row's name.
+            Migration{
+                3, R"sql(
         CREATE TABLE categories_new (
             id         INTEGER PRIMARY KEY,
             name       TEXT    NOT NULL COLLATE NOCASE,
@@ -70,11 +73,13 @@ constexpr std::array kMigrations = {
         DROP TABLE items;
         ALTER TABLE items_new RENAME TO items;
         CREATE UNIQUE INDEX ux_items_name ON items(category_id, name) WHERE is_deleted = 0;
-    )sql"},
+    )sql"
+            },
 
-    // Days and entries. A day is one row (the date is the primary key, so it is unique),
-    // and every entry points at its day. Nothing is rebuilt here, so no data is touched.
-    Migration{4, R"sql(
+            // Days and entries. A day is one row (the date is the primary key, so it is unique),
+            // and every entry points at its day. Nothing is rebuilt here, so no data is touched.
+            Migration{
+                4, R"sql(
         CREATE TABLE days (
             date       TEXT    PRIMARY KEY
                        CHECK (date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
@@ -94,16 +99,18 @@ constexpr std::array kMigrations = {
             funded_from     INTEGER NOT NULL DEFAULT 0 CHECK (funded_from IN (0, 1))
         );
         CREATE INDEX idx_entries_date ON entries(date);
-    )sql"},
+    )sql"
+            },
 
-    // Three changes that belong together:
-    //  1. "Misc": a built-in category (is_system = 1) that can never be renamed, paused or
-    //     deleted, so every item and one-off always has somewhere to live.
-    //  2. A settings table (first-run done?, expected pay, auto-post on/off and time).
-    //  3. The days an item posts on MOVE to rules (migration 6), so the items table loses
-    //     its weekdays column. SQLite cannot reliably drop a column that has a CHECK on it
-    //     in older versions, so we rebuild the table the same way migration 3 did.
-    Migration{5, R"sql(
+            // Three changes that belong together:
+            //  1. "Misc": a built-in category (is_system = 1) that can never be renamed, paused or
+            //     deleted, so every item and one-off always has somewhere to live.
+            //  2. A settings table (first-run done?, expected pay, auto-post on/off and time).
+            //  3. The days an item posts on MOVE to rules (migration 6), so the items table loses
+            //     its weekdays column. SQLite cannot reliably drop a column that has a CHECK on it
+            //     in older versions, so we rebuild the table the same way migration 3 did.
+            Migration{
+                5, R"sql(
         ALTER TABLE categories
             ADD COLUMN is_system INTEGER NOT NULL DEFAULT 0 CHECK (is_system IN (0, 1));
 
@@ -132,12 +139,14 @@ constexpr std::array kMigrations = {
         DROP TABLE items;
         ALTER TABLE items_new RENAME TO items;
         CREATE UNIQUE INDEX ux_items_name ON items(category_id, name) WHERE is_deleted = 0;
-    )sql"},
+    )sql"
+            },
 
-    // Rules (charge rules for now: "post these items on these days"). A rule says WHEN,
-    // an item says WHAT and HOW MUCH, and rule_items links the two (many to many).
-    // Skip and adjust rules come later as extra columns/tables, so nothing is wasted here.
-    Migration{6, R"sql(
+            // Rules (charge rules for now: "post these items on these days"). A rule says WHEN,
+            // an item says WHAT and HOW MUCH, and rule_items links the two (many to many).
+            // Skip and adjust rules come later as extra columns/tables, so nothing is wasted here.
+            Migration{
+                6, R"sql(
         CREATE TABLE rules (
             id             INTEGER PRIMARY KEY,
             name           TEXT    NOT NULL COLLATE NOCASE,
@@ -163,15 +172,17 @@ constexpr std::array kMigrations = {
             item_id INTEGER NOT NULL REFERENCES items(id),
             PRIMARY KEY (rule_id, item_id)
         );
-    )sql"},
-        // Three changes that belong together:
-    //  1. A one-off has NO category any more (it was stored under Misc by mistake), so
-    //     entries.category_id may now be NULL. SQLite cannot drop a NOT NULL, so we rebuild
-    //     the table the same way as migration 3.
-    //  2. entries.rule_id: which rule posted an auto entry. With the unique index below it is
-    //     the hard guard "a rule posts once per item per day", even if the job ran twice.
-    //  3. An issues table where the daily job records a problem instead of hiding it.
-    Migration{7, R"sql(
+    )sql"
+            },
+            // Three changes that belong together:
+            //  1. A one-off has NO category any more (it was stored under Misc by mistake), so
+            //     entries.category_id may now be NULL. SQLite cannot drop a NOT NULL, so we rebuild
+            //     the table the same way as migration 3.
+            //  2. entries.rule_id: which rule posted an auto entry. With the unique index below it is
+            //     the hard guard "a rule posts once per item per day", even if the job ran twice.
+            //  3. An issues table where the daily job records a problem instead of hiding it.
+            Migration{
+                7, R"sql(
         CREATE TABLE entries_new (
             id              INTEGER PRIMARY KEY,
             date            TEXT    NOT NULL REFERENCES days(date),
@@ -205,14 +216,16 @@ constexpr std::array kMigrations = {
             message    TEXT NOT NULL,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
-    )sql"},
-        // Money: pots and the ledger (savings), periods and income (earned).
-    //  - Savings is STORED as ledger lines; a pot's balance is the sum of its lines.
-    //  - A period runs from one "I got paid" to the next: [start_date, end_date).
-    //    The unique index allows only ONE open period (end_date empty) at a time.
-    //  - A ledger line may point at the entry it pays for (entry_id), so changing or
-    //    deleting that entry can fix the pot ("Expense cover").
-    Migration{8, R"sql(
+    )sql"
+            },
+            // Money: pots and the ledger (savings), periods and income (earned).
+            //  - Savings is STORED as ledger lines; a pot's balance is the sum of its lines.
+            //  - A period runs from one "I got paid" to the next: [start_date, end_date).
+            //    The unique index allows only ONE open period (end_date empty) at a time.
+            //  - A ledger line may point at the entry it pays for (entry_id), so changing or
+            //    deleting that entry can fix the pot ("Expense cover").
+            Migration{
+                8, R"sql(
         CREATE TABLE pots (
             id         INTEGER PRIMARY KEY,
             name       TEXT    NOT NULL COLLATE NOCASE,
@@ -266,10 +279,12 @@ constexpr std::array kMigrations = {
         INSERT INTO ledger(date, pot_id, amount, kind, note, entry_id)
             SELECT e.date, (SELECT id FROM pots WHERE is_main = 1), -e.amount, 4, e.name, e.id
             FROM entries e WHERE e.funded_from = 1 AND e.kind != 3;
-    )sql"},
-    // The log: every event, in order. Problems are log lines of kind 5 (Issue), so the
-// old issues table is folded into it. The timestamp comes from SQLite's local clock.
-Migration{9, R"sql(
+    )sql"
+            },
+            // The log: every event, in order. Problems are log lines of kind 5 (Issue), so the
+            // old issues table is folded into it. The timestamp comes from SQLite's local clock.
+            Migration{
+                9, R"sql(
         CREATE TABLE log (
             id         INTEGER PRIMARY KEY,
             created_at TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
@@ -282,63 +297,123 @@ Migration{9, R"sql(
             SELECT created_at, 5, 'Could not post ' || day || ': ' || message
             FROM issues ORDER BY id;
         DROP TABLE issues;
-    )sql"},
-};
+    )sql"
+            },
+            // Skip and adjust rules, and restore points.
+            //  - rules.kind: 0 charge (posts items), 1 adjust (adds `extra` KES to each posting).
+            //  - skips are their own table, each with targets (a whole category OR one item).
+            //  - entries.skip_id: which skip turned an entry into a grey "Skipped" row.
+            //  - A restore point is a snapshot of the entries in one date range, plus the on/off/
+            //    deleted state of every rule and skip. The copies hold plain numbers, with no
+            //    links, so deleting an item later can never block a restore.
+            Migration{
+                10, R"sql(
+        ALTER TABLE rules ADD COLUMN kind  INTEGER NOT NULL DEFAULT 0 CHECK (kind IN (0, 1));
+        ALTER TABLE rules ADD COLUMN extra INTEGER NOT NULL DEFAULT 0;
 
-// While tables are being rebuilt, foreign keys must be switched off (SQLite ignores
-// that switch inside a transaction, so this has to wrap the Transaction). The
-// destructor switches them back on, even if the migration throws.
-class ForeignKeysOff {
-public:
-    explicit ForeignKeysOff(Database& db) : db_(db) { db_.exec("PRAGMA foreign_keys = OFF;"); }
-    ~ForeignKeysOff() {
-        try { db_.exec("PRAGMA foreign_keys = ON;"); } catch (...) {}
+        CREATE TABLE skips (
+            id         INTEGER PRIMARY KEY,
+            name       TEXT    NOT NULL,
+            from_date  TEXT    NOT NULL
+                       CHECK (from_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            to_date    TEXT    NOT NULL
+                       CHECK (to_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            is_deleted INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1)),
+            CHECK (to_date >= from_date)
+        );
+        CREATE TABLE skip_targets (
+            skip_id     INTEGER NOT NULL REFERENCES skips(id),
+            category_id INTEGER REFERENCES categories(id),
+            item_id     INTEGER REFERENCES items(id),
+            CHECK ((category_id IS NULL) != (item_id IS NULL))   -- exactly one of the two
+        );
+        CREATE INDEX idx_skip_targets ON skip_targets(skip_id);
+
+        ALTER TABLE entries ADD COLUMN skip_id INTEGER REFERENCES skips(id);
+
+        CREATE TABLE restore_points (
+            id         INTEGER PRIMARY KEY,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            label      TEXT NOT NULL,
+            from_date  TEXT NOT NULL,
+            to_date    TEXT NOT NULL
+        );
+        CREATE TABLE rp_entries (
+            restore_point_id INTEGER NOT NULL REFERENCES restore_points(id) ON DELETE CASCADE,
+            id INTEGER NOT NULL, date TEXT NOT NULL, item_id INTEGER, category_id INTEGER,
+            name TEXT NOT NULL, amount INTEGER NOT NULL, original_amount INTEGER,
+            kind INTEGER NOT NULL, funded_from INTEGER NOT NULL, rule_id INTEGER, skip_id INTEGER
+        );
+        CREATE INDEX idx_rp_entries ON rp_entries(restore_point_id);
+        CREATE TABLE rp_rules (
+            restore_point_id INTEGER NOT NULL REFERENCES restore_points(id) ON DELETE CASCADE,
+            rule_id INTEGER NOT NULL, is_active INTEGER NOT NULL, is_deleted INTEGER NOT NULL,
+            effective_to TEXT
+        );
+        CREATE TABLE rp_skips (
+            restore_point_id INTEGER NOT NULL REFERENCES restore_points(id) ON DELETE CASCADE,
+            skip_id INTEGER NOT NULL, is_deleted INTEGER NOT NULL
+        );
+    )sql"
+            },
+        };
+
+        // While tables are being rebuilt, foreign keys must be switched off (SQLite ignores
+        // that switch inside a transaction, so this has to wrap the Transaction). The
+        // destructor switches them back on, even if the migration throws.
+        class ForeignKeysOff {
+        public:
+            explicit ForeignKeysOff(Database &db) : db_(db) { db_.exec("PRAGMA foreign_keys = OFF;"); }
+
+            ~ForeignKeysOff() {
+                try { db_.exec("PRAGMA foreign_keys = ON;"); } catch (...) {
+                }
+            }
+
+            ForeignKeysOff(const ForeignKeysOff &) = delete;
+
+            ForeignKeysOff &operator=(const ForeignKeysOff &) = delete;
+
+        private:
+            Database &db_;
+        };
+
+        // Because checking was off, verify nothing now points at a missing row.
+        void requireForeignKeysIntact(Database &db, int version) {
+            auto st = db.prepare("PRAGMA foreign_key_check");
+            if (st.step()) {
+                throw Error("Migration " + std::to_string(version) + " would break the data. Nothing was changed.");
+            }
+        }
+    } // namespace
+
+    int latestSchemaVersion() { return kMigrations.back().version; }
+
+    int currentSchemaVersion(Database &db) {
+        db.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
+        auto st = db.prepare("SELECT value FROM meta WHERE key = 'schema_version'");
+        return st.step() ? std::stoi(st.text(0)) : 0; // no row = brand new file
     }
-    ForeignKeysOff(const ForeignKeysOff&) = delete;
-    ForeignKeysOff& operator=(const ForeignKeysOff&) = delete;
 
-private:
-    Database& db_;
-};
+    void migrate(Database &db) {
+        const int current = currentSchemaVersion(db);
 
-// Because checking was off, verify nothing now points at a missing row.
-void requireForeignKeysIntact(Database& db, int version) {
-    auto st = db.prepare("PRAGMA foreign_key_check");
-    if (st.step()) {
-        throw Error("Migration " + std::to_string(version) + " would break the data. Nothing was changed.");
+        if (current > latestSchemaVersion()) {
+            throw Error("This database was made by a newer Pesa. Please update Pesa.");
+        }
+
+        for (const Migration &m: kMigrations) {
+            if (m.version <= current) continue;
+
+            ForeignKeysOff fkOff(db); // declared first, so it is undone last
+            Transaction tx(db); // a failed step leaves the file untouched
+            db.exec(m.sql);
+            requireForeignKeysIntact(db, m.version);
+            db.prepare("INSERT INTO meta(key, value) VALUES ('schema_version', ?) "
+                        "ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+                    .bind(1, std::to_string(m.version))
+                    .run();
+            tx.commit();
+        }
     }
-}
-
-} // namespace
-
-int latestSchemaVersion() { return kMigrations.back().version; }
-
-int currentSchemaVersion(Database& db) {
-    db.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
-    auto st = db.prepare("SELECT value FROM meta WHERE key = 'schema_version'");
-    return st.step() ? std::stoi(st.text(0)) : 0;   // no row = brand new file
-}
-
-void migrate(Database& db) {
-    const int current = currentSchemaVersion(db);
-
-    if (current > latestSchemaVersion()) {
-        throw Error("This database was made by a newer Pesa. Please update Pesa.");
-    }
-
-    for (const Migration& m : kMigrations) {
-        if (m.version <= current) continue;
-
-        ForeignKeysOff fkOff(db);   // declared first, so it is undone last
-        Transaction tx(db);         // a failed step leaves the file untouched
-        db.exec(m.sql);
-        requireForeignKeysIntact(db, m.version);
-        db.prepare("INSERT INTO meta(key, value) VALUES ('schema_version', ?) "
-                   "ON CONFLICT(key) DO UPDATE SET value = excluded.value")
-            .bind(1, std::to_string(m.version))
-            .run();
-        tx.commit();
-    }
-}
-
 } // namespace pesa::detail

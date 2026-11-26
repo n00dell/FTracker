@@ -17,6 +17,7 @@ add_library(pesa_cli_lib STATIC
         shell.cpp
         money_cmd.cpp
         log_cmd.cpp
+        skip_cmd.cpp
 )
 target_include_directories(pesa_cli_lib PUBLIC include)
 target_link_libraries(pesa_cli_lib PUBLIC pesa_core)
@@ -25,9 +26,9 @@ add_executable(pesa-cli main.cpp)
 
 target_link_libraries(pesa-cli PRIVATE pesa_cli_lib)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(pesa_cli_lib PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(pesa-cli PRIVATE -Wall -Wextra -Wpedantic)
-endif()
+endif ()
 
 install(TARGETS pesa-cli RUNTIME DESTINATION bin)

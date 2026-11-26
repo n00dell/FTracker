@@ -11,13 +11,12 @@ using pesa::Pesa;
 using pesa::Visibility;
 
 namespace {
+    // Bump this when you add a migration. It is the only place the number lives in the tests.
+    constexpr int kLatest = 10;
 
-// Bump this when you add a migration. It is the only place the number lives in the tests.
-constexpr int kLatest = 9;
-
-// Frozen copies of what older Pesa versions created. NEVER change these:
-// they are the "old files" the upgrade code has to cope with.
-constexpr const char* kV1 = R"sql(
+    // Frozen copies of what older Pesa versions created. NEVER change these:
+    // they are the "old files" the upgrade code has to cope with.
+    constexpr const char *kV1 = R"sql(
     CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     CREATE TABLE categories (
         id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -26,8 +25,8 @@ constexpr const char* kV1 = R"sql(
     INSERT INTO meta VALUES ('schema_version', '1');
 )sql";
 
-// Same, but the person already made a category called Misc by hand.
-constexpr const char* kV1WithMisc = R"sql(
+    // Same, but the person already made a category called Misc by hand.
+    constexpr const char *kV1WithMisc = R"sql(
     CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     CREATE TABLE categories (
         id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -36,7 +35,7 @@ constexpr const char* kV1WithMisc = R"sql(
     INSERT INTO meta VALUES ('schema_version', '1');
 )sql";
 
-constexpr const char* kV2 = R"sql(
+    constexpr const char *kV2 = R"sql(
     CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     CREATE TABLE categories (
         id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -51,28 +50,33 @@ constexpr const char* kV2 = R"sql(
         VALUES (1, 'Milk', 60, 31, 1), (1, 'Bread', 55, 127, 0), (2, 'Matatu', 50, 96, 1);
     INSERT INTO meta VALUES ('schema_version', '2');
 )sql";
-
 } // namespace
 
-TEST_CASE("a new database is created at the latest version") {
+TEST_CASE(
+    "a new database is created at the latest version"
+) {
     Pesa app(":memory:");
     CHECK(app.schemaVersion() == kLatest);
 }
 
-TEST_CASE("a version 1 file is upgraded all the way and keeps its data") {
+TEST_CASE(
+    "a version 1 file is upgraded all the way and keeps its data"
+) {
     TempDb file("pesa_test_v1_upgrade.db");
     rawSql(file.path, kV1);
 
     Pesa app(file.path);
     CHECK(app.schemaVersion() == kLatest);
     const auto cats = app.categories().list();
-    REQUIRE(cats.size() == 2);                     // Food, plus the new built-in Misc
+    REQUIRE(cats.size() == 2); // Food, plus the new built-in Misc
     CHECK(cats[0].name == "Food");
     CHECK(cats[1].isSystem);
     CHECK_NOTHROW(app.items().add({.categoryId = cats[0].id, .name = "Milk", .defaultAmount = 60}));
 }
 
-TEST_CASE("a Misc category you made yourself is adopted, not duplicated") {
+TEST_CASE(
+    "a Misc category you made yourself is adopted, not duplicated"
+) {
     TempDb file("pesa_test_v1_misc.db");
     rawSql(file.path, kV1WithMisc);
 
@@ -83,7 +87,9 @@ TEST_CASE("a Misc category you made yourself is adopted, not duplicated") {
     CHECK(cats[0].isSystem);
 }
 
-TEST_CASE("a version 2 file survives the table rebuild of migration 3") {
+TEST_CASE(
+    "a version 2 file survives the table rebuild of migration 3"
+) {
     TempDb file("pesa_test_v2_upgrade.db");
     rawSql(file.path, kV2);
 
@@ -120,7 +126,9 @@ TEST_CASE("a version 2 file survives the table rebuild of migration 3") {
     CHECK(firstValue(file.path, "SELECT \"table\" FROM pragma_foreign_key_list('items')") == "categories");
 }
 
-TEST_CASE("a file from a newer Pesa is refused") {
+TEST_CASE(
+    "a file from a newer Pesa is refused"
+) {
     TempDb file("pesa_test_newer.db");
     rawSql(file.path, R"sql(
         CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -128,9 +136,14 @@ TEST_CASE("a file from a newer Pesa is refused") {
     )sql");
     CHECK_THROWS_AS(Pesa{file.path}, Error);
 }
-TEST_CASE("the old issues table is folded into the log") {
+
+TEST_CASE(
+    "the old issues table is folded into the log"
+) {
     TempDb file("pesa_test_log_table.db");
-    { Pesa app(file.path); }
+    {
+        Pesa app(file.path);
+    }
     CHECK(firstValue(file.path, "SELECT COUNT(*) FROM sqlite_master WHERE name = 'issues'") == "0");
     CHECK(firstValue(file.path, "SELECT COUNT(*) FROM sqlite_master WHERE name = 'log'") == "1");
 }

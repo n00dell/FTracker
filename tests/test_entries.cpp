@@ -14,28 +14,30 @@ using pesa::FundedFrom;
 using pesa::Pesa;
 
 namespace {
+    const Date kDay = Date::parse("2026-11-23");
 
-const Date kDay = Date::parse("2026-11-23");
+    // A tiny starting point: Transport with Matatu (50), and Food with Milk (60).
+    struct Fixture {
+        Pesa app;
+        pesa::CategoryId transport = 0;
+        pesa::CategoryId food = 0;
+        pesa::ItemId matatu = 0;
+        pesa::ItemId milk = 0;
 
-// A tiny starting point: Transport with Matatu (50), and Food with Milk (60).
-struct Fixture {
-    Pesa app;
-    pesa::CategoryId transport = 0;
-    pesa::CategoryId food = 0;
-    pesa::ItemId matatu = 0;
-    pesa::ItemId milk = 0;
-
-    explicit Fixture(const std::filesystem::path& file = ":memory:") : app(file) {
-        food = app.categories().add("Food");            // Food first, Transport second
-        transport = app.categories().add("Transport");
-        matatu = app.items().add({.categoryId = transport, .name = "Matatu", .defaultAmount = 50});
-        milk = app.items().add({.categoryId = food, .name = "Milk", .defaultAmount = 60});
-    }
-};
-
+        explicit Fixture(const std::filesystem::path &file = ":memory:") : app(file) {
+            food = app.categories().add("Food"); // Food first, Transport second
+            transport = app.categories().add("Transport");
+            matatu = app.items().add({.categoryId = transport, .name = "Matatu", .defaultAmount = 50});
+            milk = app.items().add({.categoryId = food, .name = "Milk", .defaultAmount = 60});
+        }
+    };
 } // namespace
 
-TEST_CASE("adding from the catalog copies the item's name, category and default amount") {
+TEST_CASE (
+
+"adding from the catalog copies the item's name, category and default amount"
+)
+ {
     Fixture f;
     const auto id = f.app.entries().addFromItem(kDay, f.matatu);
     const auto e = f.app.entries().find(id);
@@ -52,14 +54,22 @@ TEST_CASE("adding from the catalog copies the item's name, category and default 
     CHECK_FALSE(e->isOneOff());
 }
 
-TEST_CASE("the amount and the funding source can be chosen when adding") {
+TEST_CASE (
+
+"the amount and the funding source can be chosen when adding"
+)
+ {
     Fixture f;
     const auto id = f.app.entries().addFromItem(kDay, f.matatu, 120, FundedFrom::Savings);
     CHECK(f.app.entries().find(id)->amount == 120);
     CHECK(f.app.entries().find(id)->fund == FundedFrom::Savings);
 }
 
-TEST_CASE("only available items can be picked, and amounts must be positive") {
+TEST_CASE (
+
+"only available items can be picked, and amounts must be positive"
+)
+ {
     Fixture f;
     CHECK_THROWS_AS(f.app.entries().addFromItem(kDay, 9999), Error);
     CHECK_THROWS_AS(f.app.entries().addFromItem(kDay, f.matatu, 0), Error);
@@ -77,7 +87,11 @@ TEST_CASE("only available items can be picked, and amounts must be positive") {
     CHECK_THROWS_AS(f.app.entries().addFromItem(kDay, f.matatu), Error);
 }
 
-TEST_CASE("a failed add leaves no trace, not even an empty day") {
+TEST_CASE (
+
+"a failed add leaves no trace, not even an empty day"
+)
+ {
     Fixture f;
     CHECK_THROWS_AS(f.app.entries().addFromItem(kDay, 9999), Error);
     CHECK_FALSE(f.app.days().savedResult(kDay).has_value());
@@ -106,7 +120,11 @@ TEST_CASE("a failed add leaves no trace, not even an empty day") {
 //     CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, f.food, "Gift", 100), Error);
 // }
 //
-TEST_CASE("a day sums its entries and splits them by funding source") {
+TEST_CASE (
+
+"a day sums its entries and splits them by funding source"
+)
+ {
     Fixture f;
     f.app.entries().addFromItem(kDay, f.matatu);                          // 50 earned
     f.app.entries().addFromItem(kDay, f.milk, std::nullopt, FundedFrom::Savings);   // 60 savings
@@ -120,7 +138,11 @@ TEST_CASE("a day sums its entries and splits them by funding source") {
     CHECK(f.app.days().savedResult(kDay) == 610);
 }
 
-TEST_CASE("a day with no entries is simply empty") {
+TEST_CASE (
+
+"a day with no entries is simply empty"
+)
+ {
     Fixture f;
     const auto v = f.app.days().view(Date::parse("2030-01-01"));
     CHECK(v.entries.empty());
@@ -128,7 +150,11 @@ TEST_CASE("a day with no entries is simply empty") {
     CHECK_FALSE(v.calculated);
 }
 
-TEST_CASE("entries can go on past and future days") {
+TEST_CASE (
+
+"entries can go on past and future days"
+)
+ {
     Fixture f;
     const Date past = kDay.addDays(-30);
     const Date future = kDay.addDays(90);
@@ -139,7 +165,11 @@ TEST_CASE("entries can go on past and future days") {
     CHECK(f.app.days().view(kDay).total() == 0);   // other days are not affected
 }
 
-TEST_CASE("the day view groups entries in category order") {
+TEST_CASE (
+
+"the day view groups entries in category order"
+)
+ {
     Fixture f;
     f.app.entries().addFromItem(kDay, f.matatu);   // Transport was added second...
     f.app.entries().addFromItem(kDay, f.milk);     // ...Food first, so Food is listed first
@@ -149,7 +179,11 @@ TEST_CASE("the day view groups entries in category order") {
     CHECK(v.entries[1].categoryName == "Transport");
 }
 
-TEST_CASE("editing a hand-added entry keeps it 'added'") {
+TEST_CASE (
+
+"editing a hand-added entry keeps it 'added'"
+)
+ {
     Fixture f;
     const auto id = f.app.entries().addFromItem(kDay, f.matatu);
     f.app.entries().setAmount(id, 70);
@@ -164,7 +198,11 @@ TEST_CASE("editing a hand-added entry keeps it 'added'") {
     CHECK_THROWS_AS(f.app.entries().setAmount(9999, 10), Error);
 }
 
-TEST_CASE("changing where an entry is paid from moves it between the totals") {
+TEST_CASE (
+
+"changing where an entry is paid from moves it between the totals"
+)
+ {
     Fixture f;
     const auto id = f.app.entries().addFromItem(kDay, f.matatu);
     f.app.entries().setFundedFrom(id, FundedFrom::Savings);
@@ -175,7 +213,11 @@ TEST_CASE("changing where an entry is paid from moves it between the totals") {
     CHECK_THROWS_AS(f.app.entries().setFundedFrom(9999, FundedFrom::Earned), Error);
 }
 
-TEST_CASE("deleting an entry updates the day") {
+TEST_CASE (
+
+"deleting an entry updates the day"
+)
+ {
     Fixture f;
     const auto a = f.app.entries().addFromItem(kDay, f.matatu);
     f.app.entries().addFromItem(kDay, f.milk);
@@ -191,7 +233,11 @@ TEST_CASE("deleting an entry updates the day") {
     CHECK(f.app.days().savedResult(kDay) == 0);       // the day row stays, with a total of 0
 }
 
-TEST_CASE("history survives deleting the item or category it came from") {
+TEST_CASE (
+
+"history survives deleting the item or category it came from"
+)
+ {
     Fixture f;
     const auto id = f.app.entries().addFromItem(kDay, f.matatu);
     f.app.items().remove(f.matatu);
@@ -204,7 +250,11 @@ TEST_CASE("history survives deleting the item or category it came from") {
     CHECK(f.app.days().view(kDay).total() == 50);
 }
 
-TEST_CASE("renaming an item does not rewrite old entries, renaming a category does") {
+TEST_CASE (
+
+"renaming an item does not rewrite old entries, renaming a category does"
+)
+ {
     Fixture f;
     const auto id = f.app.entries().addFromItem(kDay, f.matatu);
     f.app.items().rename(f.matatu, "Bus");
@@ -214,7 +264,11 @@ TEST_CASE("renaming an item does not rewrite old entries, renaming a category do
     CHECK(e->categoryName == "Commute");     // looked up live
 }
 
-TEST_CASE("editing an auto entry makes it 'edited' and remembers the first amount") {
+TEST_CASE (
+
+"editing an auto entry makes it 'edited' and remembers the first amount"
+)
+ {
     TempDb file("pesa_test_entries_auto.db");
     EntryId id = 0;
     {
@@ -242,7 +296,11 @@ TEST_CASE("editing an auto entry makes it 'edited' and remembers the first amoun
     CHECK(app.days().view(kDay).total() == 80);
 }
 
-TEST_CASE("skipped entries are listed but never counted or edited") {
+TEST_CASE (
+
+"skipped entries are listed but never counted or edited"
+)
+ {
     TempDb file("pesa_test_entries_skipped.db");
     EntryId matatu = 0;
     {
@@ -262,7 +320,11 @@ TEST_CASE("skipped entries are listed but never counted or edited") {
     CHECK_THROWS_AS(app.entries().setFundedFrom(matatu, FundedFrom::Savings), Error);
 }
 
-TEST_CASE("entries survive closing and reopening the file") {
+TEST_CASE (
+
+"entries survive closing and reopening the file"
+)
+ {
     TempDb file("pesa_test_entries_reopen.db");
     {
         Fixture f(file.path);
@@ -275,7 +337,11 @@ TEST_CASE("entries survive closing and reopening the file") {
     CHECK(v.earnedTotal == 50);
     CHECK(v.savingsTotal == 500);
 }
-TEST_CASE("a one-off has no category and is not in the catalog") {
+TEST_CASE (
+
+"a one-off has no category and is not in the catalog"
+)
+ {
     Fixture f;
     const auto id = f.app.entries().addOneOff(kDay, "  Uncle Bill's wedding ", 500);
     const auto e = f.app.entries().find(id);
@@ -290,13 +356,21 @@ TEST_CASE("a one-off has no category and is not in the catalog") {
     CHECK(f.app.days().view(kDay).total() == 500);                // and the day still counts it
 }
 
-TEST_CASE("one-off input is checked") {
+TEST_CASE (
+
+"one-off input is checked"
+)
+ {
     Fixture f;
     CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, "  ", 100), Error);
     CHECK_THROWS_AS(f.app.entries().addOneOff(kDay, "Gift", 0), Error);
 }
 
-TEST_CASE("one-offs are listed after every category") {
+TEST_CASE (
+
+"one-offs are listed after every category"
+)
+ {
     Fixture f;
     f.app.entries().addOneOff(kDay, "Gift", 500);
     f.app.entries().addFromItem(kDay, f.matatu);

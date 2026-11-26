@@ -5,7 +5,6 @@
 #include <pesa/common.h>
 
 namespace pesa {
-
     std::string formatMoney(Money amount) {
         const bool negative = amount < 0;
         const std::string digits = std::to_string(negative ? -amount : amount);
@@ -16,5 +15,4 @@ namespace pesa {
         }
         return negative ? "-" + out : out;
     }
-
 } // namespace pesa

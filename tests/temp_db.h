@@ -8,17 +8,19 @@
 struct TempDb {
     std::filesystem::path path;
 
-    explicit TempDb(const std::string& name)
+    explicit TempDb(const std::string &name)
         : path(std::filesystem::temp_directory_path() / name) { cleanup(); }
+
     ~TempDb() { cleanup(); }
 
-    TempDb(const TempDb&) = delete;
-    TempDb& operator=(const TempDb&) = delete;
+    TempDb(const TempDb &) = delete;
+
+    TempDb &operator=(const TempDb &) = delete;
 
 private:
     void cleanup() const {
-        std::error_code ec;   // the no-throw version: it is fine if a file is missing
-        for (const char* suffix : {"", "-wal", "-shm"}) {
+        std::error_code ec; // the no-throw version: it is fine if a file is missing
+        for (const char *suffix: {"", "-wal", "-shm"}) {
             std::filesystem::remove(path.string() + suffix, ec);
         }
     }

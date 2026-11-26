@@ -2,7 +2,7 @@
 #include "DashController.h"
 #include <../gui/src/format.h>
 
-DashController::DashController(AppWindow& ui, pesa::Pesa& core) : ui_(ui), core_(core) {
+DashController::DashController(AppWindow &ui, pesa::Pesa &core) : ui_(ui), core_(core) {
     // Slint callback  entry-deleted(int)  becomes  on_entry_deleted(...)
     ui_.on_entry_deleted([this](int id) {
         core_.deleteEntry(id);
@@ -18,7 +18,7 @@ DashController::DashController(AppWindow& ui, pesa::Pesa& core) : ui_(ui), core_
 
 void DashController::refresh() {
     pesa::Money total = 0;
-    for (const auto& e : core_.entriesOn(day_)) total += e.amount;
+    for (const auto &e: core_.entriesOn(day_)) total += e.amount;
 
     // Slint property  day-total  becomes  set_day_total(...)
     ui_.set_day_total(slint::SharedString(formatMoney(total)));

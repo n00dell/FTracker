@@ -2,18 +2,18 @@
 <!-- FTracker/gui/android/src/main/AndroidManifest.xml -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="My Application"
-        android:hasCode="false">
+            android:label="My Application"
+            android:hasCode="false">
         <activity
-            android:name="android.app.NativeActivity"
-            android:exported="true"
-            android:configChanges="orientation|screenSize|keyboardHidden">
+                android:name="android.app.NativeActivity"
+                android:exported="true"
+                android:configChanges="orientation|screenSize|keyboardHidden">
             <meta-data
-                android:name="android.app.lib_name"
-                android:value="my_application" />
+                    android:name="android.app.lib_name"
+                    android:value="my_application"/>
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
     </application>

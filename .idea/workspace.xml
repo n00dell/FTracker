@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="BackendCodeEditorMiscSettings">
-    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="14" type="long" />
+    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="10" type="long" />
     <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
   </component>
   <component name="CMakePresetLoader">{
@@ -42,34 +42,105 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ced2d428-5f87-47df-88bd-3eee4bb3ced2" name="Changes" comment="feat: Add pay periods, income tracking, and savings management&#10;&#10;- Add period summaries, payday recording and delays, income entries, savings pots, and a transaction ledger.&#10;- Expose status, paid, delay, income, and savings workflows in the CLI with formatted displays.&#10;- Add database migration support, synchronize savings-covered expenses, and support month-based date arithmetic.&#10;- Expand tests for periods, savings, migrations, dates, settings, and CLI commands; update CMake targets and IDE workspace metadata.">
-      <change afterPath="$PROJECT_DIR$/cli/log_cmd.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/include/pesa/log.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/format.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/log.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/log_sql.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/src/log_sql.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_log.cpp" afterDir="false" />
+    <list default="true" id="ced2d428-5f87-47df-88bd-3eee4bb3ced2" name="Changes" comment="feat: Add event logging across money workflows&#10;&#10;- Record entry, savings, payday, and automatic-posting events with transactional log writes; migrate existing issues into the new log.&#10;- Add a filtered, newest-first `log` CLI command and show issue counts in status output.&#10;- Add shared money formatting and log tests; update CLI text handling, CMake targets, and IDE workspace metadata.">
+      <change afterPath="$PROJECT_DIR$/cli/skip_cmd.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/include/pesa/corrections.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/include/pesa/restore_points.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/include/pesa/skips.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/corrections_sql.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/corrections_sql.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/restore_points.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/src/skips.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_corrections.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cli/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/catalog_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/catalog_cmd.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/category_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/category_cmd.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/console.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/console.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/day_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/day_cmd.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/dispatch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/dispatch.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/display.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/display.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/entry_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/entry_cmd.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/include/cli/commands.h" beforeDir="false" afterPath="$PROJECT_DIR$/cli/include/cli/commands.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/include/cli/console.h" beforeDir="false" afterPath="$PROJECT_DIR$/cli/include/cli/console.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/include/cli/display.h" beforeDir="false" afterPath="$PROJECT_DIR$/cli/include/cli/display.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/include/cli/pickers.h" beforeDir="false" afterPath="$PROJECT_DIR$/cli/include/cli/pickers.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/include/cli/text.h" beforeDir="false" afterPath="$PROJECT_DIR$/cli/include/cli/text.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/item_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/item_cmd.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/log_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/log_cmd.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/main.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/money_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/money_cmd.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/pickers.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/pickers.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/rule_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/rule_cmd.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/setup_cmd.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/setup_cmd.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/shell.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/shell.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cli/startup.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/startup.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cli/text.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/cli/text.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/core/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/categories.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/categories.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/include/pesa/common.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/common.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/daily_job.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/daily_job.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/date.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/date.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/days.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/days.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/entries.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/entries.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/items.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/items.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/log.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/log.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/include/pesa/periods.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/periods.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/include/pesa/pesa.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/pesa.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/rules.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/rules.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/savings.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/savings.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/include/pesa/settings.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/include/pesa/settings.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/categories.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/categories.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/src/daily_job.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/daily_job.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/date.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/date.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/days.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/days.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/db.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/db.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/db.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/db.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/src/entries.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/entries.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/entry_sql.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/entry_sql.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/entry_sql.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/entry_sql.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/format.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/format.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/items.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/items.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/log.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/log.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/log_sql.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/log_sql.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/log_sql.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/log_sql.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/src/migrations.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/migrations.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/migrations.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/migrations.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/money_sql.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/money_sql.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/money_sql.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/money_sql.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/paths.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/paths.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/src/periods.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/periods.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/src/pesa.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/pesa.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/rules.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/rules.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/src/savings.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/savings.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/settings.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/settings.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/util.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/util.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/weekday_set.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/weekday_set.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/.vscode/launch.json" beforeDir="false" afterPath="$PROJECT_DIR$/gui/.vscode/launch.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/gui/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/gui/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/android/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/gui/android/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/backend/Controllers/DashController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/backend/Controllers/DashController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/backend/Controllers/DashController.h" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/backend/Controllers/DashController.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/main.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tests/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/raw_sql.h" beforeDir="false" afterPath="$PROJECT_DIR$/tests/raw_sql.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/temp_db.h" beforeDir="false" afterPath="$PROJECT_DIR$/tests/temp_db.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_categories.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_categories.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_cli_commands.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_cli_commands.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_cli_text.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_cli_text.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_daily_job.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_daily_job.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_date.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_date.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_entries.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_entries.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_items.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_items.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_log.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_log.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_migrations.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_migrations.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_periods.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_periods.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_rules.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_rules.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_savings.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_savings.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_settings.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_settings.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_weekdays.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_weekdays.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,61 +193,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.310611706478731" />
-      <entry key="MS500" value="2.815212099944333" />
-      <entry key="S2" value="5.1107782023104535" />
-      <entry key="S5" value="6.123948500337895" />
-      <entry key="S10" value="6.538719501867369" />
-      <entry key="S30" value="6.840923283202295" />
-      <entry key="S60" value="6.95044669738953" />
-      <entry key="M2" value="7.352397329646414" />
-      <entry key="M5" value="8.958700276596677" />
-      <entry key="M10" value="11.290400318393166" />
-      <entry key="M15" value="13.110866641655962" />
-      <entry key="M30" value="16.278658026158816" />
-      <entry key="H1" value="19.016650116336393" />
-      <entry key="H2" value="22.88199437663703" />
-      <entry key="H4" value="34.490509696739075" />
-      <entry key="D1" value="449.124647439208" />
-      <entry key="W1" value="1400.8562720739749" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0" />
+      <entry key="S30" value="1.0000053341614032" />
+      <entry key="S60" value="1.0036645512317188" />
+      <entry key="M2" value="1.12497580334212" />
+      <entry key="M5" value="2.870889466963049" />
+      <entry key="M10" value="7.345286916699643" />
+      <entry key="M15" value="11.795458612046373" />
+      <entry key="M30" value="22.752246850381514" />
+      <entry key="H1" value="35.543024722764486" />
+      <entry key="H2" value="47.63856976690882" />
+      <entry key="H4" value="63.73805163299943" />
+      <entry key="D1" value="473.17622426241286" />
+      <entry key="W1" value="1433.3012069694792" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="1.538035662346328E-263" />
-      <entry key="S5" value="7.495257599864339E-106" />
-      <entry key="S10" value="2.7379537505783057E-53" />
-      <entry key="S30" value="3.2546034867999745E-18" />
-      <entry key="S60" value="2.570999973060189E-9" />
-      <entry key="M2" value="9.147354705643608E-5" />
-      <entry key="M5" value="0.054397594322137664" />
-      <entry key="M10" value="0.46477756396683406" />
-      <entry key="M15" value="0.9517244560368341" />
-      <entry key="M30" value="1.9514628175899058" />
-      <entry key="H1" value="2.8576621333355035" />
-      <entry key="H2" value="3.9510802586213845" />
-      <entry key="H4" value="5.709500158607363" />
-      <entry key="D1" value="96.5052142849595" />
-      <entry key="W1" value="371.50870763988536" />
+      <entry key="MS500" value="1.010569829611754E-95" />
+      <entry key="S2" value="1.7829599261718476E-24" />
+      <entry key="S5" value="3.1656043411716354E-10" />
+      <entry key="S10" value="1.779214529354511E-5" />
+      <entry key="S30" value="0.026115536136273078" />
+      <entry key="S60" value="0.16465960485170258" />
+      <entry key="M2" value="0.46643600561945725" />
+      <entry key="M5" value="1.4298489058423638" />
+      <entry key="M10" value="3.2617080236191627" />
+      <entry key="M15" value="4.850645175224529" />
+      <entry key="M30" value="8.03437932594966" />
+      <entry key="H1" value="11.17867013241305" />
+      <entry key="H2" value="13.978538897647244" />
+      <entry key="H4" value="16.8148738168956" />
+      <entry key="D1" value="106.2786519171819" />
+      <entry key="W1" value="382.7729590591611" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.2702921903798339" />
-      <entry key="MS500" value="2.795876453675342" />
-      <entry key="S2" value="5.101768877458365" />
-      <entry key="S5" value="6.119602095512123" />
-      <entry key="S10" value="6.536393895430383" />
-      <entry key="S30" value="6.840110882505182" />
-      <entry key="S60" value="6.950022234480085" />
-      <entry key="M2" value="7.352193447419702" />
-      <entry key="M5" value="9.012343331031854" />
-      <entry key="M10" value="11.752933743371212" />
-      <entry key="M15" value="14.059684510497133" />
-      <entry key="M30" value="18.227252569667318" />
-      <entry key="H1" value="21.87223796159882" />
-      <entry key="H2" value="26.831603598851377" />
-      <entry key="H4" value="40.19884418884144" />
-      <entry key="D1" value="545.6269567910102" />
-      <entry key="W1" value="1772.3635044376324" />
+      <entry key="MS100" value="1.7819991691529005E-7" />
+      <entry key="MS500" value="0.04468703082380283" />
+      <entry key="S2" value="0.459775023075829" />
+      <entry key="S5" value="0.7328551600915799" />
+      <entry key="S10" value="0.8560858138789406" />
+      <entry key="S30" value="0.974841127045153" />
+      <entry key="S60" value="1.139878777414232" />
+      <entry key="M2" value="1.5704997779929935" />
+      <entry key="M5" value="4.275692767999973" />
+      <entry key="M10" value="10.580525561578265" />
+      <entry key="M15" value="16.62155368480318" />
+      <entry key="M30" value="30.768131275335538" />
+      <entry key="H1" value="46.709616671800106" />
+      <entry key="H2" value="61.609856196056754" />
+      <entry key="H4" value="80.5486413215908" />
+      <entry key="D1" value="579.4514800924252" />
+      <entry key="W1" value="1816.0726134185868" />
     </decayedShown>
   </component>
   <component name="ProjectApplicationVersion">
@@ -245,6 +316,11 @@
     </key>
   </component>
   <component name="RunManager" selected="Node.js Test Runner.All Tests">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="pesa_tests" type="CMakeDoctestTestRunConfigurationType" factoryName="doctest Test" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="pesa" TARGET_NAME="pesa_tests" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="pesa" RUN_TARGET_NAME="pesa_tests" TEST_MODE="SUITE_TEST">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -257,11 +333,6 @@
       </method>
     </configuration>
     <configuration name="_cargo-build_slint_cpp" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="pesa" TARGET_NAME="_cargo-build_slint_cpp" CONFIG_NAME="Debug">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -429,7 +500,8 @@
     <MESSAGE value="feat: Add interactive CLI workflows and built-in Misc category&#10;&#10;- Refactored the CLI into a reusable library with interactive console, catalog, category, setup, rules, and settings commands.&#10;- Added the protected system Misc category and exposed its ID through the core categories API.&#10;- Expanded test coverage and updated CMake targets for the CLI and new core features.&#10;- Updated dashboard UI and controller files, and added source-file markers across GUI components." />
     <MESSAGE value="feat: Add daily automatic posting and category-free one-off entries&#10;&#10;- Implement a catch-up daily job with a configurable post-after time, rule-linked entries, and a CLI command to run it manually.&#10;- Allow one-off entries without a category and update day views and CLI displays to label them accordingly.&#10;- Add database migration support for nullable one-off categories, rule-post tracking, and job issue records.&#10;- Integrate daily posting at startup, update CLI and CMake configuration, and expand tests for daily jobs, entries, settings, and commands.&#10;- Update IDE workspace metadata." />
     <MESSAGE value="feat: Add pay periods, income tracking, and savings management&#10;&#10;- Add period summaries, payday recording and delays, income entries, savings pots, and a transaction ledger.&#10;- Expose status, paid, delay, income, and savings workflows in the CLI with formatted displays.&#10;- Add database migration support, synchronize savings-covered expenses, and support month-based date arithmetic.&#10;- Expand tests for periods, savings, migrations, dates, settings, and CLI commands; update CMake targets and IDE workspace metadata." />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: Add pay periods, income tracking, and savings management&#10;&#10;- Add period summaries, payday recording and delays, income entries, savings pots, and a transaction ledger.&#10;- Expose status, paid, delay, income, and savings workflows in the CLI with formatted displays.&#10;- Add database migration support, synchronize savings-covered expenses, and support month-based date arithmetic.&#10;- Expand tests for periods, savings, migrations, dates, settings, and CLI commands; update CMake targets and IDE workspace metadata." />
+    <MESSAGE value="feat: Add event logging across money workflows&#10;&#10;- Record entry, savings, payday, and automatic-posting events with transactional log writes; migrate existing issues into the new log.&#10;- Add a filtered, newest-first `log` CLI command and show issue counts in status output.&#10;- Add shared money formatting and log tests; update CLI text handling, CMake targets, and IDE workspace metadata." />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: Add event logging across money workflows&#10;&#10;- Record entry, savings, payday, and automatic-posting events with transactional log writes; migrate existing issues into the new log.&#10;- Add a filtered, newest-first `log` CLI command and show issue counts in status output.&#10;- Add shared money formatting and log tests; update CLI text handling, CMake targets, and IDE workspace metadata." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

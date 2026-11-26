@@ -11,19 +11,20 @@
 #include <string_view>
 
 namespace pesa::detail {
+    PotId mainPotId(Database & db);
 
-    PotId       mainPotId(Database& db);
     // Throws if there is no such pot; returns its name.
-    std::string requirePot(Database& db, PotId id);
+    std::string requirePot(Database &db, PotId id);
 
-    void insertLedger(Database& db, const Date& date, PotId pot, Money amount, LedgerKind kind,
+    void insertLedger(Database &db, const Date &date, PotId pot, Money amount, LedgerKind kind,
                       std::string_view note, std::optional<PeriodId> period = std::nullopt);
-    void insertIncome(Database& db, PeriodId period, const Date& date, std::string_view label, Money amount);
+
+    void insertIncome(Database &db, PeriodId period, const Date &date, std::string_view label, Money amount);
 
     // Makes the ledger match one entry: the old line is removed, and if the entry is paid from
     // savings (and not skipped) a fresh line is added. Calling it twice changes nothing.
-    void syncExpenseCover(Database& db, EntryId entry);
-    // For deleting an entry: removes its ledger line (the refund).
-    void dropExpenseCover(Database& db, EntryId entry);
+    void syncExpenseCover(Database &db, EntryId entry);
 
+    // For deleting an entry: removes its ledger line (the refund).
+    void dropExpenseCover(Database &db, EntryId entry);
 } // namespace pesa::detail
