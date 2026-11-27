@@ -24,6 +24,14 @@ namespace cli {
             }
             out << "  Auto-post:        " << (settings.autoPostEnabled() ? "on" : "off") << " (runs when Pesa opens)\n";
             out << "  Post today after: " << settings.postAfter().toString() << " (earlier days always post)\n";
+            out << "  Auto-cover:       " << (settings.autoCoverEnabled() ? "on" : "off")
+                    << " (pays from Main savings when earned runs out)\n";
+            out << "  If overspent at payday: "
+                    << (settings.shortfallPolicy() == pesa::ShortfallPolicy::TakeFromSavings
+                            ? "take it from Main savings"
+                            : settings.shortfallPolicy() == pesa::ShortfallPolicy::CarryForward
+                                  ? "carry it into the new period"
+                                  : "only record it") << "\n";
         }
 
         // "on"/"off" typed, or asked.
@@ -114,6 +122,31 @@ namespace cli {
                 text ? *text : io.askText("Post today's routine after (HH:MM)", settings.postAfter().toString()));
             settings.setPostAfter(time);
             io.out() << "Today's routine entries post after " << time.toString() << ".\n";
+            return 0;
+        }
+        if (sub == "autocover") {
+            const bool on = onOff(io, reader, settings.autoCoverEnabled(),
+                                  "When earned runs out, pay the newest spending from Main savings automatically?");
+            settings.setAutoCoverEnabled(on);
+            io.out() << "Auto-cover is " << (on ? "on" : "off") << ".\n";
+            if (on) io.out() << "Nothing is ever blocked: Main savings can go below zero, and you are warned when it does.\n";
+            return 0;
+        }
+        if (sub == "shortfall") {
+            std::string word;
+            if (const auto text = reader.next()) {
+                word = toLower(*text);
+            } else {
+                const auto choice = io.askChoice("If earned ends below zero when you get paid",
+                    {"Only record it", "Take it from Main savings", "Carry it into the new period as its first expense"},
+                    static_cast<std::size_t>(settings.shortfallPolicy()));
+                word = choice == 0 ? "record" : choice == 1 ? "savings" : "carry";
+            }
+            if      (word == "record")  settings.setShortfallPolicy(pesa::ShortfallPolicy::Record);
+            else if (word == "savings") settings.setShortfallPolicy(pesa::ShortfallPolicy::TakeFromSavings);
+            else if (word == "carry")   settings.setShortfallPolicy(pesa::ShortfallPolicy::CarryForward);
+            else throw pesa::Error("Use record, savings or carry.");
+            io.out() << "Saved.\n";
             return 0;
         }
         printUsage(io);

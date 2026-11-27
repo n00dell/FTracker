@@ -356,6 +356,38 @@ namespace pesa::detail {
         );
     )sql"
             },
+            // Goals (things to buy) and funds (a target tracked against a pot).
+//  - goals.funded_from uses the same codes as entries: 0 earned, 1 savings.
+//  - goals.bought_on is empty until the goal is bought; bought_how is empty for a gift.
+//  - The last CHECK means a goal can only buy itself if it has a date to buy on.
+Migration{11, R"sql(
+        CREATE TABLE goals (
+            id          INTEGER PRIMARY KEY,
+            name        TEXT    NOT NULL COLLATE NOCASE,
+            amount      INTEGER NOT NULL CHECK (amount > 0),
+            priority    INTEGER NOT NULL CHECK (priority > 0),
+            due_date    TEXT    CHECK (due_date IS NULL OR
+                                       due_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            funded_from INTEGER NOT NULL DEFAULT 0 CHECK (funded_from IN (0, 1)),
+            donated     INTEGER NOT NULL DEFAULT 0 CHECK (donated IN (0, 1)),
+            auto_buy    INTEGER NOT NULL DEFAULT 0 CHECK (auto_buy IN (0, 1)),
+            bought_on   TEXT    CHECK (bought_on IS NULL OR
+                                       bought_on GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            bought_how  INTEGER CHECK (bought_how IS NULL OR bought_how BETWEEN 0 AND 2),
+            is_deleted  INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1)),
+            CHECK (auto_buy = 0 OR due_date IS NOT NULL)
+        );
+        CREATE UNIQUE INDEX ux_goals_name ON goals(name) WHERE is_deleted = 0;
+
+        CREATE TABLE funds (
+            id         INTEGER PRIMARY KEY,
+            name       TEXT    NOT NULL COLLATE NOCASE,
+            target     INTEGER NOT NULL CHECK (target > 0),
+            pot_id     INTEGER NOT NULL REFERENCES pots(id),
+            is_deleted INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1))
+        );
+        CREATE UNIQUE INDEX ux_funds_name ON funds(name) WHERE is_deleted = 0;
+    )sql"},
         };
 
         // While tables are being rebuilt, foreign keys must be switched off (SQLite ignores

@@ -77,4 +77,7 @@ namespace cli {
     void printSkips(Console &io, const std::vector<pesa::Skip> &skips);
 
     void printRestorePoints(Console &io, const std::vector<pesa::RestorePoint> &points);
+    void printGoals(Console& io, const std::vector<pesa::GoalStatus>& goals);
+    void printBoughtGoals(Console& io, const std::vector<pesa::Goal>& goals);
+    void printFunds(Console& io, const std::vector<pesa::Fund>& funds);
 } // namespace cli

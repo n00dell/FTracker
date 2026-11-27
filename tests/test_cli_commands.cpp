@@ -37,10 +37,9 @@ namespace {
     const pesa::Date kDay = pesa::Date::parse("2026-11-23");
 } // namespace
 
-TEST_CASE (
-"one-liners still work, and a one-off lands in Misc"
-)
- {
+TEST_CASE(
+    "one-liners still work, and a one-off lands in Misc"
+) {
     Session s;
     CHECK(s.run("category add Food") == 0);
     CHECK(s.run("item add Food 60 Milk") == 0);
@@ -59,10 +58,9 @@ TEST_CASE (
     CHECK(day.entries[1].categoryName.empty());
 }
 
-TEST_CASE (
-"errors go to the error stream and give a failing exit code"
-)
- {
+TEST_CASE(
+    "errors go to the error stream and give a failing exit code"
+) {
     Session s;
     s.run("category add Food");
     CHECK(s.run("item add Food 0 Bread") == 1);
@@ -74,10 +72,9 @@ TEST_CASE (
     CHECK(s.run("day 2026-02-30") == 1);
 }
 
-TEST_CASE (
-"Misc cannot be renamed or deleted from the command line"
-)
- {
+TEST_CASE(
+    "Misc cannot be renamed or deleted from the command line"
+) {
     Session s;
     const auto misc = std::to_string(s.app.categories().misc());
     CHECK(s.run("category rename " + misc + " Other") == 1);
@@ -85,10 +82,9 @@ TEST_CASE (
     CHECK(s.run("category delete " + misc) == 1);
 }
 
-TEST_CASE (
-"category add asks for the name"
-)
- {
+TEST_CASE(
+    "category add asks for the name"
+) {
     Session s("Food\n");
     CHECK(s.run("category add") == 0);
     REQUIRE(userCategories(s.app).size() == 1);
@@ -96,10 +92,9 @@ TEST_CASE (
     CHECK(contains(s.output(), "Category name: "));
 }
 
-TEST_CASE (
-"a blank answer or the end of input cancels"
-)
- {
+TEST_CASE(
+    "a blank answer or the end of input cancels"
+) {
     Session blank("\n");
     CHECK(blank.run("category add") == 1);
     CHECK(contains(blank.output(), "Cancelled."));
@@ -114,10 +109,9 @@ TEST_CASE (
     CHECK(quit.run("category rename") == 1); // "q" at a numbered list backs out
 }
 
-TEST_CASE (
-"item add walks through category, name and amount"
-)
- {
+TEST_CASE(
+    "item add walks through category, name and amount"
+) {
     Session s("1\nMilk\n60\n");
     s.app.categories().add("Food");
     CHECK(s.run("item add") == 0);
@@ -129,10 +123,9 @@ TEST_CASE (
     CHECK(contains(s.output(), "1) Food"));
 }
 
-TEST_CASE (
-"wrong answers are explained and asked again"
-)
- {
+TEST_CASE(
+    "wrong answers are explained and asked again"
+) {
     Session s("1\nMilk\nabc\n0\n60\n"); // bad amount, zero, then 60
     s.app.categories().add("Food");
     CHECK(s.run("item add") == 0);
@@ -141,10 +134,9 @@ TEST_CASE (
     CHECK(s.app.items().list()[0].defaultAmount == 60);
 }
 
-TEST_CASE (
-"entry add picks the day, category and item, and Enter takes the defaults"
-)
- {
+TEST_CASE(
+    "entry add picks the day, category and item, and Enter takes the defaults"
+) {
     Session s("2026-11-23\n1\n1\n\n\n"); // date, category 1, item 1, default amount, default 'earned'
     const auto food = s.app.categories().add("Food");
     s.app.items().add({.categoryId = food, .name = "Milk", .defaultAmount = 60});
@@ -157,10 +149,9 @@ TEST_CASE (
     CHECK(contains(s.output(), "Spent 60"));
 }
 
-TEST_CASE (
-"entry oneoff asks for the day, name, amount and where the money comes from"
-)
- {
+TEST_CASE(
+    "entry oneoff asks for the day, name, amount and where the money comes from"
+) {
     Session s("2026-11-23\nUncle Bill's wedding\n1,500\n2\n"); // date, name, amount, savings
     s.app.categories().add("Food");
     CHECK(s.run("entry oneoff") == 0);
@@ -174,10 +165,9 @@ TEST_CASE (
     CHECK(contains(s.output(), "One-off"));
 }
 
-TEST_CASE (
-"deleting an entry in guided mode asks first"
-)
- {
+TEST_CASE(
+    "deleting an entry in guided mode asks first"
+) {
     Session no("2026-11-23\n1\nn\n");
     no.app.entries().addOneOff(kDay, "Gift", 100);
     CHECK(no.run("entry delete") == 0);
@@ -189,10 +179,9 @@ TEST_CASE (
     CHECK(yes.app.days().view(kDay).entries.empty());
 }
 
-TEST_CASE (
-"pausing offers only categories that can be paused"
-)
- {
+TEST_CASE(
+    "pausing offers only categories that can be paused"
+) {
     Session s("1\n"); // Food is the only one: Home is paused, Misc is built in
     s.app.categories().add("Food");
     const auto home = s.app.categories().add("Home");
@@ -203,10 +192,9 @@ TEST_CASE (
     CHECK_FALSE(contains(s.output(), "Misc"));
 }
 
-TEST_CASE (
-"catalog shows categories with their items underneath, Misc last"
-)
- {
+TEST_CASE(
+    "catalog shows categories with their items underneath, Misc last"
+) {
     Session s;
     CHECK(s.run("catalog") == 0);
     CHECK(contains(s.output(), "Misc"));
@@ -228,10 +216,9 @@ TEST_CASE (
     CHECK_FALSE(contains(text, "No items yet"));
 }
 
-TEST_CASE (
-"catalog add asks whether it is a category or an item"
-)
- {
+TEST_CASE(
+    "catalog add asks whether it is a category or an item"
+) {
     Session s("2\n1\nBread\n55\n"); // an item; category 1; name; amount
     s.app.categories().add("Food");
     CHECK(s.run("catalog add") == 0);
@@ -243,10 +230,9 @@ TEST_CASE (
     CHECK(userCategories(c.app)[0].name == "Home");
 }
 
-TEST_CASE (
-"catalog edit: pick something, then change it"
-)
- {
+TEST_CASE(
+    "catalog edit: pick something, then change it"
+) {
     Session s("2\n2\n75\n"); // line 2 is Milk; action 2 is 'Change the amount'; 75
     const auto food = s.app.categories().add("Food");
     const auto milk = s.app.items().add({.categoryId = food, .name = "Milk", .defaultAmount = 60});
@@ -260,20 +246,18 @@ TEST_CASE (
     CHECK(add.app.items().list()[0].name == "Bread");
 }
 
-TEST_CASE (
-"catalog edit on Misc only offers adding an item"
-)
- {
+TEST_CASE(
+    "catalog edit on Misc only offers adding an item"
+) {
     Session s("1\n1\nBank fee\n30\n"); // Misc is the only line; its only action; name; amount
     CHECK(s.run("catalog edit") == 0);
     REQUIRE(s.app.items().list().size() == 1);
     CHECK(s.app.items().list()[0].categoryName == "Misc");
 }
 
-TEST_CASE (
-"first launch asks how you are paid, then the pay, the payday and what you have"
-)
- {
+TEST_CASE(
+    "first launch asks how you are paid, then the pay, the payday and what you have"
+) {
     const auto payday = pesa::Date::today().addDays(20).toString();
     Session s("1\n70,000\n" + payday + "\n12,000\n"); // regular; pay; payday; starting balance
     cli::runStartup(s.ctx, true);
@@ -291,10 +275,9 @@ TEST_CASE (
     CHECK(contains(freelance.output(), "income add"));
 }
 
-TEST_CASE (
-"setup is not repeated, and one-liners never ask"
-)
- {
+TEST_CASE(
+    "setup is not repeated, and one-liners never ask"
+) {
     Session done("");
     done.app.completeSetup({.mode = pesa::IncomeMode::Irregular}, pesa::Date::today());
     cli::runStartup(done.ctx, true);
@@ -307,10 +290,9 @@ TEST_CASE (
     CHECK(script.output().empty());
 }
 
-TEST_CASE (
-"status, delay and paid work from the command line"
-)
- {
+TEST_CASE(
+    "status, delay and paid work from the command line"
+) {
     Session s;
     const auto today = pesa::Date::today();
     s.app.completeSetup({
@@ -333,10 +315,9 @@ TEST_CASE (
     CHECK(s.run("paid --amount 70,000") == 1); // same day again
 }
 
-TEST_CASE (
-"income and savings commands"
-)
- {
+TEST_CASE(
+    "income and savings commands"
+) {
     Session s;
     s.app.completeSetup({.mode = pesa::IncomeMode::Irregular}, pesa::Date::today());
 
@@ -361,10 +342,9 @@ TEST_CASE (
     CHECK(contains(s.output(), "Expense cover"));
 }
 
-TEST_CASE (
-"the shell keeps going after errors and leaves on exit"
-)
- {
+TEST_CASE(
+    "the shell keeps going after errors and leaves on exit"
+) {
     Session s(
         "category add Food\nitem add Food 60 Milk\nbogus\nitem add Food 0 X\n\ncatalog\nexit\ncategory add Never\n");
     CHECK(cli::runShell(s.ctx) == 0);
@@ -375,49 +355,44 @@ TEST_CASE (
     CHECK(userCategories(s.app).size() == 1); // nothing after 'exit' ran
 }
 
-TEST_CASE (
-"the shell ends cleanly when the input ends"
-)
- {
+TEST_CASE(
+    "the shell ends cleanly when the input ends"
+) {
     Session s("category add Food\n");
     CHECK(cli::runShell(s.ctx) == 0);
     CHECK(userCategories(s.app).size() == 1);
 }
 
-TEST_CASE (
-"day shows today when no date is given"
-)
- {
+TEST_CASE(
+    "day shows today when no date is given"
+) {
     Session s;
     CHECK(s.run("day") == 0);
     CHECK(contains(s.output(), pesa::Date::today().toString()));
     CHECK(contains(s.output(), "No entries."));
 }
 
-TEST_CASE (
-"settings can switch auto-post off"
-)
- {
+TEST_CASE(
+    "settings can switch auto-post off"
+) {
     Session s;
     CHECK(s.run("settings autopost off") == 0);
     CHECK_FALSE(s.app.settings().autoPostEnabled());
     CHECK(s.run("settings autopost maybe") == 1);
 }
 
-TEST_CASE (
-"help lists the commands"
-)
- {
+TEST_CASE(
+    "help lists the commands"
+) {
     Session s;
     CHECK(s.run("help") == 0);
     CHECK(contains(s.output(), "catalog edit"));
     CHECK(contains(s.output(), "entry oneoff"));
 }
 
-TEST_CASE (
-"job says what it did, and respects the auto-post switch"
-)
- {
+TEST_CASE(
+    "job says what it did, and respects the auto-post switch"
+) {
     Session s;
     CHECK(s.run("job") == 0);
     CHECK(contains(s.output(), "Nothing new to post"));
@@ -428,12 +403,84 @@ TEST_CASE (
     CHECK(contains(s.output(), "Auto-post is off"));
 }
 
-TEST_CASE (
-"settings postafter changes when today's routine posts"
-)
- {
+TEST_CASE(
+    "settings postafter changes when today's routine posts"
+) {
     Session s;
     CHECK(s.run("settings postafter 18:30") == 0);
     CHECK(s.app.settings().postAfter().toString() == "18:30");
     CHECK(s.run("settings postafter noon") == 1);
+}
+
+TEST_CASE("goals can be added, listed, changed, bought and deleted from the command line") {
+    Session s;
+    s.app.completeSetup({.mode = pesa::IncomeMode::Irregular, .startingBalance = 10000}, pesa::Date::today());
+
+    CHECK(s.run("goal add 30,000 Electric guitar --priority 1 --savings") == 0);
+    CHECK(s.run("goal add 6500 Curtains") == 0); // priority 11: the lowest so far, plus 10
+    CHECK(s.app.goals().find(2)->priority == 11);
+    s.out.str("");
+    CHECK(s.run("goal list") == 0);
+    CHECK(contains(s.output(), "Electric guitar"));
+    CHECK(contains(s.output(), "short by 30,000")); // Main savings is empty
+
+    CHECK(s.run("goal edit 2 --amount 7000 --priority 5") == 0);
+    CHECK(s.app.goals().find(2)->amount == 7000);
+    CHECK(s.run("goal edit 2") == 1); // nothing to change
+
+    CHECK(s.run("goal buy 2 --how earned") == 0);
+    CHECK(s.app.goals().find(2)->isBought());
+    CHECK(s.app.days().view(pesa::Date::today()).entries[0].name == "Curtains");
+    CHECK(s.run("goal buy 2 --how earned") == 1); // already bought
+    CHECK(s.run("goal buy 1 --how bogus") == 1);
+
+    CHECK(s.run("goal delete 1") == 0);
+    s.out.str("");
+    CHECK(s.run("goal list --bought") == 0);
+    CHECK(contains(s.output(), "Curtains"));
+}
+
+TEST_CASE("funds follow a pot, and a goal due on launch is bought or listed") {
+    Session s;
+    const auto today = pesa::Date::today();
+    s.app.completeSetup({.mode = pesa::IncomeMode::Irregular, .startingBalance = 20000}, today);
+
+    CHECK(s.run("savings newpot Emergency --locked") == 0);
+    CHECK(s.run("savings add 50,000 --pot Emergency Start") == 0);
+    CHECK(s.run("fund add 200,000 Emergency fund --pot Emergency") == 0);
+    s.out.str("");
+    CHECK(s.run("fund list") == 0);
+    CHECK(contains(s.output(), "25%"));
+
+    s.app.goals().add({
+        .name = "Desk", .amount = 12000, .priority = 1, .dueDate = today.previousDay(),
+        .fundedFrom = pesa::FundedFrom::Earned, .autoBuy = true
+    });
+    s.app.goals().add({.name = "Curtains", .amount = 6500, .priority = 2, .dueDate = today});
+    s.out.str("");
+    cli::runStartup(s.ctx, true);
+    CHECK(contains(s.output(), "Bought goal Desk"));
+    CHECK(contains(s.output(), "Goal due: Curtains"));
+    CHECK(s.app.goals().find(1)->isBought());
+    CHECK_FALSE(s.app.goals().find(2)->isBought());
+}
+
+TEST_CASE("auto-cover and the payday policy are settings, and the warning lists the alternatives") {
+    Session s;
+    s.app.completeSetup({.mode = pesa::IncomeMode::Irregular, .startingBalance = 1000}, pesa::Date::today());
+
+    CHECK(s.run("entry oneoff today 5000 Laptop") == 0); // earned goes below zero; auto-cover is off
+    CHECK(s.run("status") == 0);
+    CHECK(contains(s.output(), "settings autocover on"));
+    CHECK(s.run("settings autocover on") == 0);
+    CHECK(s.app.settings().autoCoverEnabled());
+
+    s.out.str("");
+    CHECK(s.run("entry oneoff today 700 Snacks") == 0);
+    CHECK(contains(s.output(), "paid from Main savings"));
+    CHECK(contains(s.output(), "below zero")); // Main savings went negative: warned
+
+    CHECK(s.run("settings shortfall carry") == 0);
+    CHECK(s.app.settings().shortfallPolicy() == pesa::ShortfallPolicy::CarryForward);
+    CHECK(s.run("settings shortfall bogus") == 1);
 }

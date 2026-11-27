@@ -195,6 +195,11 @@ namespace pesa {
             result.movedToSavings = remainder;
         } else if (remainder < 0) {
             result.shortfall = -remainder;
+            if (settings_.shortfallPolicy() == ShortfallPolicy::TakeFromSavings) {
+                detail::insertLedger(db_, options.paidOn, detail::mainPotId(db_), remainder, LedgerKind::PeriodRemainder,
+                                     "Overspent in the period that started " + closing.start.toString(), closing.id);
+                result.settledFromSavings = -remainder;
+            }
         }
 
         // 4. The new period starts on the pay day, with the pay as its first income.
@@ -203,6 +208,12 @@ namespace pesa {
         bindOptionalDate(open, 2, nextPayday);
         open.run();
         detail::insertIncome(db_, db_.lastInsertId(), options.paidOn, "Pay", *pay);
+        // 5. "Carry forward": the new period starts owing what the old one overspent.
+        if (remainder < 0 && settings_.shortfallPolicy() == ShortfallPolicy::CarryForward) {
+            Entries entries(db_);
+            entries.addOneOff(options.paidOn, "Overspent last period", -remainder);   // dated on the pay day: the NEW period
+            result.carriedForward = -remainder;
+        }
         detail::writeLog(db_, LogKind::Pay,
                          std::string(options.automatic ? "Payday arrived (auto-pay) on " : "Got paid on ") +
                          options.paidOn.toString() + ": KES " + formatMoney(*pay) + " added, new period started");
@@ -210,8 +221,11 @@ namespace pesa {
             detail::writeLog(db_, LogKind::Savings, "Leftover KES " + formatMoney(result.movedToSavings) +
                                                     " moved to " + result.leftoverPot);
         } else if (result.shortfall > 0) {
-            detail::writeLog(db_, LogKind::Pay, "Earned ran KES " + formatMoney(result.shortfall) +
-                                                " over; nothing was taken from savings");
+            detail::writeLog(db_, LogKind::Pay,
+                             "Earned ran KES " + formatMoney(result.shortfall) + " over; " +
+                                 (result.settledFromSavings > 0 ? "taken from Main savings"
+                                  : result.carriedForward > 0   ? "carried into the new period"
+                                                                : "nothing was taken from savings"));
         }
 
         tx.commit();
@@ -237,7 +251,39 @@ namespace pesa {
         tx.commit();
         return done;
     }
+    AutoCoverResult Periods::autoCoverIfNeeded(const Date& today) {
+        AutoCoverResult result;
+        if (!settings_.autoCoverEnabled() || !current()) return result;
 
+        detail::Transaction tx(db_);
+        const PeriodSummary s = summary(today);
+        Money remaining = s.earnedRemaining();
+
+        std::vector<EntryId> ids;
+        if (remaining < 0) {
+            // Newest spending first: it is what pushed earned below zero.
+            auto st = db_.prepare("SELECT id, amount FROM entries WHERE funded_from = 0 AND kind != 3 "
+                                  "AND date >= ? AND date <= ? ORDER BY date DESC, id DESC");
+            st.bind(1, s.period.start.toString()).bind(2, today.toString());
+            while (remaining < 0 && st.step()) {
+                ids.push_back(st.integer(0));
+                remaining += st.integer(1);
+                result.total += st.integer(1);
+            }
+        }
+        if (!ids.empty()) {
+            Entries entries(db_);
+            entries.coverFromSavings(ids);
+            result.entries = static_cast<int>(ids.size());
+            const Savings savings(db_);
+            result.savingsAfter = savings.findPot(savings.mainPot())->balance;
+            detail::writeLog(db_, LogKind::Savings, "Auto-cover: earned ran out, so " + std::to_string(result.entries) +
+                                                        (result.entries == 1 ? " entry" : " entries") + " (KES " +
+                                                        formatMoney(result.total) + ") moved to Main savings");
+        }
+        tx.commit();
+        return result;
+    }
     void Periods::delayPayday(const Date &newPayday, const Date &today) {
         if (settings_.incomeMode() != IncomeMode::Regular) {
             throw Error("Your income is irregular, so there is no payday to delay.");

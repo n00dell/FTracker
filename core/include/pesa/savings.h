@@ -21,6 +21,7 @@ namespace pesa {
         AddedToSavings = 2,
         MovedToEarned = 3,
         ExpenseCover = 4, // an entry paid from savings
+        GoalPurchase    = 5,   // a goal bought from savings
     };
 
     // Named "ledgerKindName", not "toString": doctest calls toString() on values it prints,

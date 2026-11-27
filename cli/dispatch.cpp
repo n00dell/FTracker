@@ -55,12 +55,24 @@ namespace cli {
                 "  savings move <amount> [--pot <pot>]    move savings into earned money\n"
                 "  savings cover <entry-id>...            pay those entries from savings\n"
                 "  savings newpot <name> [--locked | --tied]\n\n"
+                "Goals and funds\n"
+                "  goal add <price> <name> [--priority <n>] [--date <d>] [--savings | --earned] [--gift] [--auto]\n"
+                "  goal list [--bought]                   what you still want to buy, in priority order (lower first)\n"
+                "  goal edit <id> [--name <n>] [--amount <n>] [--priority <n>] [--date <d> | --nodate]\n"
+                "                 [--savings | --earned] [--gift | --nogift] [--auto | --noauto]\n"
+                "  goal buy <id> [--how savings|move|earned] [--pot <pot>]\n"
+                "  goal delete <id>   goal due\n"
+                "  fund add <target> <name> [--pot <pot>]   a target you save towards, tracked against a pot\n"
+                "  fund list   fund delete <id>\n\n"
                 "Setup and settings\n"
                 "  setup                                  expected pay and payday (asked on the first run)\n"
                 "  settings                               show them\n"
                 "  settings autopost on|off               let Pesa post your routine entries when it opens\n"
                 "  settings autopay on|off                close the period by itself when the payday arrives\n"
                 "  settings postafter <HH:MM>             today's routine posts only after this time (default 20:00)\n"
+                "  settings autocover on|off              when earned runs out, pay the newest spending from Main savings\n"
+                "  settings shortfall record|savings|carry   earned still below zero at payday: record it, take it from\n"
+                "                                         savings, or carry it into the new period (default: record)\n"
                 "  job                                    run the daily posting now (it also runs whenever Pesa opens)\n\n"
                 "Days and entries  (<date> is today, tomorrow, yesterday or 2026-11-23)\n"
                 "  day [<date>]                           show a day\n"
@@ -93,6 +105,8 @@ namespace cli {
         if (command == "skip") return runSkip(ctx, args);
         if (command == "wipe") return runWipe(ctx, args);
         if (command == "restore") return runRestore(ctx, args);
+        if (command == "goal") return runGoal(ctx, args);
+        if (command == "fund") return runFund(ctx, args);
         if (command == "help" || command == "?" || command == "--help") {
             printUsage(ctx.io);
             return 0;

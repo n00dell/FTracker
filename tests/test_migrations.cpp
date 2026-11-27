@@ -12,7 +12,7 @@ using pesa::Visibility;
 
 namespace {
     // Bump this when you add a migration. It is the only place the number lives in the tests.
-    constexpr int kLatest = 10;
+    constexpr int kLatest = 11;
 
     // Frozen copies of what older Pesa versions created. NEVER change these:
     // they are the "old files" the upgrade code has to cope with.

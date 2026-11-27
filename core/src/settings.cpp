@@ -16,6 +16,8 @@ namespace pesa {
         constexpr const char *kAutoPost = "auto_post_enabled";
         constexpr const char *kPostAfter = "post_after";
         constexpr const char *kAutoPay = "auto_pay_enabled";
+        constexpr const char* kAutoCover  = "auto_cover_enabled";
+        constexpr const char* kShortfall  = "shortfall_policy";
         constexpr TimeOfDay kDefaultPostAfter{20, 0};
     } // namespace
 
@@ -130,4 +132,20 @@ namespace pesa {
 
     bool Settings::autoPayEnabled() const { return get(kAutoPay) != "0"; } // missing = on
     void Settings::setAutoPayEnabled(bool enabled) { set(kAutoPay, enabled ? "1" : "0"); }
+    // ---------------- when earned runs out ----------------
+
+    bool Settings::autoCoverEnabled() const { return get(kAutoCover) == "1"; }   // missing = off
+    void Settings::setAutoCoverEnabled(bool enabled) { set(kAutoCover, enabled ? "1" : "0"); }
+
+    ShortfallPolicy Settings::shortfallPolicy() const {
+        const auto stored = get(kShortfall);
+        if (stored == "savings") return ShortfallPolicy::TakeFromSavings;
+        if (stored == "carry")   return ShortfallPolicy::CarryForward;
+        return ShortfallPolicy::Record;
+    }
+
+    void Settings::setShortfallPolicy(ShortfallPolicy policy) {
+        set(kShortfall, policy == ShortfallPolicy::TakeFromSavings ? "savings"
+                      : policy == ShortfallPolicy::CarryForward    ? "carry" : "record");
+    }
 } // namespace pesa

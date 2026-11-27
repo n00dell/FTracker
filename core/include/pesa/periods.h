@@ -58,10 +58,16 @@ namespace pesa {
         Money remainder = 0; // income minus earned spending (can be negative)
         Money movedToSavings = 0; // the remainder when it is above 0
         Money shortfall = 0; // how far below 0 it ended (nothing is taken from savings)
+        Money               settledFromSavings = 0;   // the shortfall, when it was taken from Main savings
+        Money               carriedForward = 0;       // the shortfall, when it became the new period's first expense
         std::string leftoverPot; // the pot's name when something was moved
         std::optional<Date> nextPayday;
     };
-
+    struct AutoCoverResult {
+        int   entries = 0;        // entries switched to Main savings
+        Money total = 0;
+        Money savingsAfter = 0;   // Main savings afterwards: below 0 is a warning
+    };
     // Created and owned by Pesa. Use it through app.periods().
     class Periods {
     public:
@@ -92,6 +98,10 @@ namespace pesa {
         // with auto-pay on). Each is closed on its expected payday, even if you open the
         // app days later. Nothing happens otherwise.
         std::vector<PaidResult> autoPayIfDue(const Date &today);
+
+        // When auto-cover is on and earned is below zero, pays the NEWEST spending of this period
+        // from Main savings until earned is back at 0 or above. Does nothing otherwise.
+        AutoCoverResult autoCoverIfNeeded(const Date& today);
 
         // "Salary delayed": moves the expected payday. Must be after today.
         void delayPayday(const Date &newPayday, const Date &today);

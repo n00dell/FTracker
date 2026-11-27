@@ -60,5 +60,10 @@ namespace cli {
 
     int runRestore(Context &ctx, const Args &args);
 
+    int runGoal(Context& ctx, const Args& args);
+    int runFund(Context& ctx, const Args& args);
+    // After a change that spends money: if auto-cover is on and earned went below zero, pays from savings and says so.
+    void autoCoverAfterChange(Context& ctx);
+
     void runStartup(Context &ctx, bool interactive);
 } // namespace cli

@@ -32,6 +32,7 @@ namespace pesa {
             case LedgerKind::AddedToSavings: return "Added to savings";
             case LedgerKind::MovedToEarned: return "Moved to earned";
             case LedgerKind::ExpenseCover: return "Expense cover";
+            case LedgerKind::GoalPurchase:    return "Goal purchase";
         }
         return "";
     }

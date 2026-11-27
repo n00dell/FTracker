@@ -19,12 +19,13 @@ namespace pesa {
         Log log;
         Skips skips;
         RestorePoints restorePoints;
+        Goals goals;
         DailyJob dailyJob;
 
         explicit Impl(const std::filesystem::path &file)
             : db(file), categories(db), items(db), entries(db), days(db), rules(db),
               settings(db), dailyJob(db, settings), savings(db), periods(db, settings), log(db), skips(db),
-              restorePoints(db) {
+              restorePoints(db), goals(db, settings) {
         }
     };
 
@@ -56,6 +57,8 @@ namespace pesa {
     const Skips &Pesa::skips() const { return impl_->skips; }
     RestorePoints &Pesa::restorePoints() { return impl_->restorePoints; }
     const RestorePoints &Pesa::restorePoints() const { return impl_->restorePoints; }
+    Goals&            Pesa::goals()            { return impl_->goals; }
+    const Goals&      Pesa::goals() const      { return impl_->goals; }
     DailyJob &Pesa::dailyJob() { return impl_->dailyJob; }
     const DailyJob &Pesa::dailyJob() const { return impl_->dailyJob; }
 

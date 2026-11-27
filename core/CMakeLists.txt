@@ -47,6 +47,8 @@ add_library(pesa_core STATIC
         src/skips.cpp
         include/pesa/restore_points.h
         src/restore_points.cpp
+        include/pesa/goals.h
+        src/goals.cpp
 )
 
 # PUBLIC: anything linking pesa_core can #include <pesa/pesa.h>

@@ -75,6 +75,7 @@ namespace cli {
             const auto id = entries.addFromItem(date, itemId, amount, fund);
             io.out() << "Added entry #" << id << ".\n\n";
             printDay(io, ctx.app.days().view(date));
+            autoCoverAfterChange(ctx);
             return 0;
         }
 
@@ -109,6 +110,7 @@ namespace cli {
             const auto id = entries.addOneOff(date, name, amount, fund);
             io.out() << "Added one-off #" << id << " (for this day only; the catalog is unchanged).\n\n";
             printDay(io, ctx.app.days().view(date));
+            autoCoverAfterChange(ctx);
             return 0;
         }
 
@@ -142,6 +144,7 @@ namespace cli {
                 io.out() << "Deleted.\n\n";
             }
             printDay(io, ctx.app.days().view(before.date));
+            autoCoverAfterChange(ctx);
             return 0;
         }
         printUsage(io);

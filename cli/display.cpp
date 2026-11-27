@@ -2,7 +2,7 @@
 #include <cli/display.h>
 #include <iomanip>
 #include <cli/text.h>
-
+#include <algorithm>
 #include <array>
 #include <ostream>
 
@@ -304,20 +304,27 @@ namespace cli {
                     << " late. 'paid' records it; 'delay' moves the date.\n";
         }
         if (s.earnedRemaining() < 0) {
-            out <<
-                    "  Earned is below zero. That is allowed: add income ('income add') or cover entries ('savings cover').\n";
+            out << "  Earned is below zero. That is allowed. Your options: 'income add' (money arrived),\n"
+                   "  'savings cover <entry id>' (pay entries from savings), 'settings autocover on' (do that\n"
+                   "  automatically), or leave it: 'settings shortfall' decides what happens at payday.\n";
         }
     }
 
-    void printPaid(std::ostream &out, const pesa::PaidResult &r) {
+    void printPaid(std::ostream& out, const pesa::PaidResult& r) {
         out << "Paid on " << r.paidOn.toString() << ": closed the period that started "
-                << r.periodStart.toString() << ".\n";
+            << r.periodStart.toString() << ".\n";
         out << "  Pay added to the new period: " << formatMoney(r.pay) << "\n";
         if (r.movedToSavings > 0) {
             out << "  Leftover " << formatMoney(r.movedToSavings) << " moved to " << r.leftoverPot << ".\n";
+        } else if (r.settledFromSavings > 0) {
+            out << "  Earned ran " << formatMoney(r.shortfall) << " over; "
+                << formatMoney(r.settledFromSavings) << " was taken from Main savings.\n";
+        } else if (r.carriedForward > 0) {
+            out << "  Earned ran " << formatMoney(r.shortfall) << " over; it is the first expense of the new period"
+                << " (\"Overspent last period\").\n";
         } else if (r.shortfall > 0) {
             out << "  Earned ran " << formatMoney(r.shortfall)
-                    << " over. Nothing was taken from savings; use 'savings cover' if you want that.\n";
+                << " over. Nothing was taken from savings ('settings shortfall' changes that).\n";
         } else {
             out << "  Nothing was left over.\n";
         }
@@ -395,4 +402,47 @@ namespace cli {
         }
         table.print(io);
     }
+    void printGoals(Console& io, const std::vector<pesa::GoalStatus>& goals) {
+    if (goals.empty()) { io.out() << "  No goals to buy. Try: goal add\n"; return; }
+    Table table({{"ID", Table::Align::Right}, {"Priority", Table::Align::Right}, {"Goal"},
+                 {"Price", Table::Align::Right}, {"Date"}, {"From"}, {"Status"}});
+    for (const pesa::GoalStatus& s : goals) {
+        const pesa::Goal& g = s.goal;
+        std::string status = g.donated ? std::string("gift, nothing deducted")
+                           : s.covered ? std::string("covered")
+                                       : "short by " + formatMoney(s.shortBy);
+        if (g.autoBuy) status += ", buys itself on its date";
+        table.addRow({std::to_string(g.id), std::to_string(g.priority), g.name, formatMoney(g.amount),
+                      g.dueDate ? g.dueDate->toString() : "-",
+                      g.fundedFrom == pesa::FundedFrom::Earned ? "earned" : "savings", status},
+                     s.covered ? Style::Normal : Style::Yellow);
+    }
+    table.print(io);
+    io.out() << "  Goals are counted in priority order against the money they are paid from.\n";
+}
+
+void printBoughtGoals(Console& io, const std::vector<pesa::Goal>& goals) {
+    if (goals.empty()) { io.out() << "  Nothing bought yet.\n"; return; }
+    Table table({{"Bought"}, {"Goal"}, {"Price", Table::Align::Right}, {"How"}});
+    for (const pesa::Goal& g : goals) {
+        const char* how = g.donated ? "gift"
+                        : !g.boughtHow ? "-"
+                        : *g.boughtHow == pesa::BuyMethod::FromSavings  ? "savings"
+                        : *g.boughtHow == pesa::BuyMethod::MoveToEarned ? "moved to earned" : "earned";
+        table.addRow({g.boughtOn->toString(), g.name, formatMoney(g.amount), how});
+    }
+    table.print(io);
+}
+
+void printFunds(Console& io, const std::vector<pesa::Fund>& funds) {
+    if (funds.empty()) { io.out() << "  No funds. Try: fund add 200,000 Emergency fund --pot <pot>\n"; return; }
+    Table table({{"ID", Table::Align::Right}, {"Fund"}, {"Pot"}, {"Saved", Table::Align::Right},
+                 {"Target", Table::Align::Right}, {"Done", Table::Align::Right}});
+    for (const pesa::Fund& f : funds) {
+        const pesa::Money percent = std::clamp<pesa::Money>(f.balance * 100 / f.target, 0, 100);
+        table.addRow({std::to_string(f.id), f.name, f.potName, formatMoney(f.balance), formatMoney(f.target),
+                      std::to_string(percent) + "%"});
+    }
+    table.print(io);
+}
 } // namespace cli

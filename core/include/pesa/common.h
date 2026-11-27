@@ -27,6 +27,8 @@ namespace pesa {
     using LogId = std::int64_t;
     using SkipId = std::int64_t;
     using RestorePointId = std::int64_t;
+    using GoalId = std::int64_t;
+    using FundId = std::int64_t;
     // Declared here (not defined) so feature classes can hold a reference to the
     // database without this public header ever including SQLite.
     namespace detail {

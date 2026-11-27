@@ -34,7 +34,12 @@ namespace pesa {
         std::optional<Date> payday; // Regular: required. Irregular: ignored.
         Money startingBalance = 0; // what you have right now (becomes earned money)
     };
-
+    // What happens when you press "I got paid" and earned ended the period below zero.
+    enum class ShortfallPolicy : int {
+        Record          = 0,   // only noted on the closed period
+        TakeFromSavings = 1,   // taken from Main savings
+        CarryForward    = 2,   // becomes the first expense of the new period
+    };
     // Small app-wide choices, saved in the file. Anything never set has a sensible default.
     // Created and owned by Pesa. Use it through app.settings().
     class Settings {
@@ -65,6 +70,14 @@ namespace pesa {
         // income only). Off: only the "I got paid" button does.
         [[nodiscard]] bool autoPayEnabled() const; // default: on
         void setAutoPayEnabled(bool enabled);
+        // While earned is below zero: when on, Pesa pays the newest spending from Main savings
+        // until earned is back at 0 or above. Nothing is blocked either way.
+        [[nodiscard]] bool autoCoverEnabled() const;   // default: off
+        void               setAutoCoverEnabled(bool enabled);
+
+        [[nodiscard]] ShortfallPolicy shortfallPolicy() const;   // default: Record
+        void                          setShortfallPolicy(ShortfallPolicy policy);
+
 
     private:
         [[nodiscard]] std::optional<std::string> get(std::string_view key) const;
