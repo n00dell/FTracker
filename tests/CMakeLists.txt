@@ -24,6 +24,8 @@ add_executable(pesa_tests
         test_log.cpp
         test_corrections.cpp
         test_goals.cpp
+        test_income.cpp
+        test_expiry.cpp
 )
 target_link_libraries(pesa_tests PRIVATE pesa_core pesa_cli_lib doctest::doctest)
 include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)

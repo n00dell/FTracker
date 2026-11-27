@@ -10,6 +10,12 @@ namespace cli {
 
 namespace {
 
+std::string joined(const std::vector<std::string>& names) {
+    std::string out;
+    for (const std::string& name : names) out += (out.empty() ? "" : ", ") + name;
+    return out;
+}
+
 // Says what the job did. Quiet when there was nothing to say, unless `verbose`.
 void report(Context& ctx, const pesa::DailyJobResult& r, bool verbose, std::ostream& out) {
     if (!r.problem.empty()) {
@@ -63,6 +69,16 @@ void reportGoals(Context& ctx, const pesa::GoalsDue& due, std::ostream& out) {
     for (const auto& problem : due.problems) ctx.io.err() << problem << "\n";
 }
 
+// A fund whose date passed is not changed behind your back: you are told, and you decide.
+void reportFunds(Context& ctx, const pesa::Date& today, std::ostream& out) {
+    for (const auto& fund : ctx.app.goals().funds()) {
+        if (!pesa::fundProgress(fund, today).overdue) continue;
+        out << "Fund " << fund.name << " missed its date (" << fund.targetDate->toString() << "): "
+            << formatMoney(fund.balance) << " of " << formatMoney(fund.target) << ". 'fund date " << fund.id
+            << " <new date>' moves it, or 'fund delete " << fund.id << "' closes it.\n";
+    }
+}
+
 } // namespace
 
 void autoCoverAfterChange(Context& ctx) {
@@ -88,17 +104,24 @@ void runStartup(Context& ctx, bool interactive) {
         const bool ready = ctx.app.settings().setupDone();
         if (ready) ctx.app.periods().ensureOpen(today);   // older files have no period yet
 
-        // 1. Post the days that are due. 2. Only then close periods whose payday passed, so the old
-        // period's entries exist before its leftover is counted. 3. Then look after the new period.
+        // 1. Post the days that are due (the job respects end dates itself). 2. Only then close periods whose
+        // payday passed, so the old period's entries exist before its leftover is counted. 3. Then the rest.
         report(ctx, ctx.app.dailyJob().run(today, pesa::TimeOfDay::now()), false, out);
         for (const auto& paid : ctx.app.periods().autoPayIfDue(today)) {
             out << "Payday arrived.\n";
             printPaid(out, paid);
         }
+
+        auto paused = ctx.app.categories().pauseExpired(today);
+        for (auto& name : ctx.app.items().pauseExpired(today)) paused.push_back(std::move(name));
+        if (!paused.empty()) out << "Paused, because their last day passed: " << joined(paused) << ".\n";
+
         if (ready) {
             reportAutoCover(ctx.app.periods().autoCoverIfNeeded(today), out);
             warnIfBelowZero(ctx, today, out);
             reportGoals(ctx, ctx.app.goals().processDue(today), out);
+            reportFunds(ctx, today, out);
+            answerDueIncome(ctx, interactive);   // the "did it arrive?" questions (or a reminder line in a script)
         }
     } catch (const pesa::Error& e) {
         io.err() << "Error: " << e.what() << "\n";

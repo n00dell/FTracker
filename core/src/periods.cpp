@@ -3,7 +3,7 @@
 //
 // FTracker/core/src/periods.cpp
 #include <pesa/periods.h>
-
+#include <pesa/income.h>
 #include <pesa/entries.h>
 #include "log_sql.h"
 #include "db.h"
@@ -158,7 +158,9 @@ namespace pesa {
                         ". Pick a later date for getting paid.");
         }
 
-        const auto pay = options.amount ? options.amount : settings_.expectedPay();
+        Income payPlan(db_, settings_);
+        std::optional<Money> pay = options.amount;
+        if (!pay && settings_.incomeMode() == IncomeMode::Regular) pay = payPlan.payOn(options.paidOn);   // the pay of THAT day
         if (!pay) throw Error("Say how much you were paid.");
         detail::requirePositive(*pay);
 
@@ -207,7 +209,10 @@ namespace pesa {
         open.bind(1, options.paidOn.toString());
         bindOptionalDate(open, 2, nextPayday);
         open.run();
-        detail::insertIncome(db_, db_.lastInsertId(), options.paidOn, "Pay", *pay);
+        const PeriodId newPeriod = db_.lastInsertId();   // straight after the INSERT
+        detail::insertIncome(db_, newPeriod, options.paidOn, "Pay", *pay);
+        result.withPay = payPlan.postWithPay(options.paidOn, newPeriod);   // "with my pay" income comes along
+        
         // 5. "Carry forward": the new period starts owing what the old one overspent.
         if (remainder < 0 && settings_.shortfallPolicy() == ShortfallPolicy::CarryForward) {
             Entries entries(db_);

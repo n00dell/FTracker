@@ -287,7 +287,25 @@ namespace pesa {
         if (db_.changes() == 0) throw Error("That item is not part of this rule.");
         tx.commit();
     }
+    void Rules::addItems(RuleId id, std::span<const ItemId> items) {
+        detail::Transaction tx(db_);
+        requireLiveRule(db_, id);
+        for (const ItemId item : items) {
+            requireLiveItem(db_, item);
+            link(db_, id, item);
+        }
+        tx.commit();
+    }
 
+    void Rules::removeItems(RuleId id, std::span<const ItemId> items) {
+        detail::Transaction tx(db_);
+        requireLiveRule(db_, id);
+        for (const ItemId item : items) {
+            db_.prepare("DELETE FROM rule_items WHERE rule_id = ? AND item_id = ?").bind(1, id).bind(2, item).run();
+            if (db_.changes() == 0) throw Error("Item " + std::to_string(item) + " is not part of this rule.");
+        }
+        tx.commit();
+    }
     void Rules::remove(RuleId id) {
         db_.prepare("UPDATE rules SET is_deleted = 1 WHERE id = ? AND is_deleted = 0").bind(1, id).run();
         if (db_.changes() == 0) throw Error(noRule(id));

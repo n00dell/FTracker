@@ -19,6 +19,8 @@ add_library(pesa_cli_lib STATIC
         log_cmd.cpp
         skip_cmd.cpp
         goal_cmd.cpp
+        menu.cpp
+        income_cmd.cpp
 )
 target_include_directories(pesa_cli_lib PUBLIC include)
 target_link_libraries(pesa_cli_lib PUBLIC pesa_core)

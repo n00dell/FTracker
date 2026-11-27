@@ -31,6 +31,9 @@ namespace pesa {
         bool                   autoBuy = false;              // buys itself on its date (needs a date)
         std::optional<Date>    boughtOn;                     // empty = still to buy
         std::optional<BuyMethod> boughtHow;                  // empty for a gift
+        bool                   isEstimate = false;           // the amount is a guess
+        std::optional<Money>   paidAmount;                   // the real price, once bought
+
 
         [[nodiscard]] bool isBought() const { return boughtOn.has_value(); }
     };
@@ -43,6 +46,7 @@ namespace pesa {
         FundedFrom          fundedFrom = FundedFrom::Earned;
         bool                donated = false;
         bool                autoBuy = false;
+        bool                isEstimate = false;
     };
 
     // Only the fields that are set change. To remove the date, set `clearDate`.
@@ -55,6 +59,7 @@ namespace pesa {
         std::optional<FundedFrom>  fundedFrom;
         std::optional<bool>        donated;
         std::optional<bool>        autoBuy;
+        std::optional<bool>        isEstimate;
     };
 
     // How an open goal stands against the money it is funded from. Goals are counted in
@@ -82,8 +87,16 @@ namespace pesa {
         PotId       potId = 0;
         std::string potName;
         Money       balance = 0;
+        std::optional<Date> targetDate;   // when you want to have saved it by
     };
-
+    // Where a fund stands against its date. Overdue means the date has passed and the target is not reached.
+    struct FundProgress {
+        bool  reached = false;          // the pot holds the target
+        bool  overdue = false;
+        int   daysLeft = 0;             // negative once overdue
+        Money neededPerMonth = 0;       // to get there by the date (0 when reached, overdue, or with no date)
+    };
+    [[nodiscard]] FundProgress fundProgress(const Fund& fund, const Date& today);
     // Created and owned by Pesa. Use it through app.goals().
     class Goals {
     public:
@@ -101,14 +114,16 @@ namespace pesa {
 
         // Marks a goal bought and moves the money, in one step. A gift moves nothing.
         // `pot` is the pot a savings purchase comes out of (Main savings when empty).
-        void buy(GoalId id, BuyMethod method, const Date& date, std::optional<PotId> pot = std::nullopt);
+        void buy(GoalId id, BuyMethod method, const Date& date, std::optional<PotId> pot = std::nullopt,
+         std::optional<Money> actualAmount = std::nullopt);   // empty = the goal's own amount
 
         // On launch: goals whose date has come. Those set to buy themselves are bought;
         // the rest are listed so the person can decide.
         GoalsDue processDue(const Date& today);
 
         // ---- fund goals ----
-        FundId addFund(std::string_view name, Money target, PotId pot);
+        FundId addFund(std::string_view name, Money target, PotId pot, std::optional<Date> targetDate = std::nullopt);
+        void   setFundDate(FundId id, std::optional<Date> targetDate);   // empty removes the date
         void   removeFund(FundId id);
         [[nodiscard]] std::vector<Fund> funds() const;
 

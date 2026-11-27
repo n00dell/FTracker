@@ -50,6 +50,8 @@ namespace cli {
                                                                {
                                                                    {"Rename", "rename"},
                                                                    {"Add an item to it", "add-item"},
+                                                                   {"Short-lived: set an end date", "until"},
+                                                                   {"Keep forever", "forever"},
                                                                    {pauseWord, pauseSub}, {"Delete", "delete"}
                                                                });
                 if (sub == "add-item") runItem(ctx, {"item", "add", id});
@@ -58,6 +60,8 @@ namespace cli {
                 const std::string sub = chooseSubcommand(io, "This item",
                                                          {
                                                              {"Rename", "rename"}, {"Change the amount", "amount"},
+                                                             {"Short-lived: set an end date", "until"},
+                                                             {"Keep forever", "forever"},
                                                              {pauseWord, pauseSub}, {"Delete", "delete"}
                                                          });
                 runItem(ctx, {"item", sub, id});

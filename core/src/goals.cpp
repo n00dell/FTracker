@@ -18,9 +18,9 @@ namespace pesa {
 
 namespace {
 
-constexpr const char* kSelectGoal =
-    "SELECT id, name, amount, priority, due_date, funded_from, donated, auto_buy, bought_on, bought_how "
-    "FROM goals ";
+    constexpr const char* kSelectGoal =
+        "SELECT id, name, amount, priority, due_date, funded_from, donated, auto_buy, bought_on, bought_how, "
+        "is_estimate, paid_amount FROM goals ";
 
 std::string noGoal(GoalId id) { return "No goal with id " + std::to_string(id) + "."; }
 
@@ -34,6 +34,8 @@ Goal readGoal(const detail::Statement& st) {
     g.fundedFrom = static_cast<FundedFrom>(st.integer(5));
     g.donated    = st.integer(6) != 0;
     g.autoBuy    = st.integer(7) != 0;
+    g.isEstimate = st.integer(10) != 0;
+    if (!st.isNull(11)) g.paidAmount = st.integer(11);
     if (!st.isNull(8)) g.boughtOn = Date::parse(st.text(8));
     if (!st.isNull(9)) g.boughtHow = static_cast<BuyMethod>(st.integer(9));
     return g;
@@ -65,19 +67,27 @@ GoalId Goals::add(const NewGoal& goal) {
     g.fundedFrom = goal.fundedFrom;
     g.donated    = goal.donated;
     g.autoBuy    = goal.autoBuy;
+    g.isEstimate = goal.isEstimate;
     validate(g);
 
     detail::Transaction tx(db_);
     if (nameTaken(db_, g.name, 0)) throw Error("A goal named '" + g.name + "' already exists.");
 
-    auto insert = db_.prepare("INSERT INTO goals(name, amount, priority, due_date, funded_from, donated, auto_buy) "
-                              "VALUES (?, ?, ?, ?, ?, ?, ?)");
+    auto insert = db_.prepare("INSERT INTO goals(name, amount, priority, due_date, funded_from, donated, auto_buy, is_estimate) "
+                              "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     insert.bind(1, g.name)
           .bind(2, g.amount)
           .bind(3, static_cast<std::int64_t>(g.priority))
           .bind(5, static_cast<std::int64_t>(g.fundedFrom))
           .bind(6, g.donated ? 1 : 0)
-          .bind(7, g.autoBuy ? 1 : 0);
+          .bind(7, g.autoBuy ? 1 : 0)
+    .bind(8, g.isEstimate ? 1 : 0);insert.bind(1, g.name)
+    .bind(2, g.amount)
+    .bind(3, static_cast<std::int64_t>(g.priority))
+    .bind(5, static_cast<std::int64_t>(g.fundedFrom))
+    .bind(6, g.donated ? 1 : 0)
+    .bind(7, g.autoBuy ? 1 : 0)
+    .bind(8, g.isEstimate ? 1 : 0);
     if (g.dueDate) insert.bind(4, g.dueDate->toString()); else insert.bindNull(4);
     insert.run();
     const GoalId id = db_.lastInsertId();
@@ -99,18 +109,20 @@ void Goals::edit(GoalId id, const GoalEdit& changes) {
     if (changes.fundedFrom) goal->fundedFrom = *changes.fundedFrom;
     if (changes.donated)    goal->donated = *changes.donated;
     if (changes.autoBuy)    goal->autoBuy = *changes.autoBuy;
+    if (changes.isEstimate) goal->isEstimate = *changes.isEstimate;
     validate(*goal);
     if (nameTaken(db_, goal->name, id)) throw Error("A goal named '" + goal->name + "' already exists.");
 
     auto update = db_.prepare("UPDATE goals SET name = ?, amount = ?, priority = ?, due_date = ?, "
-                              "funded_from = ?, donated = ?, auto_buy = ? WHERE id = ?");
+                              "funded_from = ?, donated = ?, auto_buy = ?, is_estimate = ? WHERE id = ?");
     update.bind(1, goal->name)
           .bind(2, goal->amount)
           .bind(3, static_cast<std::int64_t>(goal->priority))
           .bind(5, static_cast<std::int64_t>(goal->fundedFrom))
           .bind(6, goal->donated ? 1 : 0)
           .bind(7, goal->autoBuy ? 1 : 0)
-          .bind(8, id);
+          .bind(8, goal->isEstimate ? 1 : 0)
+          .bind(9, id);
     if (goal->dueDate) update.bind(4, goal->dueDate->toString()); else update.bindNull(4);
     update.run();
     tx.commit();
@@ -166,45 +178,52 @@ std::vector<GoalStatus> Goals::statuses(const Date& today) const {
     return out;
 }
 
-void Goals::buy(GoalId id, BuyMethod method, const Date& date, std::optional<PotId> pot) {
-    detail::Transaction tx(db_);   // the money and the "bought" tick move together, or not at all
+void Goals::buy(GoalId id, BuyMethod method, const Date& date, std::optional<PotId> pot,
+                std::optional<Money> actualAmount) {
+    if (actualAmount) detail::requirePositive(*actualAmount);
+
+    detail::Transaction tx(db_);
     const auto goal = find(id);
     if (!goal) throw Error(noGoal(id));
     if (goal->isBought()) throw Error("'" + goal->name + "' is already marked as bought.");
+
+    // What actually leaves your money: the real price if you gave one, else the goal's amount.
+    const Money price = actualAmount.value_or(goal->amount);
 
     Savings savings(db_);
     Entries entries(db_);
     const PotId source = pot.value_or(savings.mainPot());
 
     std::optional<BuyMethod> how;
-    if (!goal->donated) {              // a gift deducts nothing
+    if (!goal->donated) {
         how = method;
         switch (method) {
             case BuyMethod::FromSavings: {
                 const std::string potName = detail::requirePot(db_, source);
-                detail::insertLedger(db_, date, source, -goal->amount, LedgerKind::GoalPurchase, goal->name);
+                detail::insertLedger(db_, date, source, -price, LedgerKind::GoalPurchase, goal->name);
                 detail::writeLog(db_, LogKind::Savings, "Bought " + goal->name + ": KES " +
-                                                            formatMoney(goal->amount) + " paid from " + potName);
+                                                            formatMoney(price) + " paid from " + potName);
                 break;
             }
             case BuyMethod::MoveToEarned:
-                savings.moveToEarned(date, source, goal->amount);        // out of the pot, into this period's income
-                entries.addOneOff(date, goal->name, goal->amount);        // then spent from earned
+                savings.moveToEarned(date, source, price);
+                entries.addOneOff(date, goal->name, price);
                 break;
             case BuyMethod::FromEarned:
-                entries.addOneOff(date, goal->name, goal->amount);
+                entries.addOneOff(date, goal->name, price);
                 break;
         }
     }
 
-    auto mark = db_.prepare("UPDATE goals SET bought_on = ?, bought_how = ? WHERE id = ?");
-    mark.bind(1, date.toString()).bind(3, id);
+    auto mark = db_.prepare("UPDATE goals SET bought_on = ?, bought_how = ?, paid_amount = ? WHERE id = ?");
+    mark.bind(1, date.toString()).bind(4, id);
     if (how) mark.bind(2, static_cast<std::int64_t>(*how)); else mark.bindNull(2);
+    if (how) mark.bind(3, price);                 else mark.bindNull(3);   // a gift paid nothing
     mark.run();
 
     detail::writeLog(db_, LogKind::Manual,
                      "Bought goal " + goal->name + (goal->donated ? " (a gift: nothing deducted)"
-                                                                  : ": KES " + formatMoney(goal->amount)));
+                                                                  : ": KES " + formatMoney(price)));
     tx.commit();
 }
 
@@ -218,7 +237,7 @@ GoalsDue Goals::processDue(const Date& today) {
     const Periods periods(db_, settings_);
     const auto period = periods.current();
     for (Goal& goal : dueGoals) {
-        if (!goal.autoBuy) {
+        if (!goal.autoBuy || goal.isEstimate) {      // an estimate needs its real price from you
             out.waiting.push_back(std::move(goal));
             continue;
         }
@@ -239,7 +258,7 @@ GoalsDue Goals::processDue(const Date& today) {
 
 // ---------------- fund goals ----------------
 
-FundId Goals::addFund(std::string_view rawName, Money target, PotId pot) {
+FundId Goals::addFund(std::string_view rawName, Money target, PotId pot, std::optional<Date> targetDate) {
     const std::string name = detail::cleanName(rawName, "A fund needs a name.");
     detail::requirePositive(target);
 
@@ -250,11 +269,50 @@ FundId Goals::addFund(std::string_view rawName, Money target, PotId pot) {
         st.bind(1, name);
         if (st.step()) throw Error("A fund named '" + name + "' already exists.");
     }
-    db_.prepare("INSERT INTO funds(name, target, pot_id) VALUES (?, ?, ?)")
-        .bind(1, name).bind(2, target).bind(3, pot).run();
+    auto insert = db_.prepare("INSERT INTO funds(name, target, pot_id, target_date) VALUES (?, ?, ?, ?)");
+    insert.bind(1, name).bind(2, target).bind(3, pot);
+    if (targetDate) insert.bind(4, targetDate->toString()); else insert.bindNull(4);
+    insert.run();
     const FundId id = db_.lastInsertId();
     tx.commit();
     return id;
+}
+
+void Goals::setFundDate(FundId id, std::optional<Date> targetDate) {
+    auto st = db_.prepare("UPDATE funds SET target_date = ? WHERE id = ? AND is_deleted = 0");
+    if (targetDate) st.bind(1, targetDate->toString()); else st.bindNull(1);
+    st.bind(2, id);
+    st.run();
+    if (db_.changes() == 0) throw Error("No fund with id " + std::to_string(id) + ".");
+}
+
+std::vector<Fund> Goals::funds() const {
+    auto st = db_.prepare(
+        "SELECT f.id, f.name, f.target, f.pot_id, p.name, "
+        "COALESCE((SELECT SUM(l.amount) FROM ledger l WHERE l.pot_id = f.pot_id), 0), f.target_date "
+        "FROM funds f JOIN pots p ON p.id = f.pot_id WHERE f.is_deleted = 0 ORDER BY f.id");
+    std::vector<Fund> out;
+    while (st.step()) {
+        Fund fund{st.integer(0), st.text(1), st.integer(2), st.integer(3), st.text(4), st.integer(5)};
+        if (!st.isNull(6)) fund.targetDate = Date::parse(st.text(6));
+        out.push_back(std::move(fund));
+    }
+    return out;
+}
+
+FundProgress fundProgress(const Fund& fund, const Date& today) {
+    FundProgress p;
+    p.reached = fund.balance >= fund.target;
+    if (!fund.targetDate) return p;
+
+    p.daysLeft = today.daysUntil(*fund.targetDate);
+    p.overdue = !p.reached && p.daysLeft < 0;
+    if (!p.reached && p.daysLeft >= 0) {
+        const int months = std::max(1, (p.daysLeft + 15) / 30);   // the nearest whole number of months, at least 1
+        const Money remaining = fund.target - fund.balance;
+        p.neededPerMonth = (remaining + months - 1) / months;      // rounded up
+    }
+    return p;
 }
 
 void Goals::removeFund(FundId id) {
@@ -262,16 +320,5 @@ void Goals::removeFund(FundId id) {
     if (db_.changes() == 0) throw Error("No fund with id " + std::to_string(id) + ".");
 }
 
-std::vector<Fund> Goals::funds() const {
-    auto st = db_.prepare(
-        "SELECT f.id, f.name, f.target, f.pot_id, p.name, "
-        "COALESCE((SELECT SUM(l.amount) FROM ledger l WHERE l.pot_id = f.pot_id), 0) "
-        "FROM funds f JOIN pots p ON p.id = f.pot_id WHERE f.is_deleted = 0 ORDER BY f.id");
-    std::vector<Fund> out;
-    while (st.step()) {
-        out.push_back(Fund{st.integer(0), st.text(1), st.integer(2), st.integer(3), st.text(4), st.integer(5)});
-    }
-    return out;
-}
 
 } // namespace pesa

@@ -4,7 +4,7 @@
 #include <pesa/common.h>
 #include <pesa/corrections.h>
 #include <pesa/date.h>
-
+#include <span>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -102,7 +102,9 @@ namespace pesa {
         void addItem(RuleId id, ItemId item);
 
         void removeItem(RuleId id, ItemId item);
-
+        // Several items in one step: all of them, or none (a bad id changes nothing).
+        void   addItems(RuleId id, std::span<const ItemId> items);
+        void   removeItems(RuleId id, std::span<const ItemId> items);
         void remove(RuleId id); // soft delete: hides it, keeps the row
         void restore(RuleId id); // undo a delete (fails if the name is taken again)
 

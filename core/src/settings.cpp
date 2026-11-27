@@ -105,6 +105,10 @@ namespace pesa {
     }
 
     std::optional<Money> Settings::expectedPay() const {
+        {   // The newest row of the pay history, when there is one.
+            auto st = db_.prepare("SELECT amount FROM pay_history ORDER BY from_date DESC LIMIT 1");
+            if (st.step()) return st.integer(0);
+        }
         const auto text = get(kPay);
         if (!text) return std::nullopt;
         Money value = 0;

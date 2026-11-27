@@ -5,6 +5,8 @@
 
 #include <sstream>
 
+#include "cli/display.h"
+
 namespace {
     // A pretend terminal: `input` is what the person types, output is collected.
     struct Session {
@@ -483,4 +485,121 @@ TEST_CASE("auto-cover and the payday policy are settings, and the warning lists 
     CHECK(s.run("settings shortfall carry") == 0);
     CHECK(s.app.settings().shortfallPolicy() == pesa::ShortfallPolicy::CarryForward);
     CHECK(s.run("settings shortfall bogus") == 1);
+}
+
+TEST_CASE("q leaves, < goes back one question, and the earlier answer is the default") {
+    Session back("2026-11-23\nWrong\n<\nRight\n500\n1\n");
+    // date, name, amount: back to the name, new name, amount, earned
+    CHECK(back.run("entry oneoff") == 0);
+    const auto day = back.app.days().view(kDay);
+    REQUIRE(day.entries.size() == 1);
+    CHECK(day.entries[0].name == "Right");
+    CHECK(day.entries[0].amount == 500);
+
+    Session quit("2026-11-23\nq\n"); // q at the second question
+    CHECK(quit.run("entry oneoff") == 1);
+    CHECK(contains(quit.output(), "Cancelled."));
+    CHECK(quit.app.days().view(kDay).entries.empty());
+
+    Session first("<\n"); // nothing before the first question: leave
+    CHECK(first.run("entry oneoff") == 1);
+}
+
+TEST_CASE("the menu runs areas, q inside returns to it, and q at the menu leaves") {
+    Session s("1\nq\n"); // "See today", then q at the main menu
+    CHECK(s.run("menu") == 0);
+    CHECK(contains(s.output(), "Main menu"));
+    CHECK(contains(s.output(), "No entries."));
+
+    Session inside("2\n2\n\nq\nq\n");
+    // Entries > Add a one-off > Enter (today) > q at the name question (back to menu) > q (leave)                            // Entries > Add a one-off > q (back to menu) > q (leave)
+    CHECK(inside.run("menu") == 0);
+    CHECK(contains(inside.output(), "What was it for"));
+}
+
+TEST_CASE("a new savings pot asks whether it is open, locked or tied") {
+    Session s("Sacco\n3\n");
+    CHECK(s.run("savings newpot") == 0);
+    CHECK(s.app.savings().pots()[1].kind == pesa::PotKind::Tied);
+    CHECK(s.run("savings newpot Emergency --locked") == 0); // a flag skips the question
+    CHECK(s.app.savings().pots()[2].kind == pesa::PotKind::Locked);
+}
+
+TEST_CASE("a rule can take several items and whole categories in one command") {
+    Session s;
+    s.run("category add Transport");
+    s.run("category add Food");
+    s.run("item add Transport 50 Matatu");
+    s.run("item add Transport 150 Tuktuk");
+    s.run("item add Food 60 Tea");
+    s.run("item add Food 250 Lunch");
+
+    CHECK(s.run("rule add Commute --days weekdays --items 1,2 --category Food") == 0);
+    CHECK(s.app.rules().find(1)->items.size() == 4);
+    CHECK(s.run("rule add Empty --days daily --category Misc") == 1); // Misc has no items yet
+    CHECK(s.errors().find("has no items yet") != std::string::npos);
+
+    CHECK(s.run("rule add Bills --monthly 1 --item 3") == 0);
+    CHECK(s.run("rule additem 2 1 4") == 0); // several ids, one command
+    CHECK(s.app.rules().find(2)->items.size() == 3);
+    CHECK(s.run("rule removeitem 2 1 4") == 0);
+    CHECK(s.app.rules().find(2)->items.size() == 1);
+    CHECK(s.run("rule removeitem 2 1") == 1); // not in the rule any more
+}
+
+TEST_CASE("short-lived categories and items can be set from the command line") {
+    Session s;
+    CHECK(s.run("category add Trip --until 2026-12-31") == 0);
+    CHECK(s.app.categories().find(2)->expiresOn == pesa::Date::parse("2026-12-31"));
+    CHECK(s.run("item add Trip 500 Hotel --until 2026-12-30") == 0);
+    CHECK(s.app.items().find(1)->expiresOn == pesa::Date::parse("2026-12-30"));
+
+    s.out.str("");
+    CHECK(s.run("catalog") == 0);
+    CHECK(contains(s.output(), "until 2026-12-31"));
+
+    CHECK(s.run("item forever 1") == 0);
+    CHECK_FALSE(s.app.items().find(1)->expiresOn.has_value());
+    CHECK(s.run("category until 2 2027-02-01") == 0);
+    CHECK(s.run("category until 1 2027-02-01") == 1); // Misc cannot be short-lived
+}
+
+TEST_CASE("pay raises, expected income and the arrival question work from the command line") {
+    Session s;
+    const auto today = pesa::Date::today();
+    s.app.completeSetup({.mode = pesa::IncomeMode::Regular, .pay = 70000, .payday = today.addDays(20)}, today);
+
+    CHECK(s.run("income pay 75,000 --from " + today.addDays(40).toString()) == 0);
+    CHECK(s.app.income().payHistory().size() == 2);
+    CHECK(s.run("income pay 1000 --from " + today.toString()) == 1); // earlier than the newest row
+
+    const auto yesterday = today.previousDay();
+    CHECK(s.run("income source add 4,500 Dividends --often yearly --next " + yesterday.toString() +
+        " --pot \"Main savings\"") == 0);
+    s.out.str("");
+    cli::runStartup(s.ctx, false); // a script run: a reminder, no questions
+    CHECK(s.errors().find("Expected income is due: Dividends") != std::string::npos);
+    CHECK(s.app.savings().total() == 0);
+
+    Session ask("1\n\n"); // "Yes, it arrived", then Enter for the usual amount
+    ask.app.completeSetup({.mode = pesa::IncomeMode::Irregular}, today);
+    ask.app.income().addSource({
+        .name = "Dividends", .usualAmount = 4500, .frequency = pesa::Frequency::Yearly,
+        .nextExpected = yesterday, .potId = ask.app.savings().mainPot()
+    });
+    CHECK(ask.run("income due") == 0);
+    CHECK(ask.app.savings().total() == 4500);
+    CHECK(ask.app.income().sources()[0].nextExpected == yesterday.addMonths(12));
+}
+
+TEST_CASE("colours tell entries apart") {
+    cli::Table table({{"Name"}});
+    table.addRow({"auto"}, cli::Style::Cyan);
+    table.addRow({"one-off"}, cli::Style::Magenta);
+    table.addRow({"issue"}, cli::Style::Red);
+    const auto text = table.render(true);
+    CHECK(text.find("\x1b[36m") != std::string::npos);
+    CHECK(text.find("\x1b[35m") != std::string::npos);
+    CHECK(text.find("\x1b[31m") != std::string::npos);
+    CHECK(table.render(false).find('\x1b') == std::string::npos);
 }

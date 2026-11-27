@@ -21,11 +21,12 @@ namespace pesa {
         RestorePoints restorePoints;
         Goals goals;
         DailyJob dailyJob;
+        Income income;
 
         explicit Impl(const std::filesystem::path &file)
             : db(file), categories(db), items(db), entries(db), days(db), rules(db),
               settings(db), dailyJob(db, settings), savings(db), periods(db, settings), log(db), skips(db),
-              restorePoints(db), goals(db, settings) {
+              restorePoints(db), goals(db, settings), income(db, settings) {
         }
     };
 
@@ -59,6 +60,8 @@ namespace pesa {
     const RestorePoints &Pesa::restorePoints() const { return impl_->restorePoints; }
     Goals&            Pesa::goals()            { return impl_->goals; }
     const Goals&      Pesa::goals() const      { return impl_->goals; }
+    Income&           Pesa::income()           { return impl_->income; }
+    const Income&     Pesa::income() const     { return impl_->income; }
     DailyJob &Pesa::dailyJob() { return impl_->dailyJob; }
     const DailyJob &Pesa::dailyJob() const { return impl_->dailyJob; }
 
@@ -69,6 +72,7 @@ namespace pesa {
         }
         detail::Transaction tx(impl_->db);
         impl_->settings.completeSetup(answers);
+        if (regular && answers.pay) impl_->income.setPay(*answers.pay, today);   // the first row of the pay history
         impl_->periods.ensureOpen(today, answers.startingBalance);
         impl_->periods.setExpectedPayday(regular ? answers.payday : std::nullopt);
         tx.commit();

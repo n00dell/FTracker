@@ -46,50 +46,50 @@ namespace cli {
         }
     } // namespace
 
-    int runSetup(Context &ctx, const Args &args) {
-        if (args.size() > 1) {
-            printUsage(ctx.io);
-            return 2;
-        }
-        auto &io = ctx.io;
-        auto &app = ctx.app;
-        const pesa::Date today = pesa::Date::today();
+    int runSetup(Context& ctx, const Args& args) {
+    if (args.size() > 1) { printUsage(ctx.io); return 2; }
+    auto& io = ctx.io;
+    auto& app = ctx.app;
+    const pesa::Date today = pesa::Date::today();
 
-        io.out() << "Pesa setup. Nothing is saved until the end (Ctrl-D cancels).\n\n";
+    io.out() << "Pesa setup. Nothing is saved until the end. q leaves, < goes back a question.\n\n";
 
-        pesa::SetupAnswers answers;
-        const bool wasIrregular = app.settings().incomeMode() == pesa::IncomeMode::Irregular;
-        const auto kind = io.askChoice("How do you get paid",
-                                       {
-                                           "Regularly, like a salary (a set pay on a usual date)",
-                                           "Irregularly, like freelance or project work"
-                                       },
-                                       wasIrregular && app.settings().setupDone() ? 1 : 0);
+    pesa::SetupAnswers answers;
+    std::size_t kind = (app.settings().setupDone() && app.settings().incomeMode() == pesa::IncomeMode::Irregular) ? 1 : 0;
+    const auto regular = [&] { return answers.mode == pesa::IncomeMode::Regular; };
+    const pesa::Date suggestion = [&] {
+        const auto period = app.periods().current();
+        return (period && period->expectedPayday && *period->expectedPayday > today) ? *period->expectedPayday
+                                                                                     : today.addDays(30);
+    }();
+
+    std::vector<Step> steps;
+    steps.push_back({[&] {
+        kind = io.askChoice("How do you get paid",
+                            {"Regularly, like a salary (a set pay on a usual date)",
+                             "Irregularly, like freelance or project work"}, kind);
         answers.mode = kind == 0 ? pesa::IncomeMode::Regular : pesa::IncomeMode::Irregular;
+    }});
+    steps.push_back({[&] { answers.pay = io.askAmount("How much is your pay (KES)", answers.pay ? answers.pay : app.settings().expectedPay()); },
+                     regular});
+    steps.push_back({[&] { answers.payday = io.askDate("Roughly when is your next payday", answers.payday ? answers.payday : std::optional(suggestion)); },
+                     regular});
+    steps.push_back({[&] {
+        answers.startingBalance =
+            io.askOptionalAmount("How much do you have right now (KES)? It becomes your first earned money").value_or(0);
+    }, [&] { return !app.periods().current(); }});
+    runSteps(steps);
 
-        if (answers.mode == pesa::IncomeMode::Regular) {
-            answers.pay = io.askAmount("How much is your pay (KES)", app.settings().expectedPay());
-            const auto period = app.periods().current();
-            const pesa::Date suggestion = (period && period->expectedPayday && *period->expectedPayday > today)
-                                              ? *period->expectedPayday
-                                              : today.addDays(30);
-            answers.payday = io.askDate("Roughly when is your next payday", suggestion);
-        }
-        if (!app.periods().current()) {
-            answers.startingBalance =
-                    io.askOptionalAmount("How much do you have right now (KES)? It becomes your first earned money")
-                    .value_or(0);
-        }
-        app.completeSetup(answers, today);
+    app.completeSetup(answers, today);
 
-        io.out() << "\nSaved.\n";
-        if (answers.mode == pesa::IncomeMode::Irregular) {
-            io.out() << "No payday to track. Record each payment with 'income add', and press 'paid' when you\n"
+    io.out() << "\nSaved.\n";
+    if (answers.mode == pesa::IncomeMode::Irregular) {
+        io.out() << "No payday to track. Record each payment with 'income add', and press 'paid' when you\n"
                     "want to close a period and move what is left into savings.\n";
-        }
-        io.out() << "Next: add what you spend on ('catalog add'), then say when it posts ('rule add').\n";
-        return 0;
     }
+    io.out() << "Next: add what you spend on ('catalog add'), then say when it posts ('rule add').\n";
+    return 0;
+}
 
     int runSettings(Context &ctx, const Args &args) {
         auto &io = ctx.io;

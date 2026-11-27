@@ -3,7 +3,7 @@
 //
 // FTracker/tests/test_goals.cpp
 #include <doctest/doctest.h>
-
+#include <algorithm>
 #include <pesa/pesa.h>
 
 using pesa::BuyMethod;
@@ -203,7 +203,12 @@ TEST_CASE("goals that reached their date: some buy themselves, the rest wait for
     CHECK(due.waiting[0].name == "Curtains");
     CHECK(due.problems.empty());
 
-    CHECK(f.app.savings().ledger().back().date == Date::parse("2026-11-10")); // bought on its own date
+    const auto ledger = f.app.savings().ledger();
+    const auto purchase = std::ranges::find_if(ledger, [](const pesa::LedgerLine& l) {
+        return l.kind == pesa::LedgerKind::GoalPurchase;
+    });
+    REQUIRE(purchase != ledger.end());
+    CHECK(purchase->date == Date::parse("2026-11-10"));                           // bought on its own date
     const auto desk = f.app.days().view(kToday).entries; // before this period began: clamped to its start
     REQUIRE(desk.size() == 1);
     CHECK(desk[0].name == "Desk");
@@ -241,4 +246,57 @@ TEST_CASE("a fund reads the balance of its pot") {
     f.app.goals().removeFund(id);
     CHECK(f.app.goals().funds().empty());
     CHECK_THROWS_AS(f.app.goals().removeFund(id), Error);
+}
+TEST_CASE("a fund with a date knows when it is on track, reached or overdue") {
+    Fixture f;
+    const auto lock = f.app.savings().addPot("Lock savings", pesa::PotKind::Locked);
+    const auto id = f.app.goals().addFund("Emergency fund", 120000, lock, Date::parse("2027-02-24"));
+    f.app.savings().add(kToday, lock, 30000, "Start");
+
+    const auto fund = f.app.goals().funds()[0];
+    CHECK(fund.targetDate == Date::parse("2027-02-24"));
+    auto p = pesa::fundProgress(fund, kToday);
+    CHECK_FALSE(p.reached);
+    CHECK_FALSE(p.overdue);
+    CHECK(p.daysLeft == 92);
+    CHECK(p.neededPerMonth == 30000);                                              // 90,000 over 3 months
+
+    p = pesa::fundProgress(fund, Date::parse("2027-02-24"));
+    CHECK_FALSE(p.overdue);                                                        // the date itself is not overdue yet
+    p = pesa::fundProgress(fund, Date::parse("2027-03-01"));
+    CHECK(p.overdue);
+    CHECK(p.daysLeft == -5);
+    CHECK(p.neededPerMonth == 0);
+
+    f.app.savings().add(kToday, lock, 90000, "More");
+    p = pesa::fundProgress(f.app.goals().funds()[0], Date::parse("2027-03-01"));
+    CHECK(p.reached);
+    CHECK_FALSE(p.overdue);                                                        // reaching it ends the worry
+
+    f.app.goals().setFundDate(id, Date::parse("2027-06-01"));                      // "extend"
+    CHECK(f.app.goals().funds()[0].targetDate == Date::parse("2027-06-01"));
+    f.app.goals().setFundDate(id, std::nullopt);
+    CHECK_FALSE(f.app.goals().funds()[0].targetDate.has_value());
+    CHECK_THROWS_AS(f.app.goals().setFundDate(9999, std::nullopt), Error);
+}
+TEST_CASE("an estimated goal is bought at the real price, and never buys itself") {
+    Fixture f;
+    f.app.savings().add(kToday, f.app.savings().mainPot(), 100000, "Gift");
+    const auto pc = f.app.goals().add({.name = "PC", .amount = 85000, .priority = 1,
+                                       .dueDate = Date::parse("2026-11-20"),
+                                       .fundedFrom = FundedFrom::Savings, .autoBuy = true, .isEstimate = true});
+    CHECK(f.app.goals().find(pc)->isEstimate);
+
+    const auto due = f.app.goals().processDue(kToday);
+    CHECK(due.bought.empty());                       // an estimate waits for you
+    REQUIRE(due.waiting.size() == 1);
+
+    f.app.goals().buy(pc, BuyMethod::FromSavings, kToday, std::nullopt, 91500);
+    CHECK(f.app.savings().total() == 100000 - 91500);   // the real price came out, not the estimate
+    const auto bought = f.app.goals().list(true);
+    REQUIRE(bought.size() == 1);
+    CHECK(bought[0].paidAmount == 91500);
+    CHECK(bought[0].amount == 85000);                   // the estimate is kept for comparison
+
+    CHECK_THROWS_AS(f.app.goals().buy(pc, BuyMethod::FromSavings, kToday, std::nullopt, 0), Error);
 }

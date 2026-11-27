@@ -2,7 +2,7 @@
 #pragma once
 
 #include <pesa/common.h>
-
+#include <pesa/date.h>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -17,12 +17,14 @@ namespace pesa {
         Money defaultAmount = 0;
         bool isActive = true; // false = paused (name stays reserved)
         bool isDeleted = false; // true  = soft deleted (name is free to reuse)
+        std::optional<Date> expiresOn;
     };
 
     struct NewItem {
         CategoryId categoryId = 0;
         std::string name;
         Money defaultAmount = 0;
+        std::optional<Date> expiresOn;
     };
 
     // Created and owned by Pesa. Use it through app.items().
@@ -41,7 +43,8 @@ namespace pesa {
 
         void remove(ItemId id); // soft delete: hides it, keeps the row
         void restore(ItemId id); // undo a delete (its category must exist, its name be free)
-
+        void setExpiry(ItemId id, std::optional<Date> lastDay);   // see Categories::setExpiry
+        std::vector<std::string> pauseExpired(const Date& today);
         // Finds a row even if it is deleted, so history can still look it up.
         [[nodiscard]] std::optional<Item> find(ItemId id) const;
 

@@ -47,6 +47,7 @@ namespace pesa {
                     "SELECT i.category_id FROM items i JOIN categories c ON c.id = i.category_id "
                     "WHERE i.id = ?1 AND i.is_deleted = 0 AND i.is_active = 1 "
                     "AND c.is_deleted = 0 AND c.is_active = 1 "
+                    "AND (i.expires_on IS NULL OR i.expires_on >= ?2) AND (c.expires_on IS NULL OR c.expires_on >= ?2) "
                     "AND NOT EXISTS (SELECT 1 FROM entries e WHERE e.date = ?2 AND e.item_id = i.id)");
                 st.bind(1, item.id).bind(2, date.toString());
                 if (!st.step()) return {};
@@ -121,8 +122,9 @@ namespace pesa {
                 for (const RuleItem &item: rule.items) {
                     const PostedItem posted = postItem(db_, date, rule.id, item);
                     if (posted.outcome == PostedItem::Outcome::Auto) names.push_back(item.name);
-                    else if (posted.outcome == PostedItem::Outcome::Skipped) skipped.push_back(
-                        item.name + " (" + posted.skipName + ")");
+                    else if (posted.outcome == PostedItem::Outcome::Skipped)
+                        skipped.push_back(
+                            item.name + " (" + posted.skipName + ")");
                 }
             }
             db_.prepare("UPDATE days SET calculated = 1 WHERE date = ?").bind(1, date.toString()).run();

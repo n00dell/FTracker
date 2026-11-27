@@ -4,7 +4,8 @@
 namespace cli {
     int runShell(Context &ctx) {
         auto &io = ctx.io;
-        io.out() << "Pesa shell. Type 'help' for the commands, 'exit' to leave.\n";
+        io.out() << "Pesa shell. 'help' lists the commands, 'menu' gives guided menus, 'exit' leaves.\n"
+            "At any question: q leaves it, < goes back one question, Enter takes the [default].\n";
 
         while (true) {
             const auto line = io.readLine("pesa> ");

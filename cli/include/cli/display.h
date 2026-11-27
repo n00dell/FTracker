@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace cli {
-    enum class Style { Normal, Bold, Dim, Yellow, Blue };
+    enum class Style { Normal, Bold, Dim, Yellow, Blue, Green, Cyan, Magenta, Red };
 
     // A text table whose columns size themselves to the content.
     class Table {
@@ -79,5 +79,7 @@ namespace cli {
     void printRestorePoints(Console &io, const std::vector<pesa::RestorePoint> &points);
     void printGoals(Console& io, const std::vector<pesa::GoalStatus>& goals);
     void printBoughtGoals(Console& io, const std::vector<pesa::Goal>& goals);
-    void printFunds(Console& io, const std::vector<pesa::Fund>& funds);
+    void printFunds(Console& io, const std::vector<pesa::Fund>& funds, const pesa::Date& today);   // replaces the old one
+    void printPayHistory(Console& io, const std::vector<pesa::PayRate>& rates);
+    void printSources(Console& io, const std::vector<pesa::IncomeSource>& sources, const pesa::Date& today);
 } // namespace cli

@@ -1,6 +1,6 @@
 // FTracker/core/src/items.cpp
 #include <pesa/items.h>
-
+#include "log_sql.h"
 #include "db.h"
 #include "util.h"
 
@@ -10,19 +10,21 @@ namespace pesa {
 
         // One SELECT used by list() and find(). JOIN pulls in the category's name.
         constexpr const char *kSelectItem =
-                "SELECT i.id, i.category_id, c.name, i.name, i.default_amount, i.is_active, i.is_deleted "
-                "FROM items i JOIN categories c ON c.id = i.category_id ";
+"SELECT i.id, i.category_id, c.name, i.name, i.default_amount, i.is_active, i.is_deleted, i.expires_on "
+        "FROM items i JOIN categories c ON c.id = i.category_id ";
 
-        Item readItem(const detail::Statement &st) {
-            return Item{
-                .id = st.integer(0),
-                .categoryId = st.integer(1),
-                .categoryName = st.text(2),
-                .name = st.text(3),
+        Item readItem(const detail::Statement& st) {
+            Item item{
+                .id            = st.integer(0),
+                .categoryId    = st.integer(1),
+                .categoryName  = st.text(2),
+                .name          = st.text(3),
                 .defaultAmount = st.integer(4),
-                .isActive = st.integer(5) != 0,
-                .isDeleted = st.integer(6) != 0,
+                .isActive      = st.integer(5) != 0,
+                .isDeleted     = st.integer(6) != 0,
             };
+            if (!st.isNull(7)) item.expiresOn = Date::parse(st.text(7));
+            return item;
         }
 
         std::string noItem(ItemId id) { return "No item with id " + std::to_string(id) + "."; }
@@ -60,11 +62,11 @@ namespace pesa {
             throw Error("'" + name + "' already exists in that category.");
         }
 
-        db_.prepare("INSERT INTO items(category_id, name, default_amount) VALUES (?, ?, ?)")
-                .bind(1, item.categoryId)
-                .bind(2, name)
-                .bind(3, item.defaultAmount)
-                .run();
+        // in Items::add, replace the INSERT statement (and the return) with:
+        auto insert = db_.prepare("INSERT INTO items(category_id, name, default_amount, expires_on) VALUES (?, ?, ?, ?)");
+        insert.bind(1, item.categoryId).bind(2, name).bind(3, item.defaultAmount);
+        if (item.expiresOn) insert.bind(4, item.expiresOn->toString()); else insert.bindNull(4);
+        insert.run();
         return db_.lastInsertId();
     }
 
@@ -85,9 +87,37 @@ namespace pesa {
     }
 
     void Items::setActive(ItemId id, bool active) {
-        db_.prepare("UPDATE items SET is_active = ? WHERE id = ? AND is_deleted = 0")
-                .bind(1, active ? 1 : 0).bind(2, id).run();
+        db_.prepare(active ? "UPDATE items SET is_active = 1, expires_on = NULL WHERE id = ? AND is_deleted = 0"
+                           : "UPDATE items SET is_active = 0 WHERE id = ? AND is_deleted = 0")
+            .bind(1, id).run();
         if (db_.changes() == 0) throw Error(noItem(id));
+    }
+
+    void Items::setExpiry(ItemId id, std::optional<Date> lastDay) {
+        auto st = db_.prepare("UPDATE items SET expires_on = ? WHERE id = ? AND is_deleted = 0");
+        if (lastDay) st.bind(1, lastDay->toString()); else st.bindNull(1);
+        st.bind(2, id);
+        st.run();
+        if (db_.changes() == 0) throw Error(noItem(id));
+    }
+
+    std::vector<std::string> Items::pauseExpired(const Date& today) {
+        detail::Transaction tx(db_);
+        const char* const where = "is_deleted = 0 AND is_active = 1 AND expires_on IS NOT NULL AND expires_on < ?";
+        std::vector<std::string> names;
+        {
+            auto st = db_.prepare(std::string("SELECT name FROM items WHERE ") + where + " ORDER BY id");
+            st.bind(1, today.toString());
+            while (st.step()) names.push_back(st.text(0));
+        }
+        if (!names.empty()) {
+            db_.prepare(std::string("UPDATE items SET is_active = 0 WHERE ") + where).bind(1, today.toString()).run();
+            std::string joined;
+            for (const std::string& name : names) joined += (joined.empty() ? "" : ", ") + name;
+            detail::writeLog(db_, LogKind::Edit, "Short-lived items paused (their last day passed): " + joined);
+        }
+        tx.commit();
+        return names;
     }
 
     void Items::remove(ItemId id) {

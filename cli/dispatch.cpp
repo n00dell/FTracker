@@ -27,11 +27,11 @@ namespace cli {
                 "  item deactivate <id> | activate <id> | delete <id> | restore <id>\n\n"
                 "Rules  (WHEN items post; the items say what and how much)\n"
                 "  rule add <name> --days mon,tue,.. | daily | weekdays | weekend  [--monthly <day 1-31>]\n"
-                "           [--item <item-id>]... [--from <date>] [--to <date>]\n"
+                "           [--item <id>... | --items 1,2,3 | --category <name|id>] [--from <date>] [--to <date>]\n"
                 "  rule list [--all | --deleted]\n"
                 "  rule preview <id> [<days>]             the dates it will post in the next days (default 30)\n"
                 "  rule rename <id> <new name>\n"
-                "  rule additem <id> <item-id> | rule removeitem <id> <item-id>\n"
+                "  rule additem <id> <item-id>... | rule removeitem <id> <item-id>...\n"
                 "  rule end <id> <last-day>               a change = end the old rule, add a new one\n"
                 "  rule deactivate <id> | activate <id> | delete <id> | restore <id>\n\n"
                 "Skips, wipe and restore  (these can reach back into days already posted; each shows a preview first)\n"
@@ -56,13 +56,14 @@ namespace cli {
                 "  savings cover <entry-id>...            pay those entries from savings\n"
                 "  savings newpot <name> [--locked | --tied]\n\n"
                 "Goals and funds\n"
-                "  goal add <price> <name> [--priority <n>] [--date <d>] [--savings | --earned] [--gift] [--auto]\n"
+                "  goal add <price> <name> [--priority <n>] [--date <d>] [--savings | --earned] [--gift] [--auto] [--estimate]"
                 "  goal list [--bought]                   what you still want to buy, in priority order (lower first)\n"
-                "  goal edit <id> [--name <n>] [--amount <n>] [--priority <n>] [--date <d> | --nodate]\n"
+                "  goal edit <id> [--name <n>] [--amount <n>] [--estimate | --exact] [--priority <n>] [--date <d> | --nodate]\n"
                 "                 [--savings | --earned] [--gift | --nogift] [--auto | --noauto]\n"
-                "  goal buy <id> [--how savings|move|earned] [--pot <pot>]\n"
+                "  goal buy <id> [--how savings|move|earned] [--pot <pot>] [--price <actual>]\n"
                 "  goal delete <id>   goal due\n"
-                "  fund add <target> <name> [--pot <pot>]   a target you save towards, tracked against a pot\n"
+                "  fund add <target> <name> [--pot <pot>] [--date <date>]   a target you save towards, tracked against a pot\n"
+                "  fund date <id> <date|none>             set or clear the fund's target date\n"
                 "  fund list   fund delete <id>\n\n"
                 "Setup and settings\n"
                 "  setup                                  expected pay and payday (asked on the first run)\n"
@@ -74,6 +75,15 @@ namespace cli {
                 "  settings shortfall record|savings|carry   earned still below zero at payday: record it, take it from\n"
                 "                                         savings, or carry it into the new period (default: record)\n"
                 "  job                                    run the daily posting now (it also runs whenever Pesa opens)\n\n"
+                "At any question: q leaves it, < goes back one question, Enter takes the [default]. 'menu' gives guided menus.\n\n"
+                "Income and pay\n"
+                "  income add <amount> <label> | income list      money that just arrived / this period's income\n"
+                "  income pay [<amount> [--from <date>]]          the pay history; an amount is a raise from that date\n"
+                "  income source add <amount> <name> [--often once|pay|monthly|3months|yearly] [--next <date>] [--pot <pot>]\n"
+                "  income source list | income source remove <id>   income you expect (counted only once it arrives)\n"
+                "  income due | income got <id> [<amount>] | income skip <id> | income later <id>\n\n"
+                "Short-lived: category add <name> --until <date>, item add ... --until <date>, category|item until <id> <date>,\n"
+                "  category|item forever <id>. They stop posting after their last day and pause themselves.\n\n"
                 "Days and entries  (<date> is today, tomorrow, yesterday or 2026-11-23)\n"
                 "  day [<date>]                           show a day\n"
                 "  entry add <date> <item-id> [<amount>] [--savings]\n"
@@ -107,6 +117,7 @@ namespace cli {
         if (command == "restore") return runRestore(ctx, args);
         if (command == "goal") return runGoal(ctx, args);
         if (command == "fund") return runFund(ctx, args);
+        if (command == "menu") return runMenu(ctx, args);
         if (command == "help" || command == "?" || command == "--help") {
             printUsage(ctx.io);
             return 0;
@@ -120,8 +131,12 @@ namespace cli {
     int runGuarded(Context &ctx, const Args &args) {
         try {
             return dispatch(ctx, args);
+        } catch (const GoBack &) {
+            // < with nothing to go back to
+            ctx.io.out() << "Cancelled.\n";
+            return 1;
         } catch (const Cancelled &) {
-            // must come first: it is also an std::exception
+            // must come before std::exception
             ctx.io.out() << "Cancelled.\n";
             return 1;
         } catch (const std::exception &e) {

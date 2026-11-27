@@ -20,6 +20,14 @@ namespace cli {
                     break;
                 case Style::Blue: code = "\x1b[34m";
                     break;
+                case Style::Green: code = "\x1b[32m";
+                    break;
+                case Style::Cyan: code = "\x1b[36m";
+                    break;
+                case Style::Magenta: code = "\x1b[35m";
+                    break;
+                case Style::Red: code = "\x1b[31m";
+                    break;
                 case Style::Normal: break;
             }
             return code + text + "\x1b[0m";
@@ -38,6 +46,173 @@ namespace cli {
             return (isActive && !isDeleted) ? Style::Normal : Style::Dim;
         }
     } // namespace
+    namespace {
+        std::string withExpiry(std::string status, const std::optional<pesa::Date> &lastDay) {
+            if (!lastDay) return status;
+            return status + (status.empty() ? "" : ", ") + "until " + lastDay->toString();
+        }
+
+        Style logStyle(pesa::LogKind kind) {
+            switch (kind) {
+                case pesa::LogKind::Rule: return Style::Cyan;
+                case pesa::LogKind::Manual: return Style::Blue;
+                case pesa::LogKind::Edit: return Style::Yellow;
+                case pesa::LogKind::Savings: return Style::Magenta;
+                case pesa::LogKind::Skip: return Style::Dim;
+                case pesa::LogKind::Issue: return Style::Red;
+                case pesa::LogKind::Pay: return Style::Green;
+            }
+            return Style::Normal;
+        }
+    } // namespace
+
+    void printLog(Console &io, const std::vector<pesa::LogEvent> &events, const pesa::Date &today) {
+        if (events.empty()) {
+            io.out() << "  No events match.\n";
+            return;
+        }
+
+        Table table({{"Time"}, {"Type"}, {"What happened", Table::Align::Left, 100}});
+        pesa::Date shown; // the day whose heading was printed last
+        bool any = false;
+        for (const pesa::LogEvent &e: events) {
+            if (!any || e.date != shown) {
+                shown = e.date;
+                any = true;
+                const std::string label = e.date == today
+                                              ? "Today, "
+                                              : e.date == today.previousDay()
+                                                    ? "Yesterday, "
+                                                    : "";
+                table.addSection(label + weekdayName(e.date.weekday()) + " " + e.date.toString());
+            }
+            table.addRow({e.time, pesa::logKindName(e.kind), e.message}, logStyle(e.kind));
+        }
+        table.print(io);
+    }
+
+    void printCategories(Console &io, const std::vector<pesa::Category> &categories) {
+        if (categories.empty()) {
+            io.out() << "  No categories.\n";
+            return;
+        }
+        Table table({{"ID", Table::Align::Right}, {"Category"}, {"Status"}});
+        for (const pesa::Category &c: categories) {
+            table.addRow({
+                             std::to_string(c.id), c.name,
+                             withExpiry(statusWord(c.isActive, c.isDeleted, c.isSystem), c.expiresOn)
+                         },
+                         statusStyle(c.isActive, c.isDeleted));
+        }
+        table.print(io);
+    }
+
+    void printItems(Console &io, const std::vector<pesa::Item> &items) {
+        if (items.empty()) {
+            io.out() << "  No items.\n";
+            return;
+        }
+        Table table({
+            {"ID", Table::Align::Right}, {"Category"}, {"Item"},
+            {"Amount", Table::Align::Right}, {"Status"}
+        });
+        for (const pesa::Item &i: items) {
+            table.addRow({
+                             std::to_string(i.id), i.categoryName, i.name, formatMoney(i.defaultAmount),
+                             withExpiry(statusWord(i.isActive, i.isDeleted), i.expiresOn)
+                         },
+                         statusStyle(i.isActive, i.isDeleted));
+        }
+        table.print(io);
+    }
+
+    void printCatalog(Console &io, const std::vector<pesa::Category> &categories,
+                      const std::vector<pesa::Item> &items) {
+        Table table({{"ID", Table::Align::Right}, {"Item"}, {"Amount", Table::Align::Right}, {"Status"}});
+        for (const pesa::Category &c: categories) {
+            const std::string status = withExpiry(statusWord(c.isActive, c.isDeleted, c.isSystem), c.expiresOn);
+            table.addSection(c.name + "   (category " + std::to_string(c.id) + ")" +
+                             (status.empty() ? "" : "  " + status));
+            bool any = false;
+            for (const pesa::Item &i: items) {
+                if (i.categoryId != c.id) continue;
+                any = true;
+                const std::string itemStatus = withExpiry(statusWord(i.isActive, i.isDeleted), i.expiresOn);
+                table.addRow({std::to_string(i.id), i.name, formatMoney(i.defaultAmount), itemStatus},
+                             i.isActive && !i.isDeleted ? Style::Normal : Style::Dim);
+            }
+            if (!any) table.addRow({"", "(no items)", "", ""}, Style::Dim);
+        }
+        table.print(io);
+        if (items.empty()) io.out() << "\n  No items yet. Try: catalog add\n";
+    }
+
+    void printFunds(Console &io, const std::vector<pesa::Fund> &funds, const pesa::Date &today) {
+        if (funds.empty()) {
+            io.out() << "  No funds. Try: fund add 200,000 Emergency fund --pot <pot> --date <date>\n";
+            return;
+        }
+        Table table({
+            {"ID", Table::Align::Right}, {"Fund"}, {"Pot"}, {"Saved", Table::Align::Right},
+            {"Target", Table::Align::Right}, {"Done", Table::Align::Right}, {"Date"},
+            {"Needed a month", Table::Align::Right}, {"Status"}
+        });
+        for (const pesa::Fund &f: funds) {
+            const pesa::FundProgress p = pesa::fundProgress(f, today);
+            const pesa::Money percent = std::clamp<pesa::Money>(f.balance * 100 / f.target, 0, 100);
+            const std::string status = p.reached
+                                           ? "reached"
+                                           : p.overdue
+                                                 ? "overdue by " + std::to_string(-p.daysLeft) + " days"
+                                                 : f.targetDate
+                                                       ? std::to_string(p.daysLeft) + " days left"
+                                                       : "";
+            table.addRow({
+                             std::to_string(f.id), f.name, f.potName, formatMoney(f.balance), formatMoney(f.target),
+                             std::to_string(percent) + "%", f.targetDate ? f.targetDate->toString() : "-",
+                             p.neededPerMonth > 0 ? formatMoney(p.neededPerMonth) : "-", status
+                         },
+                         p.reached ? Style::Green : p.overdue ? Style::Red : Style::Normal);
+        }
+        table.print(io);
+    }
+
+    void printPayHistory(Console &io, const std::vector<pesa::PayRate> &rates) {
+        if (rates.empty()) {
+            io.out() << "  No pay set yet. Try: income pay 70,000\n";
+            return;
+        }
+        Table table({{"From"}, {"To"}, {"Pay", Table::Align::Right}});
+        for (const pesa::PayRate &r: rates) {
+            table.addRow({r.from.toString(), r.to ? r.to->toString() : "onwards", formatMoney(r.amount)});
+        }
+        table.print(io);
+    }
+
+    void printSources(Console &io, const std::vector<pesa::IncomeSource> &sources, const pesa::Date &today) {
+        if (sources.empty()) {
+            io.out() <<
+                    "  No expected income. Try: income source add 4,500 Dividends --often yearly --next 2026-12-15\n";
+            return;
+        }
+        Table table({
+            {"ID", Table::Align::Right}, {"From"}, {"Usual", Table::Align::Right}, {"Often"}, {"Next"}, {"Goes to"}
+        });
+        for (const pesa::IncomeSource &s: sources) {
+            const bool due = s.frequency != pesa::Frequency::WithPay && s.nextExpected && *s.nextExpected <= today;
+            table.addRow({
+                             std::to_string(s.id), s.name, formatMoney(s.usualAmount), pesa::frequencyName(s.frequency),
+                             s.frequency == pesa::Frequency::WithPay
+                                 ? "with my pay"
+                                 : s.nextExpected
+                                       ? s.nextExpected->toString()
+                                       : "no plan yet",
+                             s.goesTo
+                         },
+                         due ? Style::Yellow : Style::Normal);
+        }
+        table.print(io);
+    }
 
     // ---------------- Table ----------------
 
@@ -136,10 +311,17 @@ namespace cli {
                 {"Amount", Table::Align::Right}, {"From"}, {"State"}
             });
             for (const pesa::Entry &e: day.entries) {
-                Style style = Style::Normal; // white: untouched auto entry
-                if (e.kind == pesa::EntryKind::Edited) style = Style::Yellow;
-                if (e.kind == pesa::EntryKind::Added) style = Style::Blue;
-                if (e.kind == pesa::EntryKind::Skipped) style = Style::Dim;
+                Style style = Style::Cyan; // auto-posted by a rule
+                switch (e.kind) {
+                    case pesa::EntryKind::AutoPosted: style = Style::Cyan;
+                        break;
+                    case pesa::EntryKind::Edited: style = Style::Yellow;
+                        break;
+                    case pesa::EntryKind::Added: style = e.isOneOff() ? Style::Magenta : Style::Blue;
+                        break;
+                    case pesa::EntryKind::Skipped: style = Style::Dim;
+                        break;
+                }
                 table.addRow({
                                  std::to_string(e.id), entryCategoryText(e), e.name, formatMoney(e.amount),
                                  e.fund == pesa::FundedFrom::Earned ? "earned" : "savings", entryStateText(e)
@@ -147,41 +329,17 @@ namespace cli {
                              style);
             }
             table.print(io);
+            if (io.color()) {
+                io.out() << "  " << paint("auto-posted", Style::Cyan, true) << "  " << paint(
+                            "edited", Style::Yellow, true)
+                        << "  " << paint("added", Style::Blue, true) << "  " << paint("one-off", Style::Magenta, true)
+                        << "  " << paint("skipped", Style::Dim, true) << "\n";
+            }
         }
         io.out() << "  Spent " << formatMoney(day.total()) << "  (earned " << formatMoney(day.earnedTotal)
                 << ", savings " << formatMoney(day.savingsTotal) << ")\n";
     }
 
-    void printCategories(Console &io, const std::vector<pesa::Category> &categories) {
-        if (categories.empty()) {
-            io.out() << "  No categories.\n";
-            return;
-        }
-        Table table({{"ID", Table::Align::Right}, {"Category"}, {"Status"}});
-        for (const pesa::Category &c: categories) {
-            table.addRow({std::to_string(c.id), c.name, statusWord(c.isActive, c.isDeleted, c.isSystem)},
-                         statusStyle(c.isActive, c.isDeleted));
-        }
-        table.print(io);
-    }
-
-    void printItems(Console &io, const std::vector<pesa::Item> &items) {
-        if (items.empty()) {
-            io.out() << "  No items.\n";
-            return;
-        }
-        Table table({
-            {"ID", Table::Align::Right}, {"Category"}, {"Item"},
-            {"Amount", Table::Align::Right}, {"Status"}
-        });
-        for (const pesa::Item &i: items) {
-            table.addRow({
-                             std::to_string(i.id), i.categoryName, i.name, formatMoney(i.defaultAmount),
-                             statusWord(i.isActive, i.isDeleted)
-                         }, statusStyle(i.isActive, i.isDeleted));
-        }
-        table.print(io);
-    }
 
     void printRules(Console &io, const std::vector<pesa::Rule> &rules) {
         if (rules.empty()) {
@@ -261,27 +419,6 @@ namespace cli {
         table.print(io);
     }
 
-    void printCatalog(Console &io, const std::vector<pesa::Category> &categories,
-                      const std::vector<pesa::Item> &items) {
-        Table table({{"ID", Table::Align::Right}, {"Item"}, {"Amount", Table::Align::Right}, {"Status"}});
-
-        for (const pesa::Category &c: categories) {
-            const std::string status = statusWord(c.isActive, c.isDeleted, c.isSystem);
-            table.addSection(c.name + "   (category " + std::to_string(c.id) + ")" +
-                             (status.empty() ? "" : "  " + status));
-            bool any = false;
-            for (const pesa::Item &i: items) {
-                if (i.categoryId != c.id) continue;
-                any = true;
-                const std::string itemStatus = statusWord(i.isActive, i.isDeleted);
-                table.addRow({std::to_string(i.id), i.name, formatMoney(i.defaultAmount), itemStatus},
-                             itemStatus.empty() ? Style::Normal : Style::Dim);
-            }
-            if (!any) table.addRow({"", "(no items)", "", ""}, Style::Dim);
-        }
-        table.print(io);
-        if (items.empty()) io.out() << "\n  No items yet. Try: catalog add\n";
-    }
 
     void printStatus(std::ostream &out, const pesa::PeriodSummary &s, pesa::Money savingsTotal, pesa::IncomeMode mode) {
         auto line = [&](const char *label, pesa::Money value) {
@@ -305,26 +442,30 @@ namespace cli {
         }
         if (s.earnedRemaining() < 0) {
             out << "  Earned is below zero. That is allowed. Your options: 'income add' (money arrived),\n"
-                   "  'savings cover <entry id>' (pay entries from savings), 'settings autocover on' (do that\n"
-                   "  automatically), or leave it: 'settings shortfall' decides what happens at payday.\n";
+                    "  'savings cover <entry id>' (pay entries from savings), 'settings autocover on' (do that\n"
+                    "  automatically), or leave it: 'settings shortfall' decides what happens at payday.\n";
         }
     }
 
-    void printPaid(std::ostream& out, const pesa::PaidResult& r) {
+    void printPaid(std::ostream &out, const pesa::PaidResult &r) {
         out << "Paid on " << r.paidOn.toString() << ": closed the period that started "
-            << r.periodStart.toString() << ".\n";
+                << r.periodStart.toString() << ".\n";
         out << "  Pay added to the new period: " << formatMoney(r.pay) << "\n";
+        for (const pesa::PaidExtra &extra: r.withPay) {
+            out << "  " << extra.name << " (KES " << formatMoney(extra.amount) << ") added with this pay"
+                    << (extra.goesTo == "Earned" ? std::string() : ", into " + extra.goesTo) << ".\n";
+        }
         if (r.movedToSavings > 0) {
             out << "  Leftover " << formatMoney(r.movedToSavings) << " moved to " << r.leftoverPot << ".\n";
         } else if (r.settledFromSavings > 0) {
             out << "  Earned ran " << formatMoney(r.shortfall) << " over; "
-                << formatMoney(r.settledFromSavings) << " was taken from Main savings.\n";
+                    << formatMoney(r.settledFromSavings) << " was taken from Main savings.\n";
         } else if (r.carriedForward > 0) {
             out << "  Earned ran " << formatMoney(r.shortfall) << " over; it is the first expense of the new period"
-                << " (\"Overspent last period\").\n";
+                    << " (\"Overspent last period\").\n";
         } else if (r.shortfall > 0) {
             out << "  Earned ran " << formatMoney(r.shortfall)
-                << " over. Nothing was taken from savings ('settings shortfall' changes that).\n";
+                    << " over. Nothing was taken from savings ('settings shortfall' changes that).\n";
         } else {
             out << "  Nothing was left over.\n";
         }
@@ -377,72 +518,75 @@ namespace cli {
         io.out() << "  Total " << formatMoney(total) << "\n";
     }
 
-    void printLog(Console &io, const std::vector<pesa::LogEvent> &events, const pesa::Date &today) {
-        if (events.empty()) {
-            io.out() << "  No events match.\n";
+
+    void printGoals(Console &io, const std::vector<pesa::GoalStatus> &goals) {
+        if (goals.empty()) {
+            io.out() << "  No goals to buy. Try: goal add\n";
             return;
         }
+        Table table({
+            {"ID", Table::Align::Right}, {"Priority", Table::Align::Right}, {"Goal"},
+            {"Price", Table::Align::Right}, {"Date"}, {"From"}, {"Status"}
+        });
+        for (const pesa::GoalStatus &s: goals) {
+            const pesa::Goal &g = s.goal;
+            std::string status = g.donated
+                                     ? std::string("gift, nothing deducted")
+                                     : s.covered
+                                           ? std::string("covered")
+                                           : "short by " + formatMoney(s.shortBy);
+            if (g.autoBuy) status += ", buys itself on its date";
 
-        Table table({{"Time"}, {"Type"}, {"What happened", Table::Align::Left, 100}});
-        pesa::Date shown; // the day whose heading was printed last
-        bool any = false;
-        for (const pesa::LogEvent &e: events) {
-            if (!any || e.date != shown) {
-                shown = e.date;
-                any = true;
-                const std::string label = e.date == today
-                                              ? "Today, "
-                                              : e.date == today.previousDay()
-                                                    ? "Yesterday, "
-                                                    : "";
-                table.addSection(label + weekdayName(e.date.weekday()) + " " + e.date.toString());
-            }
-            table.addRow({e.time, pesa::logKindName(e.kind), e.message},
-                         e.kind == pesa::LogKind::Issue ? Style::Yellow : Style::Normal);
+            table.addRow({
+                             std::to_string(g.id), std::to_string(g.priority), g.name,
+                             (g.isEstimate ? "~" : "") + formatMoney(g.amount),
+                             g.dueDate ? g.dueDate->toString() : "-",
+                             g.fundedFrom == pesa::FundedFrom::Earned ? "earned" : "savings", status
+                         },
+                         g.donated ? Style::Normal : s.covered ? Style::Green : Style::Yellow);
+        }
+        table.print(io);
+        io.out() << "  Goals are counted in priority order against the money they are paid from.\n";
+    }
+
+    void printBoughtGoals(Console &io, const std::vector<pesa::Goal> &goals) {
+        if (goals.empty()) {
+            io.out() << "  Nothing bought yet.\n";
+            return;
+        }
+        Table table({{"Bought"}, {"Goal"}, {"Paid", Table::Align::Right}, {"Estimated", Table::Align::Right}, {"How"}});
+        for (const pesa::Goal &g: goals) {
+            const char *how = g.donated
+                                  ? "gift"
+                                  : !g.boughtHow
+                                        ? "-"
+                                        : *g.boughtHow == pesa::BuyMethod::FromSavings
+                                              ? "savings"
+                                              : *g.boughtHow == pesa::BuyMethod::MoveToEarned
+                                                    ? "moved to earned"
+                                                    : "earned";
+            table.addRow({g.boughtOn->toString(), g.name, formatMoney(g.paidAmount.value_or(g.amount)),
+                      g.isEstimate ? "~" + formatMoney(g.amount) : "-", how});
         }
         table.print(io);
     }
-    void printGoals(Console& io, const std::vector<pesa::GoalStatus>& goals) {
-    if (goals.empty()) { io.out() << "  No goals to buy. Try: goal add\n"; return; }
-    Table table({{"ID", Table::Align::Right}, {"Priority", Table::Align::Right}, {"Goal"},
-                 {"Price", Table::Align::Right}, {"Date"}, {"From"}, {"Status"}});
-    for (const pesa::GoalStatus& s : goals) {
-        const pesa::Goal& g = s.goal;
-        std::string status = g.donated ? std::string("gift, nothing deducted")
-                           : s.covered ? std::string("covered")
-                                       : "short by " + formatMoney(s.shortBy);
-        if (g.autoBuy) status += ", buys itself on its date";
-        table.addRow({std::to_string(g.id), std::to_string(g.priority), g.name, formatMoney(g.amount),
-                      g.dueDate ? g.dueDate->toString() : "-",
-                      g.fundedFrom == pesa::FundedFrom::Earned ? "earned" : "savings", status},
-                     s.covered ? Style::Normal : Style::Yellow);
-    }
-    table.print(io);
-    io.out() << "  Goals are counted in priority order against the money they are paid from.\n";
-}
 
-void printBoughtGoals(Console& io, const std::vector<pesa::Goal>& goals) {
-    if (goals.empty()) { io.out() << "  Nothing bought yet.\n"; return; }
-    Table table({{"Bought"}, {"Goal"}, {"Price", Table::Align::Right}, {"How"}});
-    for (const pesa::Goal& g : goals) {
-        const char* how = g.donated ? "gift"
-                        : !g.boughtHow ? "-"
-                        : *g.boughtHow == pesa::BuyMethod::FromSavings  ? "savings"
-                        : *g.boughtHow == pesa::BuyMethod::MoveToEarned ? "moved to earned" : "earned";
-        table.addRow({g.boughtOn->toString(), g.name, formatMoney(g.amount), how});
+    void printFunds(Console &io, const std::vector<pesa::Fund> &funds) {
+        if (funds.empty()) {
+            io.out() << "  No funds. Try: fund add 200,000 Emergency fund --pot <pot>\n";
+            return;
+        }
+        Table table({
+            {"ID", Table::Align::Right}, {"Fund"}, {"Pot"}, {"Saved", Table::Align::Right},
+            {"Target", Table::Align::Right}, {"Done", Table::Align::Right}
+        });
+        for (const pesa::Fund &f: funds) {
+            const pesa::Money percent = std::clamp<pesa::Money>(f.balance * 100 / f.target, 0, 100);
+            table.addRow({
+                std::to_string(f.id), f.name, f.potName, formatMoney(f.balance), formatMoney(f.target),
+                std::to_string(percent) + "%"
+            });
+        }
+        table.print(io);
     }
-    table.print(io);
-}
-
-void printFunds(Console& io, const std::vector<pesa::Fund>& funds) {
-    if (funds.empty()) { io.out() << "  No funds. Try: fund add 200,000 Emergency fund --pot <pot>\n"; return; }
-    Table table({{"ID", Table::Align::Right}, {"Fund"}, {"Pot"}, {"Saved", Table::Align::Right},
-                 {"Target", Table::Align::Right}, {"Done", Table::Align::Right}});
-    for (const pesa::Fund& f : funds) {
-        const pesa::Money percent = std::clamp<pesa::Money>(f.balance * 100 / f.target, 0, 100);
-        table.addRow({std::to_string(f.id), f.name, f.potName, formatMoney(f.balance), formatMoney(f.target),
-                      std::to_string(percent) + "%"});
-    }
-    table.print(io);
-}
 } // namespace cli

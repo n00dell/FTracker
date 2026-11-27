@@ -55,6 +55,9 @@ int runGoal(Context& ctx, const Args& args) {
     const bool noAuto      = takeFlag(rest, "--noauto");
     const bool noDate      = takeFlag(rest, "--nodate");
     const bool boughtList  = takeFlag(rest, "--bought");
+    const bool estimate    = takeFlag(rest, "--estimate");
+    const bool exact       = takeFlag(rest, "--exact");
+    const auto priceText   = takeOption(rest, "--price");
     const auto priorityText = takeOption(rest, "--priority");
     const auto dateText     = takeOption(rest, "--date");
     const auto nameText     = takeOption(rest, "--name");
@@ -64,7 +67,7 @@ int runGoal(Context& ctx, const Args& args) {
     if (savingsFlag && earnedFlag) throw pesa::Error("Use either --savings or --earned, not both.");
     if (gift && noGift) throw pesa::Error("Use either --gift or --nogift, not both.");
     if (autoBuy && noAuto) throw pesa::Error("Use either --auto or --noauto, not both.");
-
+    if (estimate && exact) throw pesa::Error("Use either --estimate or --exact, not both.");
     const std::string sub = rest.size() >= 2
         ? rest[1]
         : chooseSubcommand(io, "Goals", {{"Add a goal", "add"}, {"List goals", "list"}, {"Change a goal", "edit"},
@@ -101,8 +104,8 @@ int runGoal(Context& ctx, const Args& args) {
         }
 
         pesa::NewGoal goal{.name = name, .amount = price, .priority = priority,
-                           .fundedFrom = savingsFlag ? pesa::FundedFrom::Savings : pesa::FundedFrom::Earned,
-                           .donated = gift, .autoBuy = autoBuy};
+                   .fundedFrom = savingsFlag ? pesa::FundedFrom::Savings : pesa::FundedFrom::Earned,
+                   .donated = gift, .autoBuy = autoBuy, .isEstimate = estimate};
         if (dateText) goal.dueDate = parseDate(*dateText);
 
         const auto id = goals.add(goal);
@@ -127,7 +130,8 @@ int runGoal(Context& ctx, const Args& args) {
         if (autoBuy)      { edit.autoBuy = true;                    changed = true; }
         if (noAuto)       { edit.autoBuy = false;                   changed = true; }
         if (!changed) throw pesa::Error("Say what to change, for example --amount 12,000 or --date 2026-12-20.");
-
+        if (estimate)     { edit.isEstimate = true;                 changed = true; }
+        if (exact)        { edit.isEstimate = false;                changed = true; }
         goals.edit(id, edit);
         io.out() << "Updated.\n\n";
         printGoals(io, goals.statuses(today));
@@ -165,6 +169,12 @@ int runGoal(Context& ctx, const Args& args) {
             if (info && info->kind == pesa::PotKind::Locked) {
                 io.out() << "Note: '" << info->name << "' is a locked pot. Taking money out early may cost you.\n";
             }
+            std::optional<pesa::Money> price;
+            if (priceText) price = parseAmount(*priceText);
+            else if (goal->isEstimate && !goal->donated) {
+                price = io.askAmount("Actual price (KES)", goal->amount);   // Enter keeps the estimate
+            }
+            const pesa::Money cost = price.value_or(goal->amount);
             if (info && info->balance < goal->amount) {
                 io.out() << "Note: '" << info->name << "' only has " << formatMoney(info->balance) << ".\n";
             }
@@ -189,16 +199,28 @@ int runGoal(Context& ctx, const Args& args) {
 int runFund(Context& ctx, const Args& args) {
     auto& io = ctx.io;
     auto& goals = ctx.app.goals();
+    const pesa::Date today = pesa::Date::today();
 
     Args rest = args;
     const auto potText = takeOption(rest, "--pot");
+    const auto dateText = takeOption(rest, "--date");
     const std::string sub = rest.size() >= 2
         ? rest[1]
-        : chooseSubcommand(io, "Funds", {{"Add a fund", "add"}, {"List funds", "list"}, {"Delete a fund", "delete"}});
+        : chooseSubcommand(io, "Funds", {{"Add a fund", "add"}, {"List funds", "list"},
+                                         {"Change a fund's date", "date"}, {"Delete a fund", "delete"}});
     ArgReader reader(rest, 2);
 
+    const auto fundIdArg = [&](const std::string& label) -> pesa::FundId {
+        if (const auto text = reader.next()) return parseId(*text, "fund");
+        const auto funds = goals.funds();
+        if (funds.empty()) throw pesa::Error("There are no funds yet. Try: fund add");
+        std::vector<std::string> options;
+        for (const auto& f : funds) options.push_back(f.name);
+        return funds[io.askChoice(label, options)].id;
+    };
+
     if (sub == "list") {
-        printFunds(io, goals.funds());
+        printFunds(io, goals.funds(), today);
         return 0;
     }
     if (sub == "add") {
@@ -207,23 +229,25 @@ int runFund(Context& ctx, const Args& args) {
         const pesa::Money target = targetWord ? parseAmount(*targetWord) : io.askAmount("Target (KES)");
         const std::string name = typed ? *typed : io.askText("Fund name (e.g. Emergency fund)");
         const pesa::PotId pot = potText ? potRef(ctx, *potText) : ctx.app.savings().mainPot();
-        const auto id = goals.addFund(name, target, pot);
+        std::optional<pesa::Date> date;
+        if (dateText) date = parseDate(*dateText);
+        const auto id = goals.addFund(name, target, pot, date);
         io.out() << "Added fund #" << id << ".\n\n";
-        printFunds(io, goals.funds());
+        printFunds(io, goals.funds(), today);
+        return 0;
+    }
+    if (sub == "date") {   // fund date <id> <date>   or   fund date <id> none
+        const auto id = fundIdArg("Change which fund");
+        const auto text = reader.next();
+        std::optional<pesa::Date> date;
+        if (text ? toLower(*text) != "none" : false) date = parseDate(*text);
+        else if (!text) date = io.askOptionalDate("New target date");
+        goals.setFundDate(id, date);
+        io.out() << (date ? "The target date is now " + date->toString() + "." : std::string("The date is removed.")) << "\n";
         return 0;
     }
     if (sub == "delete") {
-        pesa::FundId id = 0;
-        if (const auto text = reader.next()) {
-            id = parseId(*text, "fund");
-        } else {
-            const auto funds = goals.funds();
-            if (funds.empty()) throw pesa::Error("There are no funds to delete.");
-            std::vector<std::string> options;
-            for (const auto& f : funds) options.push_back(f.name);
-            id = funds[io.askChoice("Delete which fund", options)].id;
-        }
-        goals.removeFund(id);
+        goals.removeFund(fundIdArg("Delete which fund"));
         io.out() << "Deleted.\n";
         return 0;
     }

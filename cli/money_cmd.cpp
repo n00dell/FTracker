@@ -38,6 +38,16 @@ namespace cli {
             ctx.io.out() << "  " << issues << (issues == 1 ? " issue" : " issues") <<
                     " in the log. See 'log issues'.\n";
         }
+        const auto sources = ctx.app.income().sources();
+        if (!sources.empty()) {
+            ctx.io.out() << "  Expected, not counted yet:\n";
+            for (const auto& s : sources) {
+                ctx.io.out() << "    " << s.name << "  KES " << formatMoney(s.usualAmount) << "  "
+                             << (s.frequency == pesa::Frequency::WithPay ? "with my pay"
+                                 : s.nextExpected ? "around " + s.nextExpected->toString() : std::string("no plan yet"))
+                             << (s.goesTo == "Earned" ? "" : "  -> " + s.goesTo) << "\n";
+            }
+        }
         return 0;
     }
 
@@ -63,7 +73,7 @@ namespace cli {
         options.paidOn = dateText ? parseDate(*dateText) : (guided ? io.askDate("Date you were paid", today) : today);
 
         if (amountText) options.amount = parseAmount(*amountText);
-        else if (guided) options.amount = io.askAmount("Amount that arrived (KES)", ctx.app.settings().expectedPay());
+        else if (guided) options.amount = io.askAmount("Amount that arrived (KES)", ctx.app.income().payOn(options.paidOn));
 
         if (nextText) options.nextPayday = parseDate(*nextText);
         else if (guided && regular) {
@@ -99,35 +109,6 @@ namespace cli {
         return 0;
     }
 
-    int runIncome(Context &ctx, const Args &args) {
-        auto &io = ctx.io;
-        auto &periods = ctx.app.periods();
-
-        const std::string sub = args.size() >= 2
-                                    ? args[1]
-                                    : chooseSubcommand(io, "Income", {
-                                                           {"Add income", "add"}, {"List this period's income", "list"}
-                                                       });
-        ArgReader reader(args, 2);
-
-        if (sub == "add") {
-            const auto amountText = reader.next();
-            const auto labelText = reader.rest();
-            const pesa::Money amount = amountText ? parseAmount(*amountText) : io.askAmount("Amount (KES)");
-            const std::string label = labelText ? *labelText : io.askText("Who is it from");
-            periods.addIncome(pesa::Date::today(), label, amount);
-            io.out() << "Added.\n\n";
-            printIncome(io, periods.income());
-            return 0;
-        }
-        if (sub == "list") {
-            printIncome(io, periods.income());
-            return 0;
-        }
-        printUsage(io);
-        return 2;
-    }
-
     int runSavings(Context &ctx, const Args &args) {
         auto &io = ctx.io;
         auto &savings = ctx.app.savings();
@@ -136,6 +117,7 @@ namespace cli {
         Args rest = args;
         const bool locked = takeFlag(rest, "--locked");
         const bool tied = takeFlag(rest, "--tied");
+        const bool open = takeFlag(rest, "--open");
         const std::string sub = rest.size() >= 2 ? rest[1] : "show";
 
         if (sub == "show") {
@@ -149,12 +131,25 @@ namespace cli {
         if (sub == "newpot") {
             ArgReader reader(rest, 2);
             const auto typed = reader.rest();
-            const auto id = savings.addPot(typed ? *typed : io.askText("Pot name"),
-                                           locked
-                                               ? pesa::PotKind::Locked
-                                               : tied
-                                                     ? pesa::PotKind::Tied
-                                                     : pesa::PotKind::Open);
+            std::string name = typed ? *typed : std::string();
+            std::optional<pesa::PotKind> kind;
+            if (locked) kind = pesa::PotKind::Locked;
+            else if (tied) kind = pesa::PotKind::Tied;
+            else if (open) kind = pesa::PotKind::Open;
+
+            std::vector<Step> steps;
+            if (!typed) steps.push_back({[&] { name = io.askText("Pot name", name.empty() ? std::nullopt : std::optional(name)); }});
+            if (!kind) {
+                steps.push_back({[&] {
+                    const auto pick = io.askChoice("What kind of pot is it",
+                        {"Open: spendable", "Locked: set aside (you are warned when you take money out)",
+                         "Tied: contributions only, like a Sacco"}, 0);
+                    kind = pick == 0 ? pesa::PotKind::Open : pick == 1 ? pesa::PotKind::Locked : pesa::PotKind::Tied;
+                }});
+            }
+            runSteps(steps);
+
+            const auto id = savings.addPot(name, *kind);
             io.out() << "Added pot #" << id << ".\n\n";
             printPots(io, savings.pots());
             return 0;

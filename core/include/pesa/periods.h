@@ -4,7 +4,7 @@
 #include <pesa/common.h>
 #include <pesa/date.h>
 #include <pesa/settings.h>
-
+#include <pesa/income.h>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -62,6 +62,7 @@ namespace pesa {
         Money               carriedForward = 0;       // the shortfall, when it became the new period's first expense
         std::string leftoverPot; // the pot's name when something was moved
         std::optional<Date> nextPayday;
+        std::vector<PaidExtra> withPay;           // "with my pay" income added to the new period
     };
     struct AutoCoverResult {
         int   entries = 0;        // entries switched to Main savings

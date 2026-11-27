@@ -388,6 +388,54 @@ Migration{11, R"sql(
         );
         CREATE UNIQUE INDEX ux_funds_name ON funds(name) WHERE is_deleted = 0;
     )sql"},
+                // Pay history, other income sources, fund target dates, and short-lived categories and items.
+    //  - pay_history: one row per amount, with the days it applied ("a raise" ends the old row the day before).
+    //    A file from before this migration brings its single expected pay across as the first row.
+    //  - income_sources.frequency: 0 one-off, 1 with my pay, 2 monthly, 3 every 3 months, 4 yearly.
+    //    "With my pay" income has no date of its own (the last CHECK).
+    //  - expires_on: the LAST day a category or item is in use; it pauses itself after that.
+    Migration{12, R"sql(
+        CREATE TABLE pay_history (
+            id        INTEGER PRIMARY KEY,
+            amount    INTEGER NOT NULL CHECK (amount > 0),
+            from_date TEXT    NOT NULL CHECK (from_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            to_date   TEXT    CHECK (to_date IS NULL OR
+                                     to_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            CHECK (to_date IS NULL OR to_date >= from_date)
+        );
+        CREATE UNIQUE INDEX ux_pay_history_from ON pay_history(from_date);
+        INSERT INTO pay_history(amount, from_date)
+            SELECT CAST(value AS INTEGER),
+                   COALESCE((SELECT MIN(start_date) FROM periods), date('now', 'localtime'))
+            FROM settings WHERE key = 'expected_pay' AND CAST(value AS INTEGER) > 0;
+
+        CREATE TABLE income_sources (
+            id            INTEGER PRIMARY KEY,
+            name          TEXT    NOT NULL COLLATE NOCASE,
+            usual_amount  INTEGER NOT NULL CHECK (usual_amount > 0),
+            frequency     INTEGER NOT NULL CHECK (frequency BETWEEN 0 AND 4),
+            next_expected TEXT    CHECK (next_expected IS NULL OR
+                                         next_expected GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            pot_id        INTEGER REFERENCES pots(id),      -- NULL = earned
+            snoozed_on    TEXT    CHECK (snoozed_on IS NULL OR
+                                         snoozed_on GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+            is_deleted    INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1)),
+            CHECK (frequency != 1 OR next_expected IS NULL)
+        );
+        CREATE UNIQUE INDEX ux_income_sources_name ON income_sources(name) WHERE is_deleted = 0;
+
+        ALTER TABLE funds      ADD COLUMN target_date TEXT
+            CHECK (target_date IS NULL OR target_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]');
+        ALTER TABLE categories ADD COLUMN expires_on TEXT
+            CHECK (expires_on IS NULL OR expires_on GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]');
+        ALTER TABLE items      ADD COLUMN expires_on TEXT
+            CHECK (expires_on IS NULL OR expires_on GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]');
+    )sql"},
+            // Estimated goals: the amount can be a guess, and buying records the real price.
+Migration{13, R"sql(
+        ALTER TABLE goals ADD COLUMN is_estimate INTEGER NOT NULL DEFAULT 0 CHECK (is_estimate IN (0, 1));
+        ALTER TABLE goals ADD COLUMN paid_amount INTEGER CHECK (paid_amount IS NULL OR paid_amount > 0);
+    )sql"},
         };
 
         // While tables are being rebuilt, foreign keys must be switched off (SQLite ignores

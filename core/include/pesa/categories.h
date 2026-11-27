@@ -2,7 +2,7 @@
 #pragma once
 
 #include <pesa/common.h>
-
+#include <pesa/date.h>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -16,6 +16,7 @@ namespace pesa {
         bool isActive = true; // false = paused (name stays reserved)
         bool isDeleted = false; // true  = soft deleted (name is free to reuse)
         bool isSystem = false; // true  = built in (Misc): cannot be renamed, paused or deleted
+        std::optional<Date> expiresOn;      // the LAST day it is in use; it pauses itself after that
     };
 
     // Created and owned by Pesa. Use it through app.categories().
@@ -32,7 +33,11 @@ namespace pesa {
 
         void remove(CategoryId id); // soft delete: hides it, keeps the row
         void restore(CategoryId id); // undo a delete (fails if the name is taken again)
-
+        // A short-lived category: it pauses itself after this day (Misc cannot have one). Empty removes it.
+        // Resuming a paused category (setActive) also removes its end date.
+        void setExpiry(CategoryId id, std::optional<Date> lastDay);
+        // On launch: pauses categories whose last day has passed. Returns their names.
+        std::vector<std::string> pauseExpired(const Date& today);
         // The built-in "Misc" category: home for anything that fits nowhere else.
         [[nodiscard]] CategoryId misc() const;
 

@@ -1,6 +1,6 @@
 // FTracker/core/src/categories.cpp
 #include <pesa/categories.h>
-
+#include  "log_sql.h"
 #include "db.h"
 #include "util.h"
 
@@ -8,17 +8,19 @@ namespace pesa {
     namespace {
         constexpr const char *kEmptyName = "A category name cannot be empty.";
         constexpr const char *kSelect =
-                "SELECT id, name, sort_order, is_active, is_deleted, is_system FROM categories ";
+                "SELECT id, name, sort_order, is_active, is_deleted, is_system, expires_on FROM categories ";
 
-        Category readCategory(const detail::Statement &st) {
-            return Category{
-                .id = st.integer(0),
-                .name = st.text(1),
+        Category readCategory(const detail::Statement& st) {
+            Category c{
+                .id        = st.integer(0),
+                .name      = st.text(1),
                 .sortOrder = static_cast<int>(st.integer(2)),
-                .isActive = st.integer(3) != 0,
+                .isActive  = st.integer(3) != 0,
                 .isDeleted = st.integer(4) != 0,
-                .isSystem = st.integer(5) != 0,
+                .isSystem  = st.integer(5) != 0,
             };
+            if (!st.isNull(6)) c.expiresOn = Date::parse(st.text(6));
+            return c;
         }
 
         // Names only have to be unique among categories that are NOT deleted.
@@ -72,9 +74,40 @@ namespace pesa {
 
     void Categories::setActive(CategoryId id, bool active) {
         requireNotSystem(db_, id);
-        db_.prepare("UPDATE categories SET is_active = ? WHERE id = ? AND is_deleted = 0")
-                .bind(1, active ? 1 : 0).bind(2, id).run();
+        // Resuming also makes it permanent: its end date has done its job.
+        db_.prepare(active ? "UPDATE categories SET is_active = 1, expires_on = NULL WHERE id = ? AND is_deleted = 0"
+                           : "UPDATE categories SET is_active = 0 WHERE id = ? AND is_deleted = 0")
+            .bind(1, id).run();
         if (db_.changes() == 0) throw Error(noCategory(id));
+    }
+
+    void Categories::setExpiry(CategoryId id, std::optional<Date> lastDay) {
+        requireNotSystem(db_, id);
+        auto st = db_.prepare("UPDATE categories SET expires_on = ? WHERE id = ? AND is_deleted = 0");
+        if (lastDay) st.bind(1, lastDay->toString()); else st.bindNull(1);
+        st.bind(2, id);
+        st.run();
+        if (db_.changes() == 0) throw Error(noCategory(id));
+    }
+
+    std::vector<std::string> Categories::pauseExpired(const Date& today) {
+        detail::Transaction tx(db_);
+        const char* const where = "is_deleted = 0 AND is_active = 1 AND is_system = 0 "
+                                  "AND expires_on IS NOT NULL AND expires_on < ?";
+        std::vector<std::string> names;
+        {
+            auto st = db_.prepare(std::string("SELECT name FROM categories WHERE ") + where + " ORDER BY id");
+            st.bind(1, today.toString());
+            while (st.step()) names.push_back(st.text(0));
+        }
+        if (!names.empty()) {
+            db_.prepare(std::string("UPDATE categories SET is_active = 0 WHERE ") + where).bind(1, today.toString()).run();
+            std::string joined;
+            for (const std::string& name : names) joined += (joined.empty() ? "" : ", ") + name;
+            detail::writeLog(db_, LogKind::Edit, "Short-lived categories paused (their last day passed): " + joined);
+        }
+        tx.commit();
+        return names;
     }
 
     void Categories::remove(CategoryId id) {
